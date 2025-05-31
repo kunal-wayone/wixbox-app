@@ -17,7 +17,7 @@ function App(): React.JSX.Element {
     <View>
 
       <Text className='text-primary-100 text-4xl text-center p-16 uppercase font-inter '>
-        demo
+        demo 
       </Text>
     </View>
   );
