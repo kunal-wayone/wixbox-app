@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f7f6f6;
+  --foreground: #171717;
+
+  /* Primary colors base RGB */
+  --primary-rgb: 182, 138, 212;
+  --orange-primary-rgb: 238, 100, 71;
+  --purple-primary-rgb: 114, 72, 179;
+  --primary-green-rgb: 0, 165, 47;
+  --red-primary-rgb: 237, 0, 4;
+  --dark-primary-rgb: 49, 49, 49;
+  --secondary-rgb: 49, 49, 49;
+
+  /* Opacity variants */
+  --primary-10: rgba(var(--primary-rgb), 0.1);
+  --primary-20: rgba(var(--primary-rgb), 0.2);
+  --primary-30: rgba(var(--primary-rgb), 0.3);
+  --primary-40: rgba(var(--primary-rgb), 0.4);
+  --primary-100: rgba(var(--primary-rgb), 1);
+
+  --orange-primary-10: rgba(var(--orange-primary-rgb), 0.1);
+  --orange-primary-20: rgba(var(--orange-primary-rgb), 0.2);
+  --orange-primary-30: rgba(var(--orange-primary-rgb), 0.3);
+  --orange-primary-40: rgba(var(--orange-primary-rgb), 0.4);
+  --orange-primary-100: rgba(var(--orange-primary-rgb), 1);
+
+  --purple-primary-10: rgba(var(--purple-primary-rgb), 0.1);
+  --purple-primary-20: rgba(var(--purple-primary-rgb), 0.2);
+  --purple-primary-30: rgba(var(--purple-primary-rgb), 0.3);
+  --purple-primary-40: rgba(var(--purple-primary-rgb), 0.4);
+  --purple-primary-100: rgba(var(--purple-primary-rgb), 1);
+
+  --primary-green-10: rgba(var(--primary-green-rgb), 0.1);
+  --primary-green-20: rgba(var(--primary-green-rgb), 0.2);
+  --primary-green-30: rgba(var(--primary-green-rgb), 0.3);
+  --primary-green-40: rgba(var(--primary-green-rgb), 0.4);
+  --primary-green-100: rgba(var(--primary-green-rgb), 1);
+
+  --red-primary-10: rgba(var(--red-primary-rgb), 0.1);
+  --red-primary-20: rgba(var(--red-primary-rgb), 0.2);
+  --red-primary-30: rgba(var(--red-primary-rgb), 0.3);
+  --red-primary-40: rgba(var(--red-primary-rgb), 0.4);
+  --red-primary-100: rgba(var(--red-primary-rgb), 1);
+
+  --dark-primary-10: rgba(var(--dark-primary-rgb), 0.1);
+  --dark-primary-20: rgba(var(--dark-primary-rgb), 0.2);
+  --dark-primary-30: rgba(var(--dark-primary-rgb), 0.3);
+  --dark-primary-40: rgba(var(--dark-primary-rgb), 0.4);
+  --dark-primary-100: rgba(var(--dark-primary-rgb), 1);
+
+  --secondary-10: rgba(var(--secondary-rgb), 0.1);
+  --secondary-20: rgba(var(--secondary-rgb), 0.2);
+  --secondary-30: rgba(var(--secondary-rgb), 0.3);
+  --secondary-40: rgba(var(--secondary-rgb), 0.4);
+  --secondary-100: rgba(var(--secondary-rgb), 0.5); /* note original was 0.5 */
+}
+
+
+
+
+
+/* Text color classes */
+.text-primary-10 { color: var(--primary-10); }
+.text-primary-20 { color: var(--primary-20); }
+.text-primary-30 { color: var(--primary-30); }
+.text-primary-40 { color: var(--primary-40); }
+.text-primary-100 { color: var(--primary-100); }
+
+.text-orange-primary-10 { color: var(--orange-primary-10); }
+.text-orange-primary-20 { color: var(--orange-primary-20); }
+.text-orange-primary-30 { color: var(--orange-primary-30); }
+.text-orange-primary-40 { color: var(--orange-primary-40); }
+.text-orange-primary-100 { color: var(--orange-primary-100); }
+
+/* similarly for purple, green, red, dark, secondary... */
+
+/* Background color classes */
+.bg-primary-10 { background-color: var(--primary-10); }
+.bg-primary-20 { background-color: var(--primary-20); }
+.bg-primary-30 { background-color: var(--primary-30); }
+.bg-primary-40 { background-color: var(--primary-40); }
+.bg-primary-100 { background-color: var(--primary-100); }
+
+/* similarly for other colors */
+
+/* Border color classes */
+.border-primary-10 { border-color: var(--primary-10); }
+.border-primary-20 { border-color: var(--primary-20); }
+.border-primary-30 { border-color: var(--primary-30); }
+.border-primary-40 { border-color: var(--primary-40); }
+.border-primary-100 { border-color: var(--primary-100); }
+
+/* Scrollbar thumb color (example for webkit) */
+.scrollbar-primary-10::-webkit-scrollbar-thumb {
+  background-color: var(--primary-10);
+}
+.scrollbar-primary-20::-webkit-scrollbar-thumb {
+  background-color: var(--primary-20);
+}
+/* ... similarly for others */
+
+
+
+
+
+
+.scrollbar-primary-10::-webkit-scrollbar-thumb {
+  background-color: var(--primary-10);
+}
+.scrollbar-primary-20::-webkit-scrollbar-thumb {
+  background-color: var(--primary-20);
+}
+/* Add scrollbar color for Firefox */
+.scrollbar-primary-10 {
+  scrollbar-color: var(--primary-10) transparent;
+}
+.scrollbar-primary-20 {
+  scrollbar-color: var(--primary-20) transparent;
+}
+/* And so on... */
+
+
+
+
+.button-primary-10 {
+  background-color: var(--primary-10);
+  color: var(--foreground);
+}
+.button-primary-10:hover {
+  background-color: var(--primary-20);
+  opacity: 0.9;
+  transition: 0.2s ease-in-out;
+}
