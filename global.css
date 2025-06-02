@@ -85,7 +85,17 @@
 .bg-primary-40 { background-color: var(--primary-40); }
 .bg-primary-100 { background-color: var(--primary-100); }
 
+
 /* similarly for other colors */
+
+
+.bg-orange-10 { background-color: var(--orange-10); }
+.bg-orange-20 { background-color: var(--orange-20); }
+.bg-orange-30 { background-color: var(--orange-30); }
+.bg-orange-40 { background-color: var(--orange-40); }
+.bg-orange-100 { background-color: var(--orange-100); }
+
+
 
 /* Border color classes */
 .border-primary-10 { border-color: var(--primary-10); }
@@ -134,4 +144,11 @@
   background-color: var(--primary-20);
   opacity: 0.9;
   transition: 0.2s ease-in-out;
+}
+
+/* Gradient Text  */
+.gradient-text {
+  background: linear-gradient(to right, purple, orange);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
