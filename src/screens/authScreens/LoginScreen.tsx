@@ -6,7 +6,6 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -25,35 +24,25 @@ const {width, height} = Dimensions.get('screen');
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
-  fullName: Yup.string()
-    .min(2, 'Name must be at least 2 characters')
-    .required('Full Name is required'),
-  email: Yup.string()
-    .email('Invalid email address')
+  username: Yup.string()
+    .email('Invalid username address')
     .required('Email is required'),
   password: Yup.string()
     .min(8, 'Password must be at least 8 characters')
     .required('Password is required'),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref('password'), undefined], 'Passwords must match')
-    .required('Confirm Password is required'),
 });
 
-const SignUpScreen = () => {
-  const navigation = useNavigation<any>();
+const LoginScreen = () => {
+  const navigaiton = useNavigation<any>();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isCheck, setIsCheck] = useState(false);
+
   // Mock API call
-  const handleSignUp = async (values: any, {setSubmitting, resetForm}: any) => {
-    if (!isCheck) {
-      ToastAndroid.show("Please Check Terms & Condition",ToastAndroid.SHORT)
-      return null;
-    }
-    navigation.navigate('CreateShopScreen');
+  const handleLogin = async (values: any, {setSubmitting, resetForm}: any) => {
+    navigaiton.navigate('CreateShopScreen');
     try {
       // Replace with your actual API endpoint
-      const response = await fetch('https://api.example.com/signup', {
+      const response = await fetch('https://api.example.com/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,16 +55,16 @@ const SignUpScreen = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Registration failed');
+        throw new Error('Login failed');
       }
 
       const data = await response.json();
-      Alert.alert('Success', 'Account created successfully!');
+      ToastAndroid.show('Account Login successfully!', ToastAndroid.SHORT);
       resetForm();
     } catch (error: any) {
-      Alert.alert(
-        'Error',
+      ToastAndroid.show(
         error.message || 'Something went wrong. Please try again.',
+        ToastAndroid.SHORT,
       );
     } finally {
       setSubmitting(false);
@@ -87,16 +76,14 @@ const SignUpScreen = () => {
       style={{flex: 1}}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      <View
-        // contentContainerStyle={{
-        //   flexGrow: 1,
-        //   padding: 16,
-        //   backgroundColor: '#fff',
-        // }}
-        // showsVerticalScrollIndicator={false}
-        // keyboardShouldPersistTaps="handled"
-        className='p-4'
-        >
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          padding: 16,
+          backgroundColor: '#fff',
+        }}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled">
         <Image
           source={ImagePath.signBg}
           className="absolute -top-[2%] -left-[2%] w-52 h-44"
@@ -106,7 +93,7 @@ const SignUpScreen = () => {
           <MaskedView
             maskElement={
               <Text className="text-center text-3xl font-bold font-poppins">
-                Create an Account
+                Welcome Back!{' '}
               </Text>
             }>
             <LinearGradient
@@ -116,7 +103,7 @@ const SignUpScreen = () => {
               <Text
                 className="text-center text-3xl font-bold font-poppins"
                 style={{opacity: 0}}>
-                Create an Account
+                Welcome Back!{' '}
               </Text>
             </LinearGradient>
           </MaskedView>
@@ -126,14 +113,11 @@ const SignUpScreen = () => {
 
           <Formik
             initialValues={{
-              fullName: '',
-              email: '',
+              username: '',
               password: '',
-              confirmPassword: '',
-              agreeTerms: false,
             }}
             validationSchema={validationSchema}
-            onSubmit={handleSignUp}>
+            onSubmit={handleLogin}>
             {({
               handleChange,
               handleBlur,
@@ -146,45 +130,25 @@ const SignUpScreen = () => {
               <View className="mt-4">
                 <View className="mb-3">
                   <Text className="text-sm font-medium text-gray-700 mb-1">
-                    Full Name
+                    Username
                   </Text>
                   <TextInput
                     className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base"
-                    placeholder="Enter your full name"
-                    onChangeText={handleChange('fullName')}
-                    onBlur={handleBlur('fullName')}
-                    value={values.fullName}
+                    placeholder="Enter your username"
+                    onChangeText={handleChange('username')}
+                    onBlur={handleBlur('username')}
+                    value={values.username}
                   />
-                  {touched.fullName && errors.fullName && (
+                  {touched.username && errors.username && (
                     <Text className="text-red-500 text-xs mt-1">
-                      {errors.fullName}
+                      {errors.username}
                     </Text>
                   )}
                 </View>
 
                 <View className="mb-3">
-                  <Text className="text-sm font-medium text-gray-700 mb-1">
-                    Email Address
-                  </Text>
-                  <TextInput
-                    className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base"
-                    placeholder="Enter your email"
-                    onChangeText={handleChange('email')}
-                    onBlur={handleBlur('email')}
-                    value={values.email}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                  {touched.email && errors.email && (
-                    <Text className="text-red-500 text-xs mt-1">
-                      {errors.email}
-                    </Text>
-                  )}
-                </View>
-
-                <View className="mb-3">
-                  <Text className="text-sm font-medium text-gray-700 mb-1">
-                    Create Password
+                  <Text className="text-sm font-medium bg-gray-100 text-gray-700 mb-1">
+                    Password
                   </Text>
                   <View className="flex-row items-center border border-gray-300 overflow-hidden rounded-lg">
                     <TextInput
@@ -212,58 +176,14 @@ const SignUpScreen = () => {
                   )}
                 </View>
 
-                <View>
-                  <Text className="text-sm font-medium text-gray-700 mb-1">
-                    Confirm Password
-                  </Text>
-                  <View className="flex-row items-center bg-gray-100 border border-gray-300 overflow-hidden rounded-lg">
-                    <TextInput
-                      className="flex-1 p-3 text-base"
-                      placeholder="Confirm your password"
-                      onChangeText={handleChange('confirmPassword')}
-                      onBlur={handleBlur('confirmPassword')}
-                      value={values.confirmPassword}
-                      secureTextEntry={!showConfirmPassword}
-                    />
-                    <TouchableOpacity
-                      onPress={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
-                      className="p-3 bg-gray-100">
-                      <Icon
-                        name={showConfirmPassword ? 'eye-off' : 'eye'}
-                        size={20}
-                        color="#666"
-                      />
-                    </TouchableOpacity>
-                  </View>
-                  {touched.confirmPassword && errors.confirmPassword && (
-                    <Text className="text-red-500 text-xs mt-1">
-                      {errors.confirmPassword}
+                <View className="flex-row items-center my-1">
+                  <TouchableOpacity
+                    onPress={() => navigaiton.navigate('ForgetPasswordScreen')}>
+                    <Text className="ml-2 text-sm text-orange-primary-80 font-poppins font-bold ">
+                      Forget Password?
                     </Text>
-                  )}
+                  </TouchableOpacity>
                 </View>
-
-                <View className="flex-row items-center my-3">
-                  <CheckBox
-                    value={isCheck}
-                    onValueChange={va => {
-                      setIsCheck(va);
-                      handleChange('agreeTerms');
-                      console.log(va, isCheck, values.agreeTerms);
-                    }}
-                    tintColors={{true: '#7248B3', false: '#666'}}
-                  />
-                  <Text className="ml-2 text-sm text-gray-600">
-                    Agree to all terms & conditions
-                  </Text>
-                </View>
-
-                {touched.agreeTerms && !isCheck && (
-                  <Text className="text-red-500 text-xs mb-3">
-                    {"Please check agree terms & conditions"}
-                  </Text>
-                )}
                 <TouchableOpacity
                   onPress={handleSubmit}
                   disabled={isSubmitting}
@@ -278,7 +198,7 @@ const SignUpScreen = () => {
                       alignItems: 'center',
                     }}>
                     <Text className="text-white text-base font-bold">
-                      {isSubmitting ? 'Creating...' : 'Create Account'}
+                      {isSubmitting ? 'Login...' : 'Login'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -290,38 +210,38 @@ const SignUpScreen = () => {
             --------Or Continue with--------
           </Text>
 
-          <View className="flex-row justify-center gap-4 mb-4">
-            <TouchableOpacity className="p-3 w-1/2  bg-orange-primary-10 rounded-2xl">
+          <View className="flex-row justify-center gap-4 my-4">
+            <TouchableOpacity className="p-3 w-1/2 h-24  bg-orange-primary-10 rounded-2xl">
               <Image
                 source={ImagePath.google}
-                className="w-8 h-8 m-auto"
+                className="w-14 h-14 m-auto"
                 resizeMode="contain"
               />
             </TouchableOpacity>
             <TouchableOpacity className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl">
               <Image
                 source={ImagePath.facebook}
-                className="w-8 h-8 m-auto"
+                className="w-14 h-14 m-auto"
                 resizeMode="contain"
               />
             </TouchableOpacity>
           </View>
 
-          <View className="flex-row justify-center items-center mb-4">
+          <View className="flex-row items-center justify-center">
             <Text className="text-sm text-gray-600">
               Already have an account?{' '}
             </Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate('LoginScreen')}>
-              <Text className="text-orange-primary-100 text-sm ml-1 font-bold underline">
-                Login
+              onPress={() => navigaiton.navigate('SignUpScreen')}>
+              <Text className="text-orange-primary-100 text-sm ml-1 underline font-bold">
+                SignUp
               </Text>
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-export default SignUpScreen;
+export default LoginScreen;

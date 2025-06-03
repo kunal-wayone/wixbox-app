@@ -16,6 +16,13 @@ export const ImagePath = {
     signBg: require('../assets/images/signbg.png'),
     google: require('../assets/images/google.png'),
     facebook: require('../assets/images/facebook.png'),
+    stars: require('../assets/images/icons/stars.png'),
+    home: require('../assets/images/icons/home.png'),
+    userstar: require('../assets/images/icons/userstar.png'),
+    analytic: require('../assets/images/icons/analyse.png'),
+    profile: require('../assets/images/icons/user.png'),
+
+
 
 
 
