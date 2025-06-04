@@ -11,13 +11,15 @@ import ResetPasswordScreen from '../screens/authScreens/ResetPasswordScreen';
 import CreateShopScreen from '../screens/shopFormScreens/CreateShopScreen';
 import AddDineInServiceScreen from '../screens/shopFormScreens/AddDineInServiceScreen';
 import BottomTabNavigator from './BottomTabNavigator';
+import NotificationScreen from '../screens/otherScreen/NotificationScreen';
+import AddProductScreen from '../screens/productScreens/AddProductScreen';
 
 const Stack = createNativeStackNavigator();
 
 const MainNavigation = () => {
   return (
     <Stack.Navigator
-      initialRouteName="HomeScreen"
+      initialRouteName="SplashScreen"
       screenOptions={{headerShown: false}}>
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
       <Stack.Screen name="SplashScreen1" component={IntroScreen} />
@@ -30,6 +32,9 @@ const MainNavigation = () => {
       <Stack.Screen name="CreateShopScreen" component={CreateShopScreen} />
       <Stack.Screen name="AddDineInServiceScreen" component={AddDineInServiceScreen} />
       <Stack.Screen name="HomeScreen" component={BottomTabNavigator} />
+      <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
+      <Stack.Screen name="AddProductScreen" component={AddProductScreen} />
+
 
 
 

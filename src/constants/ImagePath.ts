@@ -21,6 +21,23 @@ export const ImagePath = {
     userstar: require('../assets/images/icons/userstar.png'),
     analytic: require('../assets/images/icons/analyse.png'),
     profile: require('../assets/images/icons/user.png'),
+    profile1: require('../assets/images/profile1.png'),
+    mystore: require('../assets/images/mystore.png'),
+    bellIcon: require('../assets/images/icons/bellicon.png'),
+    edit: require('../assets/images/icons/edit.png'),
+    crown: require('../assets/images/icons/crown.png'),
+    cafe: require('../assets/images/icons/cafe.png'),
+    home2: require('../assets/images/icons/home2.png'),
+    item1: require('../assets/images/item1.png'),
+    item2: require('../assets/images/item2.png'),
+    item3: require('../assets/images/item3.png'),
+    uploadIcon: require('../assets/images/icons/upload.png'),
+
+
+
+
+
+
 
 
 
