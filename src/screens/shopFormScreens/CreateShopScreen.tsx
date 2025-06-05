@@ -22,6 +22,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {ImagePath} from '../../constants/ImagePath';
 import ShiftCard, {ShiftData} from '../../components/common/ShiftCard';
 import * as ImagePicker from 'react-native-image-picker'; // Added for image picking
+import { useNavigation } from '@react-navigation/native';
 
 const {width} = Dimensions.get('screen');
 
@@ -32,10 +33,10 @@ const validationSchema = Yup.object().shape({
     .matches(/^[0-9]{10}$/, 'Must be a valid 10-digit phone number')
     .required('Phone number is required'),
   gstId: Yup.string()
-    .matches(
-      /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-      'Invalid GST ID format',
-    )
+    // .matches(
+    //   /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
+    //   'Invalid GST ID format',
+    // )
     .required('GST ID is required'),
   addressLine1: Yup.string().required('Address Line 1 is required'),
   addressLine2: Yup.string(),
@@ -50,6 +51,7 @@ const validationSchema = Yup.object().shape({
 const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const CreateShopScreen = ({route}: any) => {
+  const navigation = useNavigation<any>()
   const [images, setImages] = useState<any>([]);
   const [viewImageModal, setViewImageModal] = useState(null);
   const [schedules, setSchedules] = useState(
@@ -145,7 +147,7 @@ const CreateShopScreen = ({route}: any) => {
   const handleSubmit = async (values: any, {setSubmitting, resetForm}: any) => {
     try {
       setSubmitting(true);
-
+navigation.navigate("AddDineInServiceScreen")
       // Prepare form data for images
       const formData = new FormData();
       formData.append('businessName', values.businessName);

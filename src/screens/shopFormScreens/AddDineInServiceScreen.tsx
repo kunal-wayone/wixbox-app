@@ -59,6 +59,7 @@ const AddDineInServiceScreen = () => {
   };
 
   const handleCreateShop = async () => {
+    navigation.navigate("HomeScreen")
     if (tables.length === 0) {
       ToastAndroid.show('Please add at least one table', ToastAndroid.SHORT);
       return;

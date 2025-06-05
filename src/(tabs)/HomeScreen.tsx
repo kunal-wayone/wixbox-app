@@ -230,6 +230,7 @@ const HomeScreen = () => {
 
           <View className="flex-row items-center justify-between gap-3 py-4">
             <TouchableOpacity
+            onPress={()=>navigaton.navigate("CreateAdScreen")}
               disabled={!shopStatus}
               className={`${
                 shopStatus ? 'bg-primary-70' : 'bg-primary-50'

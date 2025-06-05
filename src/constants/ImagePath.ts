@@ -32,6 +32,10 @@ export const ImagePath = {
     item2: require('../assets/images/item2.png'),
     item3: require('../assets/images/item3.png'),
     uploadIcon: require('../assets/images/icons/upload.png'),
+    onboard: require('../assets/images/onboard.png'),
+    what: require('../assets/images/icons/what.png'),
+
+
 
 
 

@@ -19,6 +19,7 @@ const iconMap: any = {
 export default function BottomTabNavigator() {
   return (
     <Tab.Navigator
+    initialRouteName='Home'
       screenOptions={({route}) => ({
         headerShown: false,
         tabBarIcon: ({focused}) => (

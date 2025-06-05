@@ -13,6 +13,15 @@ import AddDineInServiceScreen from '../screens/shopFormScreens/AddDineInServiceS
 import BottomTabNavigator from './BottomTabNavigator';
 import NotificationScreen from '../screens/otherScreen/NotificationScreen';
 import AddProductScreen from '../screens/productScreens/AddProductScreen';
+import CreateAdScreen from '../screens/adsScreens/CreateAdScreen';
+import EditProfileScreen from '../screens/otherScreen/EditProfileScreen';
+import DeleteAccountScreen from '../screens/authScreens/DeleteAccountScreen';
+import DeleteAccountVerifyOtpScreen from '../screens/authScreens/DeleteAccountVerifyOtpScreen';
+import AddCustomerScreen from '../screens/customersScreens/AddCustomerScreen';
+import CustomerDetailsScreen from '../screens/customersScreens/CustoemrDetailsScreen';
+import AddCustomerFormScreen from '../screens/customersScreens/AddCustomerFormScreen';
+import AddOrderScreen from '../screens/orderScreen/AddOrderScreen';
+import OrderSummaryScreen from '../screens/orderScreen/OrderSummaryScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -34,6 +43,23 @@ const MainNavigation = () => {
       <Stack.Screen name="HomeScreen" component={BottomTabNavigator} />
       <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
       <Stack.Screen name="AddProductScreen" component={AddProductScreen} />
+      <Stack.Screen name="CreateAdScreen" component={CreateAdScreen} />
+      <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+      <Stack.Screen name="DeleteAccountScreen" component={DeleteAccountScreen} />
+      <Stack.Screen name="DeleteAccountVerifyOtpScreen" component={DeleteAccountVerifyOtpScreen} />
+      <Stack.Screen name="AddCustomerScreen" component={AddCustomerScreen} />
+      <Stack.Screen name="CustomerDetailsScreen" component={CustomerDetailsScreen} />
+      <Stack.Screen name="AddCustomerFormScreen" component={AddCustomerFormScreen} />
+      <Stack.Screen name="AddOrderScreen" component={AddOrderScreen} />
+      <Stack.Screen name="OrderSummaryScreen" component={OrderSummaryScreen} />
+
+
+
+
+
+
+      
+
 
 
 
