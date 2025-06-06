@@ -22,6 +22,9 @@ import CustomerDetailsScreen from '../screens/customersScreens/CustoemrDetailsSc
 import AddCustomerFormScreen from '../screens/customersScreens/AddCustomerFormScreen';
 import AddOrderScreen from '../screens/orderScreen/AddOrderScreen';
 import OrderSummaryScreen from '../screens/orderScreen/OrderSummaryScreen';
+import HighOnDemandScreen from '../screens/otherScreen/HighOnDemandScreen';
+import BookATableScreen from '../screens/otherScreen/BookATableScreen';
+import LunchAndDinnerScreen from '../screens/otherScreen/LunchAndDinnerScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -52,6 +55,12 @@ const MainNavigation = () => {
       <Stack.Screen name="AddCustomerFormScreen" component={AddCustomerFormScreen} />
       <Stack.Screen name="AddOrderScreen" component={AddOrderScreen} />
       <Stack.Screen name="OrderSummaryScreen" component={OrderSummaryScreen} />
+      <Stack.Screen name="HighOnDemandScreen" component={HighOnDemandScreen} />
+      <Stack.Screen name="BookATableScreen" component={BookATableScreen} />
+      <Stack.Screen name="LunchAndDinnerScreen" component={LunchAndDinnerScreen} />
+
+
+
 
 
 

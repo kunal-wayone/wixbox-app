@@ -39,7 +39,9 @@ const LoginScreen = () => {
 
   // Mock API call
   const handleLogin = async (values: any, {setSubmitting, resetForm}: any) => {
+    // AsyncStorage.setItem('user', 'user');
     navigaiton.navigate('CreateShopScreen');
+
     try {
       // Replace with your actual API endpoint
       const response = await fetch('https://api.example.com/login', {
@@ -70,6 +72,11 @@ const LoginScreen = () => {
       setSubmitting(false);
     }
   };
+
+  // const setuser = async (role: any) => {
+  //   await AsyncStorage.setItem('user', role);
+  //   navigaiton.navigate('CreateShopScreen');
+  // };
 
   return (
     <KeyboardAvoidingView
@@ -211,14 +218,18 @@ const LoginScreen = () => {
           </Text>
 
           <View className="flex-row justify-center gap-4 my-4">
-            <TouchableOpacity className="p-3 w-1/2 h-24  bg-orange-primary-10 rounded-2xl">
+            <TouchableOpacity
+              onPress={() => setuser('user')}
+              className="p-3 w-1/2 h-24  bg-orange-primary-10 rounded-2xl">
               <Image
                 source={ImagePath.google}
                 className="w-14 h-14 m-auto"
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            <TouchableOpacity className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl">
+            <TouchableOpacity
+              onPress={() => setuser('owner')}
+              className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl">
               <Image
                 source={ImagePath.facebook}
                 className="w-14 h-14 m-auto"

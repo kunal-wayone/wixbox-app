@@ -22,10 +22,38 @@ const ProfileScreen = () => {
       icon: 'person-outline',
       link: 'EditProfileScreen',
     },
-    {name: 'Edit Shop Details', icon: 'storefront-outline', link: 'CreateShopScreen'},
+    {
+      name: 'Edit Shop Details',
+      icon: 'storefront-outline',
+      link: 'CreateShopScreen',
+    },
     {name: 'Manage Stock', icon: 'cube-outline', link: ''},
-    {name: 'Edit Products', icon: 'pricetags-outline', link: 'AddProductScreen'},
+    {
+      name: 'Edit Products',
+      icon: 'pricetags-outline',
+      link: 'AddProductScreen',
+    },
     {name: 'Added Customer', icon: 'people-outline', link: 'AddCustomerScreen'},
+  ];
+
+  const userTabs = [
+    {
+      name: 'Edit My Profile',
+      icon: 'person-outline',
+      link: 'EditProfileScreen',
+    },
+    // {
+    //   name: 'Edit Shop Details',
+    //   icon: 'storefront-outline',
+    //   link: 'CreateShopScreen',
+    // },
+    // {name: 'Manage Stock', icon: 'cube-outline', link: ''},
+    // {
+    //   name: 'Edit Products',
+    //   icon: 'pricetags-outline',
+    //   link: 'AddProductScreen',
+    // },
+    // {name: 'Added Customer', icon: 'people-outline', link: 'AddCustomerScreen'},
   ];
 
   const moreLinks = [
@@ -54,6 +82,7 @@ const ProfileScreen = () => {
     setModalVisible(false);
   };
 
+  const user = 'user';
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="p-4 pt-10">
@@ -78,23 +107,45 @@ const ProfileScreen = () => {
 
         {/* Tabs */}
         <View className="mt-6">
-          {tabs.map((tab, index) => (
-            <TouchableOpacity
-              key={index}
-              className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
-              onPress={() => navigation.navigate(tab.link)}>
-              <View className="flex-row items-center">
-                <Icon
-                  name={tab.icon}
-                  size={20}
-                  color="#000"
-                  className="bg-primary-20 p-2 rounded-full"
-                />
-                <Text className="ml-3 text-base text-gray-900">{tab.name}</Text>
-              </View>
-              <Icon name="chevron-forward-outline" size={20} color="#000" />
-            </TouchableOpacity>
-          ))}
+          {user === 'owner'
+            ? tabs.map((tab, index) => (
+                <TouchableOpacity
+                  key={index}
+                  className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
+                  onPress={() => navigation.navigate(tab.link)}>
+                  <View className="flex-row items-center">
+                    <Icon
+                      name={tab.icon}
+                      size={20}
+                      color="#000"
+                      className="bg-primary-20 p-2 rounded-full"
+                    />
+                    <Text className="ml-3 text-base text-gray-900">
+                      {tab.name}
+                    </Text>
+                  </View>
+                  <Icon name="chevron-forward-outline" size={20} color="#000" />
+                </TouchableOpacity>
+              ))
+            : userTabs.map((tab, index) => (
+                <TouchableOpacity
+                  key={index}
+                  className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
+                  onPress={() => navigation.navigate(tab.link)}>
+                  <View className="flex-row items-center">
+                    <Icon
+                      name={tab.icon}
+                      size={20}
+                      color="#000"
+                      className="bg-primary-20 p-2 rounded-full"
+                    />
+                    <Text className="ml-3 text-base text-gray-900">
+                      {tab.name}
+                    </Text>
+                  </View>
+                  <Icon name="chevron-forward-outline" size={20} color="#000" />
+                </TouchableOpacity>
+              ))}
         </View>
 
         {/* More Links */}

@@ -34,6 +34,26 @@ export const ImagePath = {
     uploadIcon: require('../assets/images/icons/upload.png'),
     onboard: require('../assets/images/onboard.png'),
     what: require('../assets/images/icons/what.png'),
+    location2: require('../assets/images/icons/location2.png'),
+    saved: require('../assets/images/icons/saved.png'),
+    grandopening: require('../assets/images/grandopening.png'),
+    banner: require('../assets/images/banner.png'),
+    location: require('../assets/images/icons/location.png'),
+    cofee: require('../assets/images/icons/coffee.png'),
+    fire: require('../assets/images/icons/fire.png'),
+    calender: require('../assets/images/icons/calender.png'),
+    restaurant1: require('../assets/images/restaurant1.png'),
+    restaurant2: require('../assets/images/restaurant2.png'),
+    fire2: require('../assets/images/icons/fire2.png'),
+    bell: require('../assets/images/icons/bell.png'),
+    lunch: require('../assets/images/lunch.png'),
+
+
+
+
+
+
+
 
 
 

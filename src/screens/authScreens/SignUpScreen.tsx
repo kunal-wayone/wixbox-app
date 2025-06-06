@@ -50,7 +50,9 @@ const SignUpScreen = () => {
       ToastAndroid.show('Please Check Terms & Condition', ToastAndroid.SHORT);
       return null;
     }
-    navigation.navigate('CreateShopScreen');
+    navigation.navigate('HomeScreen');
+
+    // navigation.navigate('CreateShopScreen');
     try {
       // Replace with your actual API endpoint
       const response = await fetch('https://api.example.com/signup', {
@@ -73,10 +75,10 @@ const SignUpScreen = () => {
       Alert.alert('Success', 'Account created successfully!');
       resetForm();
     } catch (error: any) {
-      Alert.alert(
-        'Error',
-        error.message || 'Something went wrong. Please try again.',
-      );
+      // Alert.alert(
+      //   'Error',
+      //   error.message || 'Something went wrong. Please try again.',
+      // );
     } finally {
       setSubmitting(false);
     }

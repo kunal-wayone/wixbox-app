@@ -8,7 +8,7 @@ const SplashScreen = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current; // Background fade
   const scaleAnim = useRef(new Animated.Value(0.8)).current; // Logo scale
   const rotateAnim = useRef(new Animated.Value(0)).current; // Logo rotation
-  const text = 'Welcome to the WixBox'.split(''); // Split text into characters
+  const text = 'Welcome to WixBox'.split(''); // Split text into characters
   const charAnims = useRef(text.map(() => new Animated.Value(0))).current; // Animation for each character
 
   useEffect(() => {
