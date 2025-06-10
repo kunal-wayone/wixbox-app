@@ -47,6 +47,14 @@ export const ImagePath = {
     fire2: require('../assets/images/icons/fire2.png'),
     bell: require('../assets/images/icons/bell.png'),
     lunch: require('../assets/images/lunch.png'),
+    ppay: require('../assets/images/icons/ppay.png'),
+    gpay: require('../assets/images/icons/gpay.png'),
+    bank: require('../assets/images/icons/bank.png'),
+    cod: require('../assets/images/icons/cod.png'),
+    pin: require('../assets/images/icons/pin.png'),
+    share: require('../assets/images/icons/share.png'),
+
+
 
 
 

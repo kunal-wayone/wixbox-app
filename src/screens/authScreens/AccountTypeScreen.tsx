@@ -22,13 +22,13 @@ const AccountTypeScreen = () => {
         style={{height: height * 0.87}}
         className="flex justify-center items-center gap-10">
         {/* Business Option */}
-        <TouchableOpacity onPress={() => handleSelection('business')}>
+        <TouchableOpacity onPress={() => handleSelection('vendor')}>
           <View className="text-center">
             <View
               style={{
                 width: width * 0.6,
                 height: width * 0.6,
-                borderWidth: selectedType === 'business' ? 2 : 0, // Border for unselected
+                borderWidth: selectedType === 'vendor' ? 2 : 0, // Border for unselected
                 borderColor: 'black',
               }}
               className="mx-auto bg-gray-300 mt-4 rounded-full overflow-hidden p-10 flex justify-center items-center">
@@ -45,13 +45,13 @@ const AccountTypeScreen = () => {
         </TouchableOpacity>
 
         {/* Customer Option */}
-        <TouchableOpacity onPress={() => handleSelection('customer')}>
+        <TouchableOpacity onPress={() => handleSelection('user')}>
           <View className="text-center">
             <View
               style={{
                 width: width * 0.6,
                 height: width * 0.6,
-                borderWidth: selectedType === 'customer' ? 2 : 0, // Border for unselected
+                borderWidth: selectedType === 'user' ? 2 : 0, // Border for unselected
                 borderColor: 'black',
               }}
               className="mx-auto bg-gray-300 mt-4 rounded-full overflow-hidden p-10 flex justify-center items-center">

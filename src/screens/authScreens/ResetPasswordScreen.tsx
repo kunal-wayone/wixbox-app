@@ -19,6 +19,8 @@ import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {ImagePath} from '../../constants/ImagePath';
 import {useNavigation} from '@react-navigation/native';
+import {Post} from '../../utils/apiUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {width, height} = Dimensions.get('screen');
 
@@ -40,37 +42,103 @@ const ResetPasswordScreen = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [email, setEmail] = useState<any>('');
+  const [otp, setOtp] = useState<any>('');
+  const [apiErrors, setApiErrors] = useState<any>({
+    email: '',
+    password: '',
+  });
+
+  // Load OTP hint from AsyncStorage
+  useEffect(() => {
+    const loadEmailHint = async () => {
+      try {
+        const storedEmail: any = await AsyncStorage.getItem('resetEmail');
+        const storedOtp: any = await AsyncStorage.getItem('resetOtp');
+        if (storedEmail) {
+          const email = JSON.parse(storedEmail);
+          const otp = JSON.parse(storedOtp);
+          setEmail(email);
+          setOtp(otp);
+        }
+      } catch (error) {
+        console.error('Failed to load OTP hint:', error);
+      }
+    };
+    loadEmailHint();
+  }, []);
 
   // Mock API call for resetting password
+  // const handleResetPassword = async (
+  //   values: any,
+  //   {setSubmitting, resetForm}: any,
+  // ) => {
+  //   // navigation.navigate('LoginScreen');
+  //   try {
+  //     // Replace with your actual API endpoint
+  //     setShowSuccessModal(true); // Show success modal
+  //     const response = await fetch('https://api.example.com/reset-password', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         password: values.password,
+  //       }),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Password reset failed');
+  //     }
+
+  //     const data = await response.json();
+  //     resetForm();
+  //   } catch (error: any) {
+  //     ToastAndroid.show(
+  //       error.message || 'Something went wrong. Please try again.',
+  //       ToastAndroid.SHORT,
+  //     );
+  //   } finally {
+  //     setSubmitting(false);
+  //   }
+  // };
+
   const handleResetPassword = async (
-    values: any,
+    values: {password: string; confirmPassword: string},
     {setSubmitting, resetForm}: any,
   ) => {
-    // navigation.navigate('LoginScreen');
     try {
-      // Replace with your actual API endpoint
-      setShowSuccessModal(true); // Show success modal
-      const response = await fetch('https://api.example.com/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      setApiErrors({password: '', confirmPassword: ''});
+      const response: any = await Post(
+        '/auth/reset-password',
+        {
+          email,
+          password: values?.confirmPassword,
         },
-        body: JSON.stringify({
-          password: values.password,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Password reset failed');
+        5000,
+      );
+      console.log(values);
+      console.log(response);
+      if (!response.success) {
+        throw new Error(response?.message || 'OTP verification failed');
       }
 
-      const data = await response.json();
+      await AsyncStorage.removeItem('resetOtp');
+      await AsyncStorage.removeItem('resetEmail');
       resetForm();
+      ToastAndroid.show('OTP verified successfully!', ToastAndroid.SHORT);
+      setShowSuccessModal(true)
+      // navigation.navigate('ResetPasswordScreen');
     } catch (error: any) {
-      ToastAndroid.show(
-        error.message || 'Something went wrong. Please try again.',
-        ToastAndroid.SHORT,
-      );
+      console.log(error?.errors);
+      const errorMessage =
+        error?.message || 'Something went wrong. Please try again.';
+      const errorData = error?.errors || {};
+      setApiErrors({
+        eamil: errorData?.email[0] || errorMessage,
+        password: errorData?.password[0] || errorMessage,
+      });
+      ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
     } finally {
       setSubmitting(false);
     }
@@ -202,6 +270,12 @@ const ResetPasswordScreen = () => {
                     <Text
                       style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
                       {errors.password}
+                    </Text>
+                  )}
+                  {apiErrors?.password && (
+                    <Text
+                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      {apiErrors?.password}
                     </Text>
                   )}
                 </View>

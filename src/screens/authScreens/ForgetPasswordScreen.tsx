@@ -2,7 +2,6 @@ import React, {useState} from 'react';
 import {
   View,
   Text,
-  Dimensions,
   Image,
   TouchableOpacity,
   TextInput,
@@ -15,50 +14,65 @@ import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
-import {ImagePath} from '../../constants/ImagePath';
 import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {ImagePath} from '../../constants/ImagePath';
+import {Post} from '../../utils/apiUtils';
 
-const {width, height} = Dimensions.get('screen');
+// Define navigation stack param list (adjust according to your app's navigation)
+type RootStackParamList = {
+  LoginScreen: undefined;
+  OtpVerificationScreen: {email: string}; // Example for OTP screen
+};
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
-  mobile: Yup.string()
-    .matches(/^[0-9]{10}$/, 'Must be a valid 10-digit mobile number')
-    .required('Mobile number is required'),
+  email: Yup.string()
+    .email('Invalid email address')
+    .required('Email is required'),
 });
 
 const ForgetPasswordScreen = () => {
   const navigation = useNavigation<any>();
-  // Mock API call for sending OTP
+  const [apiErrors, setApiErrors] = useState<{email: string}>({email: ''});
+
+  // Handle sending OTP
   const handleSendOtp = async (
-    values: any,
+    values: {email: string},
     {setSubmitting, resetForm}: any,
   ) => {
     try {
-      navigation.navigate("VerifyOtpScreen")
-      // Replace with your actual API endpoint
-      const response = await fetch('https://api.example.com/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      setApiErrors({email: ''}); // Reset API errors
+      const response: any = await Post(
+        '/auth/forget-password',
+        {
+          email: values.email,
         },
-        body: JSON.stringify({
-          mobile: values.mobile,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send OTP');
+        5000,
+      );
+      console.log(values, response);
+      if (!response.success) {
+        throw new Error(response?.message || 'Something went wrong!');
       }
 
-      const data = await response.json();
-      ToastAndroid.show('OTP sent successfully!', ToastAndroid.SHORT);
+      const data = response?.data;
+      // Store OTP or relevant data (adjust key and value as needed)
+      await AsyncStorage.setItem('resetOtp', JSON.stringify(data?.otp));
+      await AsyncStorage.setItem('resetEmail', JSON.stringify(values?.email));
+
+      // Navigate to OTP verification screen
+      navigation.navigate('VerifyOtpScreen', {email: values.email});
+
       resetForm();
+      ToastAndroid.show('OTP sent successfully!', ToastAndroid.SHORT);
     } catch (error: any) {
-      ToastAndroid.show(
-        error.message || 'Something went wrong. Please try again.',
-        ToastAndroid.SHORT,
-      );
+      const errorMessage =
+        error?.message || 'Something went wrong. Please try again.';
+      const errorData = error?.errors || {};
+      setApiErrors({
+        email: errorData.email?.[0] || errorMessage,
+      });
+      ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
     } finally {
       setSubmitting(false);
     }
@@ -119,13 +133,11 @@ const ForgetPasswordScreen = () => {
           </MaskedView>
           <Text
             style={{textAlign: 'center', marginVertical: 8, color: '#4B5563'}}>
-            Enter your registered mobile number to receive an OTP.
+            Enter your registered email to receive an OTP.
           </Text>
 
           <Formik
-            initialValues={{
-              mobile: '',
-            }}
+            initialValues={{email: ''}}
             validationSchema={validationSchema}
             onSubmit={handleSendOtp}>
             {({
@@ -136,7 +148,7 @@ const ForgetPasswordScreen = () => {
               errors,
               touched,
               isSubmitting,
-            }: any) => (
+            }) => (
               <View style={{marginTop: 16}}>
                 <View style={{marginBottom: 12}}>
                   <Text
@@ -146,7 +158,7 @@ const ForgetPasswordScreen = () => {
                       color: '#374151',
                       marginBottom: 4,
                     }}>
-                    Mobile Number
+                    Email
                   </Text>
                   <TextInput
                     style={{
@@ -157,23 +169,29 @@ const ForgetPasswordScreen = () => {
                       padding: 12,
                       fontSize: 16,
                     }}
-                    placeholder="Enter your mobile number"
-                    onChangeText={handleChange('mobile')}
-                    onBlur={handleBlur('mobile')}
-                    value={values.mobile}
-                    keyboardType="number-pad"
-                    maxLength={10}
+                    placeholder="Enter your email address"
+                    onChangeText={handleChange('email')}
+                    onBlur={handleBlur('email')}
+                    value={values.email}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                   />
-                  {touched.mobile && errors.mobile && (
+                  {touched.email && errors.email && (
                     <Text
                       style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
-                      {errors.mobile}
+                      {errors.email}
+                    </Text>
+                  )}
+                  {apiErrors.email && (
+                    <Text
+                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      {apiErrors.email}
                     </Text>
                   )}
                 </View>
 
                 <TouchableOpacity
-                  onPress={handleSubmit}
+                  onPress={() => handleSubmit()}
                   disabled={isSubmitting}
                   style={{marginTop: 16}}>
                   <LinearGradient
@@ -203,7 +221,8 @@ const ForgetPasswordScreen = () => {
               marginTop: 16,
             }}>
             <Text style={{fontSize: 14, color: '#4B5563'}}>Back to</Text>
-            <TouchableOpacity onPress={()=>navigation.navigate("LoginScreen")}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('LoginScreen')}>
               <Text
                 style={{
                   color: '#F97316',

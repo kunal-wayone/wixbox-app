@@ -2,36 +2,38 @@ import React, {useEffect, useRef} from 'react';
 import {View, Animated, Image, Text, Easing} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import {ImagePath} from '../../constants/ImagePath';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useDispatch} from 'react-redux';
+import {getCurrentUser} from '../../store/slices/userSlice';
 
 const SplashScreen = () => {
   const navigation = useNavigation<any>();
-  const fadeAnim = useRef(new Animated.Value(0)).current; // Background fade
-  const scaleAnim = useRef(new Animated.Value(0.8)).current; // Logo scale
-  const rotateAnim = useRef(new Animated.Value(0)).current; // Logo rotation
-  const text = 'Welcome to WixBox'.split(''); // Split text into characters
-  const charAnims = useRef(text.map(() => new Animated.Value(0))).current; // Animation for each character
+  const dispatch = useDispatch<any>();
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+  const text = 'Welcome to WixBox'.split('');
+  const charAnims = useRef(text.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
-    // Create character animations with staggered delays
     const charAnimations = charAnims.map((anim, index) =>
       Animated.timing(anim, {
         toValue: 1,
         duration: 600,
-        delay: index * 100, // Staggered delay for wave effect
+        delay: index * 100,
         useNativeDriver: true,
         easing: Easing.out(Easing.quad),
       }),
     );
 
     Animated.sequence([
-      // 1. Fade in background
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 1000,
         useNativeDriver: true,
         easing: Easing.inOut(Easing.ease),
       }),
-      // 2. Scale and rotate logo
       Animated.parallel([
         Animated.spring(scaleAnim, {
           toValue: 1,
@@ -46,17 +48,30 @@ const SplashScreen = () => {
           easing: Easing.elastic(1),
         }),
       ]),
-      // 3. Animate text characters
       Animated.parallel(charAnimations),
     ]).start(() => {
-      // Navigate to the next screen after animations complete
       setTimeout(() => {
-        navigation.replace('SplashScreen1'); // Replace 'Home' with your target screen name
-      }, 3000); // Wait 3 seconds after animations
+        AsyncStorage.getItem('isIntroViewed').then((value: any) => {
+          console.log('isIntroViewed:', value);
+          if (value === 'true') {
+            dispatch(getCurrentUser())
+              .unwrap()
+              .then((user: any) => {
+                console.log('Fetched User:', user);
+                navigation.replace('HomeScreen');
+              })
+              .catch((err: any) => {
+                console.log('User not authenticated:', err);
+                navigation.replace('LoginScreen');
+              });
+          } else {
+            navigation.replace('SplashScreen1');
+          }
+        });
+      }, 3000);
     });
-  }, [fadeAnim, scaleAnim, rotateAnim, navigation, charAnims]);
+  }, [fadeAnim, scaleAnim, rotateAnim, navigation, charAnims, dispatch]);
 
-  // Interpolate rotation for logo
   const rotation = rotateAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
@@ -87,7 +102,7 @@ const SplashScreen = () => {
                 {
                   translateY: charAnims[index].interpolate({
                     inputRange: [0, 1],
-                    outputRange: [10, 0], // Slight upward movement for wave effect
+                    outputRange: [10, 0],
                   }),
                 },
               ],

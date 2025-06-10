@@ -1,8 +1,7 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   Text,
-  Dimensions,
   Image,
   TouchableOpacity,
   TextInput,
@@ -15,82 +14,155 @@ import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {ImagePath} from '../../constants/ImagePath';
-import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { Post } from '../../utils/apiUtils';
 
-const {width, height} = Dimensions.get('screen');
+// Define navigation stack param list
+type RootStackParamList = {
+  LoginScreen: undefined;
+  ForgetPasswordScreen: undefined;
+  VerifyOtpScreen: {email: string};
+  ResetPasswordScreen: undefined;
+};
 
-// Validation schema for 6-digit OTP
-const validationSchema = Yup.object().shape({
+// Define navigation prop type
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+// Validation schema for OTP
+const verifyOtpSchema = Yup.object().shape({
   otp: Yup.string()
-    .matches(/^[0-9]{6}$/, 'OTP must be exactly 6 digits')
+    .length(4, 'OTP must be exactly 4 digits')
+    .matches(/^\d+$/, 'OTP must contain only digits')
     .required('OTP is required'),
 });
-
 const VerifyOtpScreen = () => {
-  const navigation = useNavigation<any>();
-  // Refs for each OTP input box to manage focus
+  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<any>();
+  const email = route.params?.email || '';
+  const [otpHint, setOtpHint] = useState('');
+  const [resendTimer, setResendTimer] = useState(30);
+  const [canResend, setCanResend] = useState(false);
+  const [apiErrors, setApiErrors] = useState<{otp: string}>({otp: ''});
   const otpRefs = useRef<any>(
-    Array(6)
+    Array(4)
       .fill(null)
       .map(() => React.createRef()),
   );
+  // Load OTP hint from AsyncStorage
+  useEffect(() => {
+    const loadOtpHint = async () => {
+      try {
+        const storedOtp = await AsyncStorage.getItem('resetOtp');
+        if (storedOtp) {
+          const otp = JSON.parse(storedOtp);
+          setOtpHint(otp);
+        }
+      } catch (error) {
+        console.error('Failed to load OTP hint:', error);
+      }
+    };
+    loadOtpHint();
+  }, []);
 
-  // Mock API call for OTP verification
-  const handleVerifyOtp = async (
-    values: any,
-    {setSubmitting, resetForm}: any,
-  ) => {
-    try {
-      navigation.navigate('ResetPasswordScreen');
-      // Replace with your actual API endpoint
-      const response = await fetch('https://api.example.com/verify-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+  // Resend OTP timer
+  useEffect(() => {
+    if (resendTimer > 0) {
+      const timer = setInterval(() => {
+        setResendTimer(prev => prev - 1);
+      }, 1000);
+      return () => clearInterval(timer);
+    } else {
+      setCanResend(true);
+    }
+  }, [resendTimer]);
+
+  // Handle OTP verification
+    const handleVerifyOtp = async (
+      values: {otp: string},
+      {setSubmitting, resetForm}: any,
+    ) => {
+      try {
+        setApiErrors({otp: ''});
+        const response: any = await Post('/auth/verify-otp', {
+          email,
           otp: values.otp,
-        }),
-      });
+        },5000);
+        console.log(values);
+        console.log(response);
+        if (!response.success) {
+          throw new Error(response?.message || 'OTP verification failed');
+        }
 
-      if (!response.ok) {
-        throw new Error('OTP verification failed');
+        // await AsyncStorage.removeItem('resetOtp');
+        // await AsyncStorage.removeItem('resetEmail');
+        resetForm();
+        ToastAndroid.show('OTP verified successfully!', ToastAndroid.SHORT);
+        navigation.navigate('ResetPasswordScreen');
+      } catch (error: any) {
+        const errorMessage =
+          error?.errors?.errors || 'Something went wrong. Please try again.';
+        const errorData = error?.errors || {};
+        setApiErrors({
+          otp: errorData.otp || errorMessage,
+        });
+        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+      } finally {
+        setSubmitting(false);
+      }
+    };
+
+  // Handle resend OTP
+  const handleResendOtp = async () => {
+    try {
+      setApiErrors({otp: ''});
+      const response: any = await Post('/auth/forget-password', {
+        email,
+      },5000);
+      console.log(email, response);
+      setOtpHint(response?.data?.otp);
+      if (!response.success) {
+        throw new Error(response?.message || 'Something went wrong!');
       }
 
-      const data = await response.json();
-      ToastAndroid.show('OTP verified successfully!', ToastAndroid.SHORT);
-      resetForm();
+      const data = response?.data;
+      await AsyncStorage.setItem('resetOtp', JSON.stringify(data?.otp));
+      setOtpHint(data.otp);
+      setResendTimer(30);
+      setCanResend(false);
+      ToastAndroid.show('OTP resent successfully!', ToastAndroid.SHORT);
     } catch (error: any) {
-      ToastAndroid.show(
-        error.message || 'Something went wrong. Please try again.',
-        ToastAndroid.SHORT,
-      );
-    } finally {
-      setSubmitting(false);
+      const errorMessage =
+        error?.message || 'Something went wrong. Please try again.';
+      setApiErrors({
+        otp: error?.errors?.email?.[0] || errorMessage,
+      });
+      ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
     }
   };
 
-  // Handle input change for OTP boxes
   const handleOtpChange = (
     index: number,
     value: string,
     setFieldValue: any,
     values: any,
   ) => {
-    if (value.length === 1 && index < 5) {
-      otpRefs.current[index + 1].current.focus();
-    }
-    if (value.length === 0 && index > 0) {
-      otpRefs.current[index - 1].current.focus();
-    }
-
-    // Update the OTP value in Formik
+    // Update the OTP value
     const otpArray = values.otp.split('');
     otpArray[index] = value;
     setFieldValue('otp', otpArray.join(''));
-  };
 
+    // Handle focus navigation
+    if (value.length === 1 && index < 3) {
+      // Changed from index < 5 to index < 3
+      otpRefs.current[index + 1].current?.focus();
+    }
+    if (value.length === 0 && index > 0) {
+      otpRefs.current[index - 1].current?.focus();
+    }
+  };
   return (
     <KeyboardAvoidingView
       style={{flex: 1}}
@@ -146,14 +218,14 @@ const VerifyOtpScreen = () => {
           </MaskedView>
           <Text
             style={{textAlign: 'center', marginVertical: 8, color: '#4B5563'}}>
-            Enter the 6-digit OTP sent to your registered mobile number.
+            Enter the 4-digit OTP sent to{' '}
+            <Text style={{fontWeight: 'bold'}}>{email}</Text>.
+            {otpHint && <Text> Hint: OTP starts with {otpHint}</Text>}
           </Text>
 
           <Formik
-            initialValues={{
-              otp: '',
-            }}
-            validationSchema={validationSchema}
+            initialValues={{otp: ''}}
+            validationSchema={verifyOtpSchema}
             onSubmit={handleVerifyOtp}>
             {({
               handleSubmit,
@@ -162,7 +234,7 @@ const VerifyOtpScreen = () => {
               errors,
               touched,
               isSubmitting,
-            }: any) => (
+            }) => (
               <View style={{marginTop: 16}}>
                 <View style={{marginBottom: 12}}>
                   <Text
@@ -177,9 +249,9 @@ const VerifyOtpScreen = () => {
                   <View
                     style={{
                       flexDirection: 'row',
-                      justifyContent: 'space-between',
+                      justifyContent: 'center',
                     }}>
-                    {[...Array(6)].map((_, index) => (
+                    {[...Array(4)].map((_, index) => (
                       <TextInput
                         key={index}
                         ref={otpRefs.current[index]}
@@ -210,21 +282,32 @@ const VerifyOtpScreen = () => {
                       {errors.otp}
                     </Text>
                   )}
+                  {apiErrors.otp && (
+                    <Text
+                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      {apiErrors.otp}
+                    </Text>
+                  )}
                 </View>
-                <TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={handleResendOtp}
+                  disabled={!canResend}
+                  style={{marginBottom: 16}}>
                   <Text
                     style={{
-                      color: '#F97316',
-                      marginLeft: 4,
+                      color: canResend ? '#F97316' : '#A1A1AA',
                       fontSize: 14,
                       textDecorationLine: 'underline',
                       fontWeight: 'bold',
+                      textAlign: 'center',
                     }}>
-                    Resend Otp
+                    {canResend ? 'Resend OTP' : `Resend OTP in ${resendTimer}s`}
                   </Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
-                  onPress={handleSubmit}
+                  onPress={() => handleSubmit()}
                   disabled={isSubmitting}
                   style={{marginTop: 16}}>
                   <LinearGradient

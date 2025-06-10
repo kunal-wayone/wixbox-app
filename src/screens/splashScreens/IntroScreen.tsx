@@ -11,6 +11,7 @@ import React, {useRef, useEffect, useState, useCallback} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
 import {ImagePath} from '../../constants/ImagePath';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const {width, height} = Dimensions.get('screen');
 
@@ -75,8 +76,20 @@ const preloadImages = [
 
 // Define rotation angles and positions for each index
 const rotationAngles = ['65deg', '10deg', '5deg', '20deg', '-5deg'];
-const translateXPositions = [-width - 70, -width * 0.1, -width * 0.22, width * 0, -width * 0.15];
-const translateYPositions = [height * 0, -height * 0.52, -height * 0.55, -height * 0.53, -height * 0.55];
+const translateXPositions = [
+  -width - 70,
+  -width * 0.1,
+  -width * 0.22,
+  width * 0,
+  -width * 0.15,
+];
+const translateYPositions = [
+  height * 0,
+  -height * 0.52,
+  -height * 0.55,
+  -height * 0.53,
+  -height * 0.55,
+];
 
 const IntroScreen = () => {
   const navigation = useNavigation<any>();
@@ -88,8 +101,12 @@ const IntroScreen = () => {
   const slideAnimMain = useRef(new Animated.Value(width / 2)).current;
   const slideAnimText = useRef(new Animated.Value(100)).current;
   const scaleAnimTop = useRef(new Animated.Value(0.8)).current;
-  const translateXAnimTop = useRef(new Animated.Value(translateXPositions[0])).current;
-  const translateYAnimTop = useRef(new Animated.Value(translateYPositions[0])).current;
+  const translateXAnimTop = useRef(
+    new Animated.Value(translateXPositions[0]),
+  ).current;
+  const translateYAnimTop = useRef(
+    new Animated.Value(translateYPositions[0]),
+  ).current;
   const rotationAnimTop = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
 
@@ -262,7 +279,7 @@ const IntroScreen = () => {
       requestAnimationFrame(() => {
         const nextIndex = index + 1;
         if (nextIndex >= shi.length) {
-          navigation.replace('AccountTypeScreen');
+          handleDenyAndContinue();
         } else {
           setIndex(nextIndex);
           // Reset animations
@@ -340,8 +357,13 @@ const IntroScreen = () => {
     });
   }, [index, navigation, startButtonPulse, startTopImageRotation]);
 
-  const handleSkip = useCallback(() => {
+  const handleDenyAndContinue = async () => {
+    await AsyncStorage.setItem('isIntroViewed', 'true');
     navigation.replace('AccountTypeScreen');
+  };
+
+  const handleSkip = useCallback(() => {
+    handleDenyAndContinue();
   }, [navigation]);
 
   if (!isImagesLoaded) {
@@ -368,7 +390,10 @@ const IntroScreen = () => {
             {
               rotate: rotationAnimTop.interpolate({
                 inputRange: [0, 1],
-                outputRange: [rotationAngles[index], `${parseFloat(rotationAngles[index]) + 5}deg`],
+                outputRange: [
+                  rotationAngles[index],
+                  `${parseFloat(rotationAngles[index]) + 5}deg`,
+                ],
               }),
             },
             {translateX: translateXAnimTop},
@@ -402,7 +427,7 @@ const IntroScreen = () => {
       {/* Title and Button */}
       <View className="p-4 pt-16">
         <Animated.Text
-          className="text-2xl text-center font-poppins font-bold w-3/5 mx-auto text-gray-800"
+          className="text-2xl text-center font-poppins font-semibold w-3/5 mx-auto text-gray-800"
           style={{
             opacity: fadeAnimText,
             transform: [{translateY: slideAnimText}],

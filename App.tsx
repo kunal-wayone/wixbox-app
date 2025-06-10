@@ -1,13 +1,20 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import {Provider as ReduxProvider} from 'react-redux';
+import {NavigationContainer} from '@react-navigation/native';
 import MainNavigation from './src/navigator/MainNavigation';
-import "./global.css"
+import './global.css';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {store} from './src/store/store';
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <MainNavigation />
-    </NavigationContainer>
+    <ReduxProvider store={store}>
+      <SafeAreaProvider>
+        <NavigationContainer>
+          <MainNavigation />
+        </NavigationContainer>
+      </SafeAreaProvider>
+    </ReduxProvider>
   );
 };
 

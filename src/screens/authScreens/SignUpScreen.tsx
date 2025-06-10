@@ -11,6 +11,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ToastAndroid,
+  ActivityIndicator,
+  StyleSheet,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
@@ -20,6 +22,10 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import CheckBox from '@react-native-community/checkbox';
 import {ImagePath} from '../../constants/ImagePath';
 import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Post, TokenStorage} from '../../utils/apiUtils';
+import {useDispatch} from 'react-redux';
+import {setAuthStatus, getCurrentUser} from '../../store/slices/userSlice';
 
 const {width, height} = Dimensions.get('screen');
 
@@ -39,48 +45,93 @@ const validationSchema = Yup.object().shape({
     .required('Confirm Password is required'),
 });
 
-const SignUpScreen = () => {
+const SignUpScreen = ({route}: any) => {
   const navigation = useNavigation<any>();
+  const dispatch = useDispatch<any>();
+  const {accountType} = route.params;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [apiErrors, setApiErrors] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
   const [isCheck, setIsCheck] = useState(false);
-  // Mock API call
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSignUp = async (values: any, {setSubmitting, resetForm}: any) => {
+    setIsSubmitting(true);
+    console.log(true);
     if (!isCheck) {
       ToastAndroid.show('Please Check Terms & Condition', ToastAndroid.SHORT);
       return null;
     }
-    navigation.navigate('HomeScreen');
 
-    // navigation.navigate('CreateShopScreen');
+    if (!accountType) {
+      ToastAndroid.show('Please Select Again Account type', ToastAndroid.SHORT);
+      return null;
+    }
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch('https://api.example.com/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      console.log(values);
+      const response: any = await Post(
+        '/auth/signup',
+        {
+          name: values?.fullName,
+          email: values?.email,
+          password: values?.password,
+          password_confirmation: values?.confirmPassword,
+          role: accountType,
         },
-        body: JSON.stringify({
-          fullName: values.fullName,
-          email: values.email,
-          password: values.password,
-        }),
-      });
-
-      if (!response.ok) {
+        5000,
+      );
+      console.log(values, response);
+      if (!response.success) {
         throw new Error('Registration failed');
       }
 
-      const data = await response.json();
-      Alert.alert('Success', 'Account created successfully!');
+      const data = await response?.data;
+      await TokenStorage.setToken(data?.token);
+      await TokenStorage.setUserData(data?.user);
+      await TokenStorage.setUserRole(data?.user?.role);
+      dispatch(setAuthStatus(true));
+      await dispatch(getCurrentUser());
+
+      ToastAndroid.show(
+        data?.message || 'Account created successfully!',
+        ToastAndroid.SHORT,
+      );
+
+      setApiErrors({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+      });
       resetForm();
+
+      if (data?.user?.role === 'user') {
+        navigation.navigate('HomeScreen');
+      } else {
+        navigation.navigate('CreateShopScreen');
+      }
     } catch (error: any) {
-      // Alert.alert(
-      //   'Error',
-      //   error.message || 'Something went wrong. Please try again.',
-      // );
+      console.log(error);
+      const errorData = error?.errors || {};
+      setApiErrors({
+        name: errorData.name?.[0] || '',
+        email: errorData.email?.[0] || '',
+        password: errorData.password?.[0] || '',
+        confirmPassword: errorData.confirmPassword?.[0] || '',
+      });
+
+      ToastAndroid.show(
+        error?.message?.message || 'Something went wrong. Please try again.',
+        ToastAndroid.SHORT,
+      );
     } finally {
       setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -92,7 +143,6 @@ const SignUpScreen = () => {
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
-
           backgroundColor: '#fff',
         }}
         showsVerticalScrollIndicator={false}
@@ -156,9 +206,14 @@ const SignUpScreen = () => {
                       onBlur={handleBlur('fullName')}
                       value={values.fullName}
                     />
-                    {touched.fullName && errors.fullName && (
+                    {touched.fullName && errors.fullName && apiErrors?.name && (
                       <Text className="text-red-500 text-xs mt-1">
-                        {errors.fullName}
+                        {errors.fullName} {apiErrors?.name}
+                      </Text>
+                    )}
+                    {apiErrors?.name && (
+                      <Text className="text-red-500 text-xs mt-1">
+                        {apiErrors?.name}
                       </Text>
                     )}
                   </View>
@@ -178,7 +233,12 @@ const SignUpScreen = () => {
                     />
                     {touched.email && errors.email && (
                       <Text className="text-red-500 text-xs mt-1">
-                        {errors.email}
+                        {errors.email} {apiErrors?.email}
+                      </Text>
+                    )}
+                    {apiErrors?.email && (
+                      <Text className="text-red-500 text-xs mt-1">
+                        {apiErrors?.email}
                       </Text>
                     )}
                   </View>
@@ -189,7 +249,7 @@ const SignUpScreen = () => {
                     </Text>
                     <View className="flex-row items-center border border-gray-300 overflow-hidden rounded-lg">
                       <TextInput
-                        className="flex-1 p-3  bg-gray-100 text-base"
+                        className="flex-1 p-3 bg-gray-100 text-base"
                         placeholder="Enter your password"
                         onChangeText={handleChange('password')}
                         onBlur={handleBlur('password')}
@@ -209,6 +269,11 @@ const SignUpScreen = () => {
                     {touched.password && errors.password && (
                       <Text className="text-red-500 text-xs mt-1">
                         {errors.password}
+                      </Text>
+                    )}
+                    {apiErrors?.password && (
+                      <Text className="text-red-500 text-xs mt-1">
+                        {apiErrors?.password}
                       </Text>
                     )}
                   </View>
@@ -241,6 +306,11 @@ const SignUpScreen = () => {
                     {touched.confirmPassword && errors.confirmPassword && (
                       <Text className="text-red-500 text-xs mt-1">
                         {errors.confirmPassword}
+                      </Text>
+                    )}
+                    {apiErrors?.confirmPassword && (
+                      <Text className="text-red-500 text-xs mt-1">
+                        {apiErrors?.confirmPassword}
                       </Text>
                     )}
                   </View>
@@ -292,7 +362,7 @@ const SignUpScreen = () => {
             </Text>
 
             <View className="flex-row justify-center gap-4 mb-4">
-              <TouchableOpacity className="p-3 w-1/2  bg-orange-primary-10 rounded-2xl">
+              <TouchableOpacity className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl">
                 <Image
                   source={ImagePath.google}
                   className="w-8 h-8 m-auto"
@@ -322,8 +392,34 @@ const SignUpScreen = () => {
           </View>
         </View>
       </ScrollView>
+      {isSubmitting && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={styles.loadingText}>Creating Account...</Text>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    marginTop: 10,
+    fontWeight: 'bold',
+  },
+});
 
 export default SignUpScreen;

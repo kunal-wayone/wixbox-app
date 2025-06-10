@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,16 @@ import {
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {ImagePath} from '../constants/ImagePath';
+import {useDispatch} from 'react-redux';
+import {logoutUser} from '../store/slices/userSlice';
+import {TokenStorage} from '../utils/apiUtils';
 
 const ProfileScreen = () => {
+  const dispatch = useDispatch<any>();
   const navigation = useNavigation<any>();
   const [modalVisible, setModalVisible] = useState(false);
   const [modalAction, setModalAction] = useState('');
+  const [userData, setUserData] = useState<any>(null);
 
   const tabs = [
     {
@@ -42,17 +47,17 @@ const ProfileScreen = () => {
       icon: 'person-outline',
       link: 'EditProfileScreen',
     },
-    // {
-    //   name: 'Edit Shop Details',
-    //   icon: 'storefront-outline',
-    //   link: 'CreateShopScreen',
-    // },
-    // {name: 'Manage Stock', icon: 'cube-outline', link: ''},
-    // {
-    //   name: 'Edit Products',
-    //   icon: 'pricetags-outline',
-    //   link: 'AddProductScreen',
-    // },
+    {
+      name: 'Visited Stores',
+      icon: 'storefront-outline',
+      link: 'CreateShopScreen',
+    },
+    {name: 'Order History', icon: 'grid-outline', link: ''},
+    {
+      name: 'Edit Table',
+      icon: 'restaurant-outline',
+      link: 'AddProductScreen',
+    },
     // {name: 'Added Customer', icon: 'people-outline', link: 'AddCustomerScreen'},
   ];
 
@@ -70,10 +75,14 @@ const ProfileScreen = () => {
 
   const confirmAction = () => {
     if (modalAction === 'Logout') {
-      navigation.navigate('LoginScreen');
+      dispatch(logoutUser())
+        .unwrap()
+        .then((success: any) => {
+          console.log('Fetched User:', success);
+          navigation.navigate('LoginScreen');
+        });
       // Implement logout logic here
       console.log('Logging out...');
-      navigation.navigate('Login'); // Example navigation
     } else if (modalAction === 'Delete') {
       navigation.navigate('DeleteAccountScreen');
       // Implement delete account logic here
@@ -82,7 +91,10 @@ const ProfileScreen = () => {
     setModalVisible(false);
   };
 
-  const user = 'user';
+  useEffect(() => {
+    TokenStorage.getUserData().then((user: any) => setUserData(user));
+  }, []);
+
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="p-4 pt-10">
@@ -100,47 +112,49 @@ const ProfileScreen = () => {
         </View>
 
         {/* Name and Email */}
-        <Text className="text-xl font-bold text-center mt-4">John Doe</Text>
+        <Text className="text-xl font-bold text-center mt-4">
+          {userData?.name || 'John Doe'}
+        </Text>
         <Text className="text-base text-center text-gray-600">
-          john.doe@example.com
+          {userData?.email || 'john.doe@example.com'}
         </Text>
 
         {/* Tabs */}
         <View className="mt-6">
-          {user === 'owner'
-            ? tabs.map((tab, index) => (
+          {userData?.role === 'vendor'
+            ? tabs?.map((tab, index) => (
                 <TouchableOpacity
                   key={index}
                   className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
-                  onPress={() => navigation.navigate(tab.link)}>
+                  onPress={() => navigation.navigate(tab?.link)}>
                   <View className="flex-row items-center">
                     <Icon
-                      name={tab.icon}
+                      name={tab?.icon}
                       size={20}
                       color="#000"
                       className="bg-primary-20 p-2 rounded-full"
                     />
                     <Text className="ml-3 text-base text-gray-900">
-                      {tab.name}
+                      {tab?.name}
                     </Text>
                   </View>
                   <Icon name="chevron-forward-outline" size={20} color="#000" />
                 </TouchableOpacity>
               ))
-            : userTabs.map((tab, index) => (
+            : userTabs?.map((tab, index) => (
                 <TouchableOpacity
                   key={index}
                   className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
                   onPress={() => navigation.navigate(tab.link)}>
                   <View className="flex-row items-center">
                     <Icon
-                      name={tab.icon}
+                      name={tab?.icon}
                       size={20}
                       color="#000"
                       className="bg-primary-20 p-2 rounded-full"
                     />
                     <Text className="ml-3 text-base text-gray-900">
-                      {tab.name}
+                      {tab?.name}
                     </Text>
                   </View>
                   <Icon name="chevron-forward-outline" size={20} color="#000" />

@@ -25,6 +25,10 @@ import OrderSummaryScreen from '../screens/orderScreen/OrderSummaryScreen';
 import HighOnDemandScreen from '../screens/otherScreen/HighOnDemandScreen';
 import BookATableScreen from '../screens/otherScreen/BookATableScreen';
 import LunchAndDinnerScreen from '../screens/otherScreen/LunchAndDinnerScreen';
+import PaymentScreen from '../screens/otherScreen/PaymentScreen';
+import SearchScreen from '../screens/otherScreen/SearchScreen';
+import ShopDetailsScreen from '../screens/shopScreens/ShopDetailsScreen';
+import ProductDetailsScreen from '../screens/productScreens/ProductDetailsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -58,6 +62,14 @@ const MainNavigation = () => {
       <Stack.Screen name="HighOnDemandScreen" component={HighOnDemandScreen} />
       <Stack.Screen name="BookATableScreen" component={BookATableScreen} />
       <Stack.Screen name="LunchAndDinnerScreen" component={LunchAndDinnerScreen} />
+      <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+      <Stack.Screen name="SearchScreen" component={SearchScreen} />
+      <Stack.Screen name="ShopDetailsScreen" component={ShopDetailsScreen} />
+      <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
+
+
+
+
 
 
 

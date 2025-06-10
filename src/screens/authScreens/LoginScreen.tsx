@@ -16,16 +16,17 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
-import CheckBox from '@react-native-community/checkbox';
 import {ImagePath} from '../../constants/ImagePath';
 import {useNavigation} from '@react-navigation/native';
+import {Post, TokenStorage} from '../../utils/apiUtils';
+import {useDispatch} from 'react-redux';
+import {setAuthStatus, getCurrentUser} from '../../store/slices/userSlice';
 
 const {width, height} = Dimensions.get('screen');
 
-// Validation schema using Yup
 const validationSchema = Yup.object().shape({
-  username: Yup.string()
-    .email('Invalid username address')
+  email: Yup.string()
+    .email('Invalid email address')
     .required('Email is required'),
   password: Yup.string()
     .min(8, 'Password must be at least 8 characters')
@@ -33,50 +34,59 @@ const validationSchema = Yup.object().shape({
 });
 
 const LoginScreen = () => {
-  const navigaiton = useNavigation<any>();
+  const navigation = useNavigation<any>();
+  const dispatch = useDispatch<any>();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [apiErrors, setApiErrors] = useState({
+    email: '',
+    password: '',
+  });
 
-  // Mock API call
   const handleLogin = async (values: any, {setSubmitting, resetForm}: any) => {
-    // AsyncStorage.setItem('user', 'user');
-    navigaiton.navigate('CreateShopScreen');
-
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch('https://api.example.com/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          fullName: values.fullName,
+      const response: any = await Post(
+        '/auth/signin',
+        {
           email: values.email,
           password: values.password,
-        }),
-      });
-
-      if (!response.ok) {
+        },
+        5000,
+      );
+      console.log(response, values);
+      if (!response.success) {
         throw new Error('Login failed');
       }
 
-      const data = await response.json();
-      ToastAndroid.show('Account Login successfully!', ToastAndroid.SHORT);
+      const data = response.data;
+
+      await TokenStorage.setToken(data?.token);
+      await TokenStorage.setUserData(data?.user);
+      await TokenStorage.setUserRole(data?.user?.role);
+      dispatch(setAuthStatus(true));
+      await dispatch(getCurrentUser());
+
       resetForm();
+
+      if (data?.user?.role === 'user') {
+        navigation.navigate('HomeScreen');
+      } else {
+        navigation.navigate('CreateShopScreen');
+      }
     } catch (error: any) {
+      const errorData = error?.message?.errors || {};
+      setApiErrors({
+        email: errorData.email?.[0] || '',
+        password: errorData.password?.[0] || '',
+      });
+
       ToastAndroid.show(
-        error.message || 'Something went wrong. Please try again.',
+        error?.message?.message || 'Something went wrong. Please try again.',
         ToastAndroid.SHORT,
       );
     } finally {
       setSubmitting(false);
     }
   };
-
-  // const setuser = async (role: any) => {
-  //   await AsyncStorage.setItem('user', role);
-  //   navigaiton.navigate('CreateShopScreen');
-  // };
 
   return (
     <KeyboardAvoidingView
@@ -100,7 +110,7 @@ const LoginScreen = () => {
           <MaskedView
             maskElement={
               <Text className="text-center text-3xl font-bold font-poppins">
-                Welcome Back!{' '}
+                Welcome Back!
               </Text>
             }>
             <LinearGradient
@@ -110,19 +120,17 @@ const LoginScreen = () => {
               <Text
                 className="text-center text-3xl font-bold font-poppins"
                 style={{opacity: 0}}>
-                Welcome Back!{' '}
+                Welcome Back!
               </Text>
             </LinearGradient>
           </MaskedView>
+
           <Text className="text-center my-2 text-gray-600">
             Lorem ipsum dolor sit amet, consectetur.
           </Text>
 
           <Formik
-            initialValues={{
-              username: '',
-              password: '',
-            }}
+            initialValues={{email: '', password: ''}}
             validationSchema={validationSchema}
             onSubmit={handleLogin}>
             {({
@@ -133,33 +141,40 @@ const LoginScreen = () => {
               errors,
               touched,
               isSubmitting,
-            }: any) => (
+            }) => (
               <View className="mt-4">
                 <View className="mb-3">
                   <Text className="text-sm font-medium text-gray-700 mb-1">
-                    Username
+                    Email
                   </Text>
                   <TextInput
                     className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base"
-                    placeholder="Enter your username"
-                    onChangeText={handleChange('username')}
-                    onBlur={handleBlur('username')}
-                    value={values.username}
+                    placeholder="Enter your email"
+                    onChangeText={handleChange('email')}
+                    onBlur={handleBlur('email')}
+                    value={values.email}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
                   />
-                  {touched.username && errors.username && (
+                  {touched.email && errors.email && (
                     <Text className="text-red-500 text-xs mt-1">
-                      {errors.username}
+                      {errors.email}
+                    </Text>
+                  )}
+                  {apiErrors.email && (
+                    <Text className="text-red-500 text-xs mt-1">
+                      {apiErrors.email}
                     </Text>
                   )}
                 </View>
 
                 <View className="mb-3">
-                  <Text className="text-sm font-medium bg-gray-100 text-gray-700 mb-1">
+                  <Text className="text-sm font-medium text-gray-700 mb-1">
                     Password
                   </Text>
                   <View className="flex-row items-center border border-gray-300 overflow-hidden rounded-lg">
                     <TextInput
-                      className="flex-1 p-3  bg-gray-100 text-base"
+                      className="flex-1 p-3 bg-gray-100 text-base"
                       placeholder="Enter your password"
                       onChangeText={handleChange('password')}
                       onBlur={handleBlur('password')}
@@ -181,18 +196,24 @@ const LoginScreen = () => {
                       {errors.password}
                     </Text>
                   )}
+                  {apiErrors.password && (
+                    <Text className="text-red-500 text-xs mt-1">
+                      {apiErrors.password}
+                    </Text>
+                  )}
                 </View>
 
                 <View className="flex-row items-center my-1">
                   <TouchableOpacity
-                    onPress={() => navigaiton.navigate('ForgetPasswordScreen')}>
-                    <Text className="ml-2 text-sm text-orange-primary-80 font-poppins font-bold ">
+                    onPress={() => navigation.navigate('ForgetPasswordScreen')}>
+                    <Text className="ml-2 text-sm text-orange-primary-80 font-poppins font-bold">
                       Forget Password?
                     </Text>
                   </TouchableOpacity>
                 </View>
+
                 <TouchableOpacity
-                  onPress={handleSubmit}
+                  onPress={() => handleSubmit()}
                   disabled={isSubmitting}
                   className="mt-4">
                   <LinearGradient
@@ -205,7 +226,7 @@ const LoginScreen = () => {
                       alignItems: 'center',
                     }}>
                     <Text className="text-white text-base font-bold">
-                      {isSubmitting ? 'Login...' : 'Login'}
+                      {isSubmitting ? 'Logging in...' : 'Login'}
                     </Text>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -218,18 +239,14 @@ const LoginScreen = () => {
           </Text>
 
           <View className="flex-row justify-center gap-4 my-4">
-            <TouchableOpacity
-              onPress={() => setuser('user')}
-              className="p-3 w-1/2 h-24  bg-orange-primary-10 rounded-2xl">
+            <TouchableOpacity className="p-3 w-1/2 h-24 bg-orange-primary-10 rounded-2xl">
               <Image
                 source={ImagePath.google}
                 className="w-14 h-14 m-auto"
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setuser('owner')}
-              className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl">
+            <TouchableOpacity className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl">
               <Image
                 source={ImagePath.facebook}
                 className="w-14 h-14 m-auto"
@@ -240,12 +257,12 @@ const LoginScreen = () => {
 
           <View className="flex-row items-center justify-center">
             <Text className="text-sm text-gray-600">
-              Already have an account?{' '}
+              Don't have an account?{' '}
             </Text>
             <TouchableOpacity
-              onPress={() => navigaiton.navigate('SignUpScreen')}>
+              onPress={() => navigation.navigate('AccountTypeScreen')}>
               <Text className="text-orange-primary-100 text-sm ml-1 underline font-bold">
-                SignUp
+                Sign Up
               </Text>
             </TouchableOpacity>
           </View>

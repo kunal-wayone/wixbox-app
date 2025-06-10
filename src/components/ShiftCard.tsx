@@ -37,14 +37,16 @@ const ShiftCard: React.FC<ShiftProps> = ({
       </Text>
 
       {shift === 1 && firstShift && (
-        <Text className="text-black font-poppins text-center">{firstShift}</Text>
+        <Text className="text-black text-sm font-poppins text-center">
+          {firstShift}
+        </Text>
       )}
 
       {shift === 2 && firstShift && secondShift && (
         <View className="flex-row items-center gap-1">
-          <Text className="text-black font-poppins">{firstShift}</Text>
-          <Text className="text-black font-poppins">&</Text>
-          <Text className="text-black font-poppins">{secondShift}</Text>
+          <Text className="text-black text-sm font-poppins">{firstShift}</Text>
+          <Text className="text-black text-sm font-poppins">&</Text>
+          <Text className="text-black text-sm font-poppins">{secondShift}</Text>
         </View>
       )}
     </View>
