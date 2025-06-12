@@ -60,17 +60,26 @@ const LoginScreen = () => {
       const data = response.data;
 
       await TokenStorage.setToken(data?.token);
+      // const user = await dispatch(getCurrentUser()).unwrap();
+      // console.log(user);
       await TokenStorage.setUserData(data?.user);
       await TokenStorage.setUserRole(data?.user?.role);
       dispatch(setAuthStatus(true));
-      await dispatch(getCurrentUser());
 
       resetForm();
 
       if (data?.user?.role === 'user') {
+        // navigation.reset({
+        //   index: 0,
+        //   routes: [{name: 'HomeScreen'}],
+        // });
         navigation.navigate('HomeScreen');
       } else {
-        navigation.navigate('CreateShopScreen');
+        if (data?.user?.shopcreated) {
+          navigation.navigate('HomeScreen');
+        } else {
+          navigation.navigate('CreateShopScreen');
+        }
       }
     } catch (error: any) {
       const errorData = error?.message?.errors || {};

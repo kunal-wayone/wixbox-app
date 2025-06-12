@@ -32,7 +32,7 @@ const ProfileScreen = () => {
       icon: 'storefront-outline',
       link: 'CreateShopScreen',
     },
-    {name: 'Manage Stock', icon: 'cube-outline', link: ''},
+    {name: 'Manage Stock', icon: 'cube-outline', link: 'ManageStockScreen'},
     {
       name: 'Edit Products',
       icon: 'pricetags-outline',
@@ -79,8 +79,14 @@ const ProfileScreen = () => {
         .unwrap()
         .then((success: any) => {
           console.log('Fetched User:', success);
-          navigation.navigate('LoginScreen');
+          navigation.reset({
+            index: 0,
+            routes: [{name: 'LoginScreen'}], // ⛔ Reset navigation stack
+          });
+          // navigation.navigate('LoginScreen');
         });
+      TokenStorage.removeToken();
+
       // Implement logout logic here
       console.log('Logging out...');
     } else if (modalAction === 'Delete') {

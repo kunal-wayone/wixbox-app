@@ -5,7 +5,7 @@ import {Picker} from '@react-native-picker/picker';
 
 export interface ShiftData {
   day: string;
-  isEnabled: boolean;
+  status: boolean;
   shift1: {from: string; to: string};
   shift2?: {from: string; to: string};
   state: string;
@@ -39,10 +39,10 @@ const ShiftCard: React.FC<ShiftCardProps> = ({shift = 1, data, onChange}) => {
           {/* Enable Switch */}
           <View style={styles.switchContainer}>
             <Switch
-              value={values.isEnabled}
+              value={values.status}
               onValueChange={val => {
-                setFieldValue('isEnabled', val);
-                onChange({...values, isEnabled: val});
+                setFieldValue('status', val);
+                onChange({...values, status: val});
               }}
             />
           </View>

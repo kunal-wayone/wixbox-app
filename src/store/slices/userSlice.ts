@@ -30,13 +30,15 @@ export const getCurrentUser = createAsyncThunk(
     async (_, thunkAPI) => {
         try {
             const token = await TokenStorage.getToken();
+            console.log(token)
             if (!token)
                 return thunkAPI.rejectWithValue('Session expired. Please login again.');
 
-            const response = await Fetch<{ data: User; message?: string }>(
+            const response: any = await Fetch<{ data: User; message?: string }>(
                 '/user/profile',
             );
             console.log(response)
+            TokenStorage.setUserData(response?.data)
             return response.data || response;
         } catch (error: any) {
             console.log('getCurrentUser Error: ', error);
@@ -107,6 +109,7 @@ const userSlice = createSlice({
                 state.status = 'loading';
             })
             .addCase(getCurrentUser.fulfilled, (state, action: any) => {
+                console.log(state)
                 state.error = null;
                 state.status = 'succeeded';
                 state.isAuthenticated = true;

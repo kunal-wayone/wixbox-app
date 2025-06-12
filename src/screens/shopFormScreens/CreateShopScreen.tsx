@@ -22,7 +22,11 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {ImagePath} from '../../constants/ImagePath';
 import ShiftCard, {ShiftData} from '../../components/common/ShiftCard';
 import * as ImagePicker from 'react-native-image-picker'; // Added for image picking
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
+import {useDispatch} from 'react-redux';
+import {setAuthStatus, getCurrentUser} from '../../store/slices/userSlice';
+import {TokenStorage, Put, Post, Fetch} from '../../utils/apiUtils';
+import {convertShiftData} from '../../utils/tools/shiftConverter';
 
 const {width} = Dimensions.get('screen');
 
@@ -40,7 +44,7 @@ const validationSchema = Yup.object().shape({
     .required('GST ID is required'),
   addressLine1: Yup.string().required('Address Line 1 is required'),
   addressLine2: Yup.string(),
-  addressLine3: Yup.string(),
+  zipCode: Yup.string().required('Zip Code is required'),
   city: Yup.string().required('City is required'),
   state: Yup.string().required('State is required'),
   aboutShop: Yup.string().required('About shop is required'),
@@ -51,13 +55,14 @@ const validationSchema = Yup.object().shape({
 const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const CreateShopScreen = ({route}: any) => {
-  const navigation = useNavigation<any>()
+  const dispatch = useDispatch<any>();
+  const navigation = useNavigation<any>();
   const [images, setImages] = useState<any>([]);
   const [viewImageModal, setViewImageModal] = useState(null);
   const [schedules, setSchedules] = useState(
     daysOfWeek.map(day => ({
       day,
-      isEnabled: false,
+      status: false,
       shift1: {from: '', to: ''},
       shift2: {from: '', to: ''},
       state: 'active',
@@ -76,20 +81,13 @@ const CreateShopScreen = ({route}: any) => {
   const fetchShopData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`https://api.example.com/shops/${shopId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add authorization header if needed
-          // 'Authorization': `Bearer ${yourAuthToken}`,
-        },
-      });
+      const response: any = await Fetch(`/shops/${shopId}`, undefined, 5000);
 
-      if (!response.ok) {
+      if (!response.success) {
         throw new Error('Failed to fetch shop data');
       }
 
-      const shopData = await response.json();
+      const shopData = await response?.data;
       setImages(shopData.images || []);
       setSchedules(shopData.schedules || schedules);
     } catch (error: any) {
@@ -145,74 +143,108 @@ const CreateShopScreen = ({route}: any) => {
 
   // Handle form submission (POST for create, PUT for update)
   const handleSubmit = async (values: any, {setSubmitting, resetForm}: any) => {
+    console.log(convertShiftData(schedules));
     try {
       setSubmitting(true);
-navigation.navigate("AddDineInServiceScreen")
-      // Prepare form data for images
+      // Prepare form data for API
       const formData = new FormData();
-      formData.append('businessName', values.businessName);
-      formData.append('phoneNumber', values.phoneNumber);
-      formData.append('gstId', values.gstId);
-      formData.append('addressLine1', values.addressLine1);
-      formData.append('addressLine2', values.addressLine2);
-      formData.append('addressLine3', values.addressLine3);
+      formData.append('business_name', values.businessName);
+      formData.append('phone', values.phoneNumber);
+      formData.append('gst', values.gstId);
+      formData.append('address', values.addressLine1);
+      formData.append('addressLine2', values.addressLine2 || '');
+      formData.append('zip_code', values.zipCode || '');
       formData.append('city', values.city);
       formData.append('state', values.state);
-      formData.append('aboutShop', values.aboutShop);
-      formData.append('openingDays', values.openingDays);
-      formData.append('dineInService', values.dineInService);
-      formData.append('schedules', JSON.stringify(schedules));
+      formData.append('about_business', values.aboutShop);
+      formData.append(
+        'single_shift',
+        values.openingDays === 'Single Shift' ? 0 : 1,
+      );
+      formData.append(
+        'dine_in_service',
+        values.dineInService === 'yes' ? 1 : 0,
+      );
+
+      formData.append(
+        'shift_details',
+        JSON.stringify(convertShiftData(schedules)),
+      );
+      // formData.append('shift_details', schedules);
+      console.log(
+        'Shift details payload:',
+        JSON.stringify(convertShiftData(schedules)),
+      );
 
       // Append images to form data
-      images.forEach((image: any, index: any) => {
-        formData.append('images', {
+      images.forEach((image: any, index: number) => {
+        formData.append('business_image[]', {
           uri: image.uri,
           name: image.fileName,
           type: image.type,
         });
       });
 
-      const url = shopId
-        ? `https://api.example.com/shops/${shopId}`
-        : 'https://api.example.com/shops';
-      const method = shopId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          // Add authorization header if needed
-          // 'Authorization': `Bearer ${yourAuthToken}`,
-        },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error(shopId ? 'Shop update failed' : 'Shop creation failed');
+      // Get token for authorization
+      const token = await TokenStorage.getToken();
+      if (!token) {
+        throw new Error('No authentication token found');
       }
 
+      // API endpoint and method
+      const url = shopId ? `/user/shop/${shopId}` : '/user/shop';
+      const method = shopId ? Put : Post;
+
+      // Make API call
+      const response: any = await method(url, formData, 5000);
+      console.log(values, images, schedules, url, method, response);
+
+      if (!response.success) {
+        throw new Error(
+          response?.message ||
+            (shopId ? 'Shop update failed' : 'Shop creation failed'),
+        );
+      }
+
+      const data = response?.data;
+
       ToastAndroid.show(
-        shopId ? 'Shop updated successfully!' : 'Shop created successfully!',
+        data?.message ||
+          (shopId
+            ? 'Shop updated successfully!'
+            : 'Shop created successfully!'),
         ToastAndroid.SHORT,
       );
 
+      // Reset form on successful creation (not for updates)
       if (!shopId) {
         resetForm();
         setImages([]);
         setSchedules(
           daysOfWeek.map(day => ({
             day,
-            isEnabled: false,
+            status: false,
             shift1: {from: '', to: ''},
             shift2: {from: '', to: ''},
             state: 'active',
           })),
         );
       }
+      if (values.dineInService === 'yes') {
+        // Navigate to next screen
+        navigation.navigate('AddDineInServiceScreen');
+      } else {
+        navigation.navigate('HomeScreen');
+      }
     } catch (error: any) {
-      ToastAndroid.show(
-        error.message || 'Something went wrong. Please try again.',
-        ToastAndroid.SHORT,
-      );
+      console.log(error);
+      const errorData = error?.errors || {};
+      const errorMessage =
+        error?.message || 'Something went wrong. Please try again.';
+
+      // Set API errors for form fields (if your API returns field-specific errors)
+      // Example: setApiErrors({ businessName: errorData.businessName?.[0] || '', ... });
+      ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
     } finally {
       setSubmitting(false);
     }
@@ -297,7 +329,7 @@ navigation.navigate("AddDineInServiceScreen")
                 gstId: '',
                 addressLine1: '',
                 addressLine2: '',
-                addressLine3: '',
+                zipCode: '',
                 city: '',
                 state: '',
                 aboutShop: '',
@@ -659,13 +691,20 @@ navigation.navigate("AddDineInServiceScreen")
                         fontSize: 16,
                         marginBottom: 12,
                       }}
-                      placeholder="Address Line 3 (Optional)"
-                      onChangeText={handleChange('addressLine3')}
-                      onBlur={handleBlur('addressLine3')}
-                      value={values.addressLine3}
+                      placeholder="Zip Code"
+                      onChangeText={handleChange('zipCode')}
+                      onBlur={handleBlur('zipCode')}
+                      value={values.zipCode}
                       accessible
-                      accessibilityLabel="Address Line 3 input"
+                      keyboardType="numeric"
+                      accessibilityLabel="Zip Code"
                     />
+                    {touched.zipCode && errors.zipCode && (
+                      <Text
+                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        {errors.zipCode}
+                      </Text>
+                    )}
                   </View>
 
                   {/* About Shop */}

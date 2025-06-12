@@ -95,7 +95,6 @@ const SignUpScreen = ({route}: any) => {
       await TokenStorage.setUserData(data?.user);
       await TokenStorage.setUserRole(data?.user?.role);
       dispatch(setAuthStatus(true));
-      await dispatch(getCurrentUser());
 
       ToastAndroid.show(
         data?.message || 'Account created successfully!',

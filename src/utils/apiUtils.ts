@@ -1,10 +1,11 @@
-import Config from 'react-native-config';
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL } from "@env"
+import { API_BASE_URL, IMAGE_BASE_URL } from "@env"
 
+
+export const IMAGE_URL = IMAGE_BASE_URL;
 // Define API base URL
-const BASE_URL =
+export const BASE_URL =
     API_BASE_URL || 'https://myphsioapp.volvrit.in/api/';
 
 const api = axios.create({
@@ -93,7 +94,7 @@ export const Post = async <T>(
     data: Record<string, unknown> | FormData,
     timeout?: number,
 ): Promise<T> => {
-    console.log(API_BASE_URL ,url, data, timeout)
+    console.log(API_BASE_URL, url, data, timeout)
     try {
         const response = await request<T>({
             method: 'POST',
@@ -113,6 +114,7 @@ export const Put = async <T>(
     data: Record<string, unknown> | FormData,
     timeout?: number,
 ): Promise<T> => {
+    console.log(url, data)
     try {
         const response = await request<T>({
             method: 'PUT',
@@ -132,6 +134,7 @@ export const Patch = async <T>(
     data: Record<string, unknown> | FormData,
     timeout?: number,
 ): Promise<T> => {
+    console.log(url, data)
     try {
         const response = await request<T>({
             method: 'PATCH',
@@ -235,6 +238,25 @@ export const TokenStorage = {
             throw error;
         }
     },
+
+    removeUser: async (): Promise<void> => {
+        try {
+            await AsyncStorage.removeItem('userData');
+        } catch (error) {
+            console.error('Error removing user:', error);
+            throw error;
+        }
+    },
+
+    removeRole: async (): Promise<void> => {
+        try {
+            await AsyncStorage.removeItem('role');
+        } catch (error) {
+            console.error('Error removing role:', error);
+            throw error;
+        }
+    },
+
 
     // Clear all storage
     clearAll: async (): Promise<void> => {

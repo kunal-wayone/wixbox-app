@@ -1,6 +1,6 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {Image} from 'react-native';
+import {Image, ActivityIndicator, View} from 'react-native';
 
 import HomeScreen from '../(tabs)/HomeScreen';
 import CustormerScreen from '../(tabs)/CustormerScreen';
@@ -11,6 +11,8 @@ import {ImagePath} from '../constants/ImagePath';
 import UserHomeScreen from '../screens/userScreens/UserHomeScreen';
 import UserMomentsScreen from '../screens/userScreens/UserMomentsScreen';
 import UserMySavedScreen from '../screens/userScreens/UserMySavedScreen';
+import {TokenStorage} from '../utils/apiUtils';
+import LoadingComponent from '../screens/otherScreen/LoadingComponent';
 
 const Tab = createBottomTabNavigator();
 
@@ -29,14 +31,18 @@ const userIconMap = {
 };
 
 export default function BottomTabNavigator() {
-  // const [user, setuser] = useState('');
-  // const getuser = async (role: any) => {
-  //   const data: any = await AsyncStorage.setItem('user', role);
-  //   setuser(data);
-  //   console
-  // };
+  const [userData, setUserData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // const user: any = 'User'; // Change to 'Owner' if needed for testing
+  useEffect(() => {
+    TokenStorage.getUserData()
+      .then(user => {
+        setUserData(user);
+      })
+      .finally(() => setIsLoading(false));
+    console.log(userData);
+  }, []);
+
   const screenOptions =
     (iconMap: any) =>
     ({route}: {route: any}) => ({
@@ -69,8 +75,12 @@ export default function BottomTabNavigator() {
       tabBarActiveTintColor: '#B68AD4',
       tabBarInactiveTintColor: '#313131',
     });
-  const user = 'user';
-  if (user === 'Owner') {
+
+  if (isLoading) {
+    return <LoadingComponent />;
+  }
+
+  if (userData?.role === 'vendor') {
     return (
       <Tab.Navigator
         initialRouteName="Home"
@@ -83,15 +93,13 @@ export default function BottomTabNavigator() {
     );
   }
 
-  const savedScreenName = 'MY_Saved'.replace('_', ' '); // "MY Saved"
-
   return (
     <Tab.Navigator
       initialRouteName="Market"
       screenOptions={screenOptions(userIconMap)}>
       <Tab.Screen name="Market" component={UserHomeScreen} />
       <Tab.Screen name="Moment" component={UserMomentsScreen} />
-      <Tab.Screen name={savedScreenName} component={UserMySavedScreen} />
+      <Tab.Screen name="MY Saved" component={UserMySavedScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

@@ -11,8 +11,11 @@ import {
 import React, {useState} from 'react';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 import {ImagePath} from '../../constants/ImagePath';
+import {useNavigation} from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const ProductDetailsScreen = () => {
+  const navigation = useNavigation<any>();
   const [modalVisible, setModalVisible] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState('Medium');
@@ -78,11 +81,27 @@ const ProductDetailsScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100">
+    <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="flex-1">
+        <View className="flex-row items-center justify-between px-4 py-2 pt-4">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="flex-row items-center gap-4">
+            <Ionicons name={'arrow-back'} size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('NotificationScreen')}
+            className="bg-primary-20 w-7 h-7 rounded-full justify-center items-center">
+            <Image
+              source={ImagePath.share}
+              className="h-3 w-3"
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+        </View>
         {/* Restaurant Name */}
-        <View className="p-4 bg-white shadow-md">
-          <Text className="text-2xl font-bold text-gray-800">
+        <View className=" bg-white shadow-md">
+          <Text className="text-lg text-center font-bold text-gray-800">
             The Gourmet Kitchen
           </Text>
         </View>
@@ -94,6 +113,11 @@ const ProductDetailsScreen = () => {
             className="w-11/12 h-64 rounded-xl"
             resizeMode="cover"
           />
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="flex-row items-center gap-4 bg-primary-90 rounded-full p-2 absolute top-5 right-10 ">
+            <Ionicons name={'bookmark'} color={'white'} size={20} />
+          </TouchableOpacity>
         </View>
 
         {/* Product Details */}
@@ -103,7 +127,7 @@ const ProductDetailsScreen = () => {
             <Text className="text-xl font-semibold text-gray-800">
               Margherita Pizza
             </Text>
-            <Text className="text-lg font-bold text-green-600">$12.99</Text>
+            <Text className="text-lg font-bold text-green-600">₹122.99</Text>
           </View>
 
           {/* Description */}
@@ -113,12 +137,12 @@ const ProductDetailsScreen = () => {
           </Text>
 
           {/* Size Selection */}
+          <Text className="text-gray-700 font-medium mb-2">Size</Text>
           <View className="flex-row items-center mb-4">
-            <Text className="text-gray-700 font-medium mr-2">Size:</Text>
-            {['Small', 'Medium', 'Large'].map(size => (
+            {['S', 'M', 'XL'].map(size => (
               <TouchableOpacity
                 key={size}
-                className={`px-3 py-1 rounded-full mr-2 ${
+                className={`px-3 py-2 rounded mr-2 ${
                   selectedSize === size ? 'bg-green-500' : 'bg-gray-200'
                 }`}
                 onPress={() => handleSizeSelect(size)}>
@@ -133,25 +157,27 @@ const ProductDetailsScreen = () => {
           </View>
 
           {/* Quantity Selector */}
-          <View className="flex-row items-center mb-4">
-            <Text className="text-gray-700 font-medium mr-2">Quantity:</Text>
+          <Text className="text-gray-700 font-medium mb-2">Add Quantity</Text>
+          <View className="flex-row items-center justify-between w-2/6 bg-gray-100 mb-4">
             <TouchableOpacity
-              className="bg-gray-200 p-2 rounded-full"
+              className="bg-gray-200 p-2 rounded"
               onPress={() => handleQuantityChange('decrease')}>
               <IonIcons name="remove" size={20} color="#000" />
             </TouchableOpacity>
             <Text className="mx-4 text-gray-800 font-semibold">{quantity}</Text>
             <TouchableOpacity
-              className="bg-gray-200 p-2 rounded-full"
+              className="bg-gray-200 p-2 rounded"
               onPress={() => handleQuantityChange('increase')}>
               <IonIcons name="add" size={20} color="#000" />
             </TouchableOpacity>
           </View>
 
           {/* Unit */}
-          <Text className="text-gray-700 mb-4">Unit: 1 Pizza (Serves 2-3)</Text>
+          <Text className="text-gray-700 mb-1">Unit</Text>
+          <Text className="text-gray-700 mb-4">1 Pizza (Serves 2-3)</Text>
 
           {/* Detailed Description */}
+          <Text className="text-gray-700 text-xl mb-1">Description</Text>
           <Text className="text-gray-600 mb-4">
             Our Margherita Pizza is made with hand-tossed dough, fresh
             ingredients, and baked to perfection in a wood-fired oven. Perfect
@@ -162,12 +188,56 @@ const ProductDetailsScreen = () => {
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-lg font-semibold text-gray-800">Reviews</Text>
             <TouchableOpacity onPress={() => setModalVisible(true)}>
-              <Text className="text-blue-500">View All</Text>
+              <Text className="text-gray-800">View All</Text>
             </TouchableOpacity>
           </View>
+          <FlatList
+            data={reviews}
+            keyExtractor={item => item.id}
+            renderItem={({item}) => (
+              <View className="mb-4 p-6 border border-gray-200 rounded-xl">
+                <View className="flex-row items-center mb-3">
+                  <Image
+                    source={item.profileImage}
+                    className="w-10 h-10 rounded-full mr-3"
+                  />
+                  <View className="flex-1 ">
+                    <View className="flex-row justify-between">
+                      <Text className="text-gray-800 font-semibold">
+                        {item.name}
+                      </Text>
+                      <View className="flex-row mt-1">
+                        {renderStars(item.rating)}
+                        <Text className="ml-2 text-gray-600">
+                          {item.rating}
+                        </Text>
+                      </View>
+                    </View>
+                    <Text className="text-gray-500 text-sm">{item.time}</Text>
+                  </View>
+                </View>
+                <Text className="text-gray-600 text-sm">
+                  {item.description}
+                </Text>
+              </View>
+            )}
+          />
         </View>
       </ScrollView>
-
+      <View className="flex-col justify-between px-4 gap-2">
+        <TouchableOpacity
+          className="bg-primary-80 py-4 px-6 rounded-xl "
+          onPress={() => setModalVisible(false)}>
+          <Text className="text-white text-center font-semibold">
+            Make It Ready
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="bg-white border border-gray-700 py-4 px-6 rounded-xl "
+          onPress={() => setModalVisible(false)}>
+          <Text className="text-center font-semibold">Visit Shop</Text>
+        </TouchableOpacity>
+      </View>
       {/* Modal for Reviews */}
       <Modal
         animationType="slide"

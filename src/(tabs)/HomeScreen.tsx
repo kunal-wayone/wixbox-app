@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
   ScrollView,
@@ -19,6 +19,10 @@ import Menu from '../components/common/Menu';
 import Review from '../components/common/Review';
 import Post from '../components/common/Posts';
 import {useNavigation} from '@react-navigation/native';
+import {TokenStorage} from '../utils/apiUtils';
+import LoadingComponent from '../screens/otherScreen/LoadingComponent';
+import {useDispatch} from 'react-redux';
+
 
 const Stack = createNativeStackNavigator();
 const {height: SCREEN_HEIGHT} = Dimensions.get('window');
@@ -63,12 +67,14 @@ const shiftData = [
 ];
 
 const HomeScreen = () => {
+  const dispatch = useDispatch<any>();
   const navigaton = useNavigation<any>();
   const [shopStatus, setShopStatus] = useState(true);
   const [activeTab, setActiveTab] = useState('About');
   const scrollY = useRef(new Animated.Value(0)).current;
   const tabBarRef = useRef<any>(null);
   const [tabBarOffset, setTabBarOffset] = useState<any>(0);
+  const [userData, setUserData] = useState<any>(null);
 
   const onTabBarLayout = (event: any) => {
     tabBarRef.current?.measure?.(
@@ -96,7 +102,7 @@ const HomeScreen = () => {
               A best Hangout Place for everyone to have hot crispy snacks with
               both veg and non-veg options, lorem ipsum dolor sit amet...
             </Text>
-            
+
             <Text className="text-xl text-gray-600 font-semibold font-poppins mb-2">
               Business Contact
             </Text>
@@ -133,6 +139,21 @@ const HomeScreen = () => {
     }
   };
 
+  // const getUserData = async () => {
+  //   // const user = await dispatch(getCurrentUser()).unwrap();
+  //   // setUserData(user);
+  //   // console.log(user);
+  // };
+
+  useEffect(() => {
+    TokenStorage.getUserData().then((user: any) => setUserData(user));
+  }, []);
+
+  if (!userData) {
+    console.log(userData);
+    return <LoadingComponent />;
+  }
+
   return (
     <View className="flex-1 bg-white">
       <Animated.ScrollView
@@ -145,7 +166,7 @@ const HomeScreen = () => {
         <Animated.View style={{transform: [{translateY}]}}>
           <View className="flex-row items-center justify-between py-4">
             <Text className="text-lg font-semibold font-poppins pl-2">
-              Burger One (Cafe & Bakery)
+              {userData?.shop?.restaurant_name || ' Burger One (Cafe & Bakery)'}
             </Text>
             <View className="flex-row items-center gap-2">
               <TouchableOpacity
@@ -230,7 +251,7 @@ const HomeScreen = () => {
 
           <View className="flex-row items-center justify-between gap-3 py-4">
             <TouchableOpacity
-            onPress={()=>navigaton.navigate("CreateAdScreen")}
+              onPress={() => navigaton.navigate('CreateAdScreen')}
               disabled={!shopStatus}
               className={`${
                 shopStatus ? 'bg-primary-70' : 'bg-primary-50'
@@ -240,7 +261,7 @@ const HomeScreen = () => {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-            onPress={()=>navigaton.navigate("AddProductScreen")}
+              onPress={() => navigaton.navigate('AddProductScreen')}
               disabled={!shopStatus}
               className={`${
                 shopStatus ? 'bg-white' : ' '
