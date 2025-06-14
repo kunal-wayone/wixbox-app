@@ -11,8 +11,8 @@ import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {ImagePath} from '../constants/ImagePath';
 import {useDispatch} from 'react-redux';
-import {logoutUser} from '../store/slices/userSlice';
 import {TokenStorage} from '../utils/apiUtils';
+import {logout} from '../store/slices/authSlice';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<any>();
@@ -75,7 +75,7 @@ const ProfileScreen = () => {
 
   const confirmAction = () => {
     if (modalAction === 'Logout') {
-      dispatch(logoutUser())
+      dispatch(logout())
         .unwrap()
         .then((success: any) => {
           console.log('Fetched User:', success);

@@ -13,6 +13,8 @@ import UserMomentsScreen from '../screens/userScreens/UserMomentsScreen';
 import UserMySavedScreen from '../screens/userScreens/UserMySavedScreen';
 import {TokenStorage} from '../utils/apiUtils';
 import LoadingComponent from '../screens/otherScreen/LoadingComponent';
+import {useSelector} from 'react-redux';
+import {RootState} from '../store/store';
 
 const Tab = createBottomTabNavigator();
 
@@ -33,15 +35,18 @@ const userIconMap = {
 export default function BottomTabNavigator() {
   const [userData, setUserData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const {status: userStatus, data: user}: any = useSelector(
+    (state: RootState) => state.user,
+  );
 
-  useEffect(() => {
-    TokenStorage.getUserData()
-      .then(user => {
-        setUserData(user);
-      })
-      .finally(() => setIsLoading(false));
-    console.log(userData);
-  }, []);
+  // useEffect(() => {
+  //   TokenStorage.getUserData()
+  //     .then(user => {
+  //       setUserData(user);
+  //     })
+  //     .finally(() => setIsLoading(false));
+  //   console.log(userData);
+  // }, []);
 
   const screenOptions =
     (iconMap: any) =>
@@ -76,11 +81,11 @@ export default function BottomTabNavigator() {
       tabBarInactiveTintColor: '#313131',
     });
 
-  if (isLoading) {
-    return <LoadingComponent />;
-  }
+  // if (isLoading) {
+  //   return <LoadingComponent />;
+  // }
 
-  if (userData?.role === 'vendor') {
+  if (user?.role === 'vendor') {
     return (
       <Tab.Navigator
         initialRouteName="Home"

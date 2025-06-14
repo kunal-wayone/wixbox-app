@@ -18,6 +18,7 @@ import * as Yup from 'yup';
 import {launchImageLibrary} from 'react-native-image-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import {BASE_URL, Fetch, IMAGE_URL, Post, Put} from '../../utils/apiUtils';
+import LoadingComponent from '../otherScreen/LoadingComponent';
 
 const {width} = Dimensions.get('screen');
 
@@ -45,10 +46,12 @@ const AddProductScreen = () => {
   const [images, setImages] = useState<any>([]); // Store selected images
   const [categories, setCategories] = useState([]); // Store categories from API
   const [units, setUnits] = useState([]); // Store units from API
+  const [isLoading, setIsLoading] = useState(false);
 
   // Fetch product details if editing
   const getProductData = async (id: any) => {
     if (id) {
+      setIsLoading(true);
       try {
         const response: any = await Fetch(
           `/user/menu-items/${id}`,
@@ -74,6 +77,8 @@ const AddProductScreen = () => {
           'Failed to fetch product details',
           ToastAndroid.SHORT,
         );
+      } finally {
+        setIsLoading(false);
       }
     }
   };
@@ -151,6 +156,10 @@ const AddProductScreen = () => {
       formData.append('category_id', values.category_id);
       formData.append('status', values.status);
 
+      if (productId) {
+        formData.append('_method', 'PUT');
+      }
+
       // Append images
       values.images?.forEach((image: any, index: any) => {
         if (image.uri && image.type && image.name) {
@@ -166,7 +175,7 @@ const AddProductScreen = () => {
       const endpoint = productId
         ? `/user/menu-items/${productId}`
         : '/user/menu-items';
-      const Method = productId ? Put : Post;
+      const Method = productId ? Post : Post;
       const response: any = await Method(endpoint, formData, 5000);
       if (!response.success) {
         throw new Error('Failed to save product');
@@ -191,6 +200,10 @@ const AddProductScreen = () => {
       setSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return <LoadingComponent />;
+  }
 
   return (
     <KeyboardAvoidingView
@@ -411,6 +424,7 @@ const AddProductScreen = () => {
                       padding: 12,
                       fontSize: 16,
                       minHeight: 100,
+                      textAlignVertical: 'top', // <-- This ensures text starts from the top
                     }}
                     placeholder="Enter product description"
                     onChangeText={handleChange('description')}

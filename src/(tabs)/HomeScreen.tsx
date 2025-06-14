@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -10,22 +10,23 @@ import {
   Dimensions,
   Switch,
 } from 'react-native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Banner from '../components/common/Banner';
-import {ImagePath} from '../constants/ImagePath';
+import { ImagePath } from '../constants/ImagePath';
 import ProfileCard from '../components/common/ProfileCard';
 import ShiftCard from '../components/ShiftCard';
 import Menu from '../components/common/Menu';
 import Review from '../components/common/Review';
 import Post from '../components/common/Posts';
-import {useNavigation} from '@react-navigation/native';
-import {TokenStorage} from '../utils/apiUtils';
+import { useNavigation } from '@react-navigation/native';
+import { IMAGE_URL, TokenStorage } from '../utils/apiUtils';
 import LoadingComponent from '../screens/otherScreen/LoadingComponent';
-import {useDispatch} from 'react-redux';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store/store';
+import { fetchUser } from '../store/slices/userSlice';
 
 const Stack = createNativeStackNavigator();
-const {height: SCREEN_HEIGHT} = Dimensions.get('window');
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const shiftData = [
   {
@@ -75,6 +76,9 @@ const HomeScreen = () => {
   const tabBarRef = useRef<any>(null);
   const [tabBarOffset, setTabBarOffset] = useState<any>(0);
   const [userData, setUserData] = useState<any>(null);
+  const { status: userStatus, data: user }: any = useSelector(
+    (state: RootState) => state.user,
+  );
 
   const onTabBarLayout = (event: any) => {
     tabBarRef.current?.measure?.(
@@ -139,18 +143,18 @@ const HomeScreen = () => {
     }
   };
 
-  // const getUserData = async () => {
-  //   // const user = await dispatch(getCurrentUser()).unwrap();
-  //   // setUserData(user);
-  //   // console.log(user);
-  // };
+  const getUserData = async () => {
+    const user = await dispatch(fetchUser());
+    setUserData(user);
+    console.log(user);
+  };
 
   useEffect(() => {
-    TokenStorage.getUserData().then((user: any) => setUserData(user));
+    getUserData();
   }, []);
 
-  if (!userData) {
-    console.log(userData);
+  if (!user) {
+    console.log(user);
     return <LoadingComponent />;
   }
 
@@ -159,14 +163,14 @@ const HomeScreen = () => {
       <Animated.ScrollView
         className="p-4"
         onScroll={Animated.event(
-          [{nativeEvent: {contentOffset: {y: scrollY}}}],
-          {useNativeDriver: true},
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true },
         )}
         scrollEventThrottle={16}>
-        <Animated.View style={{transform: [{translateY}]}}>
+        <Animated.View style={{ transform: [{ translateY }] }}>
           <View className="flex-row items-center justify-between py-4">
             <Text className="text-lg font-semibold font-poppins pl-2">
-              {userData?.shop?.restaurant_name || ' Burger One (Cafe & Bakery)'}
+              {user?.shop?.restaurant_name || ' Burger One (Cafe & Bakery)'}
             </Text>
             <View className="flex-row items-center gap-2">
               <TouchableOpacity
@@ -188,7 +192,12 @@ const HomeScreen = () => {
             </View>
           </View>
 
-          <Banner imageUrl={ImagePath.mystore} showOverlay={false} />
+          <Banner
+            imageUrl={{
+              uri: IMAGE_URL + user?.shop?.restaurant_images[0]
+            }}
+            showOverlay={false}
+          />
           <ProfileCard
             profileImageUrl={ImagePath.profile1}
             name="John Doe"
@@ -253,9 +262,8 @@ const HomeScreen = () => {
             <TouchableOpacity
               onPress={() => navigaton.navigate('CreateAdScreen')}
               disabled={!shopStatus}
-              className={`${
-                shopStatus ? 'bg-primary-70' : 'bg-primary-50'
-              } p-4 w-1/2 rounded-xl justify-center items-center`}>
+              className={`${shopStatus ? 'bg-primary-70' : 'bg-primary-50'
+                } p-4 w-1/2 rounded-xl justify-center items-center`}>
               <Text className="text-white font-bold font-poppins">
                 Create Ad
               </Text>
@@ -263,13 +271,11 @@ const HomeScreen = () => {
             <TouchableOpacity
               onPress={() => navigaton.navigate('AddProductScreen')}
               disabled={!shopStatus}
-              className={`${
-                shopStatus ? 'bg-white' : ' '
-              } p-4 w-1/2 border rounded-xl justify-center items-center`}>
+              className={`${shopStatus ? 'bg-white' : ' '
+                } p-4 w-1/2 border rounded-xl justify-center items-center`}>
               <Text
-                className={`font-bold font-poppins ${
-                  shopStatus ? '' : 'text-gray-500'
-                }`}>
+                className={`font-bold font-poppins ${shopStatus ? '' : 'text-gray-500'
+                  }`}>
                 Add Products
               </Text>
             </TouchableOpacity>
@@ -290,9 +296,8 @@ const HomeScreen = () => {
             {['About', 'Menu', 'Reviews', 'Post'].map((d, i) => (
               <TouchableOpacity key={i} onPress={() => setActiveTab(d)}>
                 <Text
-                  className={`text-lg px-2 font-poppins ${
-                    activeTab === d ? 'font-bold' : 'text-gray-500'
-                  }`}>
+                  className={`text-lg px-2 font-poppins ${activeTab === d ? 'font-bold' : 'text-gray-500'
+                    }`}>
                   {d}
                 </Text>
                 {activeTab === d && (
@@ -303,7 +308,7 @@ const HomeScreen = () => {
           </View>
         </View>
         {/* Render Tab Content (NO nested ScrollView) */}
-        <View style={{minHeight: SCREEN_HEIGHT * 0.7}}>
+        <View style={{ minHeight: SCREEN_HEIGHT * 0.7 }}>
           {renderTabContent()}
         </View>
       </Animated.ScrollView>

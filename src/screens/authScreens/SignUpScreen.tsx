@@ -25,8 +25,7 @@ import {useNavigation} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Post, TokenStorage} from '../../utils/apiUtils';
 import {useDispatch} from 'react-redux';
-import {setAuthStatus, getCurrentUser} from '../../store/slices/userSlice';
-
+import {signup} from '../../store/slices/authSlice';
 const {width, height} = Dimensions.get('screen');
 
 // Validation schema using Yup
@@ -51,7 +50,7 @@ const SignUpScreen = ({route}: any) => {
   const {accountType} = route.params;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [apiErrors, setApiErrors] = useState({
+  const [apiErrors, setApiErrors] = useState<any>({
     name: '',
     email: '',
     password: '',
@@ -60,44 +59,126 @@ const SignUpScreen = ({route}: any) => {
   const [isCheck, setIsCheck] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // const handleSignUp = async (values: any, {setSubmitting, resetForm}: any) => {
+  //   setIsSubmitting(true);
+  //   console.log(true);
+  //   if (!isCheck) {
+  //     ToastAndroid.show('Please Check Terms & Condition', ToastAndroid.SHORT);
+  //     return null;
+  //   }
+
+  //   if (!accountType) {
+  //     ToastAndroid.show('Please Select Again Account type', ToastAndroid.SHORT);
+  //     return null;
+  //   }
+  //   try {
+  //     console.log(values);
+  //     const payload = {
+  //       name: values?.fullName,
+  //       email: values?.email,
+  //       password: values?.password,
+  //       password_confirmation: values?.confirmPassword,
+  //       role: accountType,
+  //     };
+  //     const response = await dispatch(signup(payload)).unwrap();
+  //     const {user} = response;
+  //     console.log(user, 'user');
+
+  //     if (!response.success) {
+  //       throw new Error('Registration failed');
+  //     }
+
+  //     const data = response;
+  //     await TokenStorage.setUserData(user);
+  //     await TokenStorage.setUserRole(user?.role);
+  //     console.log(data, 'data');
+  //     console.log(user);
+  //     console.log(user?.role);
+  //     // dispatch(setAuthStatus(true));
+
+  //     ToastAndroid.show(
+  //       data?.message || 'Account created successfully!',
+  //       ToastAndroid.SHORT,
+  //     );
+
+  //     setApiErrors({
+  //       name: '',
+  //       email: '',
+  //       password: '',
+  //       confirmPassword: '',
+  //     });
+  //     resetForm();
+
+  //     if (user?.role === 'user') {
+  //       navigation.navigate('HomeScreen');
+  //       console.log('homescreen');
+  //     } else {
+  //       navigation.navigate('CreateShopScreen');
+  //       console.log('shopscreen');
+  //     }
+  //     console.log('bottom');
+  //   } catch (error: any) {
+  //     console.log(error);
+  //     const errorData = error?.errors || {};
+  //     setApiErrors({
+  //       name: errorData.name?.[0] || '',
+  //       email: errorData.email?.[0] || '',
+  //       password: errorData.password?.[0] || '',
+  //       confirmPassword: errorData.confirmPassword?.[0] || '',
+  //     });
+
+  //     ToastAndroid.show(
+  //       error?.message?.message || 'Something went wrong. Please try again.',
+  //       ToastAndroid.SHORT,
+  //     );
+  //   } finally {
+  //     setSubmitting(false);
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
   const handleSignUp = async (values: any, {setSubmitting, resetForm}: any) => {
     setIsSubmitting(true);
-    console.log(true);
+
     if (!isCheck) {
-      ToastAndroid.show('Please Check Terms & Condition', ToastAndroid.SHORT);
-      return null;
+      ToastAndroid.show('Please accept Terms & Conditions', ToastAndroid.SHORT);
+      setIsSubmitting(false);
+      return;
     }
 
     if (!accountType) {
-      ToastAndroid.show('Please Select Again Account type', ToastAndroid.SHORT);
-      return null;
+      ToastAndroid.show('Account type is required.', ToastAndroid.SHORT);
+      setIsSubmitting(false);
+      return;
     }
+
     try {
-      console.log(values);
-      const response: any = await Post(
-        '/auth/signup',
-        {
-          name: values?.fullName,
-          email: values?.email,
-          password: values?.password,
-          password_confirmation: values?.confirmPassword,
-          role: accountType,
-        },
-        5000,
-      );
-      console.log(values, response);
-      if (!response.success) {
-        throw new Error('Registration failed');
+      const payload = {
+        name: values.fullName,
+        email: values.email,
+        password: values.password,
+        password_confirmation: values.confirmPassword, // Fixed typo in original code
+        role: accountType,
+      };
+      console.log('Sending payload:', payload);
+
+      const response: any = await dispatch(signup(payload)).unwrap();
+      console.log('Signup Response:', response);
+      const {success, user} = response;
+
+      if (success) {
+        throw new Error(response.message || 'Registration failed');
       }
 
-      const data = await response?.data;
-      await TokenStorage.setToken(data?.token);
-      await TokenStorage.setUserData(data?.user);
-      await TokenStorage.setUserRole(data?.user?.role);
-      dispatch(setAuthStatus(true));
+      console.log('User:', user);
+
+      // Store user data and role
+      // await TokenStorage.setUserData(user);
+      // await TokenStorage.setUserRole(user?.role || '');
+      console.log('Stored role:', user?.role);
 
       ToastAndroid.show(
-        data?.message || 'Account created successfully!',
+        response.message || 'Account created successfully!',
         ToastAndroid.SHORT,
       );
 
@@ -105,27 +186,32 @@ const SignUpScreen = ({route}: any) => {
         name: '',
         email: '',
         password: '',
-        confirmPassword: '',
+        password_confirmation: '',
       });
       resetForm();
 
-      if (data?.user?.role === 'user') {
+      // Navigate based on role
+      console.log('Navigating based on role:', user?.role);
+      if (user?.role === 'user') {
         navigation.navigate('HomeScreen');
+        console.log("homes")
+
       } else {
+        console.log("shopcreate")
         navigation.navigate('CreateShopScreen');
       }
     } catch (error: any) {
-      console.log(error);
+      console.log('Signup Error:', JSON.stringify(error, null, 2));
       const errorData = error?.errors || {};
       setApiErrors({
         name: errorData.name?.[0] || '',
         email: errorData.email?.[0] || '',
         password: errorData.password?.[0] || '',
-        confirmPassword: errorData.confirmPassword?.[0] || '',
+        password_confirmation: errorData.password_confirmation?.[0] || '',
       });
 
       ToastAndroid.show(
-        error?.message?.message || 'Something went wrong. Please try again.',
+        error?.message || 'Registration failed. Please check your details.',
         ToastAndroid.SHORT,
       );
     } finally {
@@ -133,7 +219,6 @@ const SignUpScreen = ({route}: any) => {
       setIsSubmitting(false);
     }
   };
-
   return (
     <KeyboardAvoidingView
       style={{flex: 1}}

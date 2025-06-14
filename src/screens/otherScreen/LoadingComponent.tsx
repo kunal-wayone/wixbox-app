@@ -1,6 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { View, Animated, ScrollView, Easing, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import { ImagePath } from '../../constants/ImagePath';
+import React, {useEffect, useRef, useState} from 'react';
+import {
+  View,
+  Animated,
+  ScrollView,
+  Easing,
+  ActivityIndicator,
+  Text,
+  StyleSheet,
+} from 'react-native';
+import {ImagePath} from '../../constants/ImagePath';
 
 // Create an Animated ScrollView
 const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
@@ -10,7 +18,7 @@ const LoadingComponent = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  
+
   // State for cycling dots in "Loading..."
   const [dots, setDots] = useState('');
 
@@ -22,7 +30,7 @@ const LoadingComponent = () => {
         duration: 2000,
         easing: Easing.linear,
         useNativeDriver: true,
-      })
+      }),
     );
 
     // Pulsing scale animation for the image
@@ -40,7 +48,7 @@ const LoadingComponent = () => {
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
-      ])
+      ]),
     );
 
     // Fade-in animation for the entire component
@@ -79,13 +87,15 @@ const LoadingComponent = () => {
 
   return (
     <AnimatedScrollView
-      contentContainerStyle={[styles.container, { opacity: fadeAnim }]}
-      showsVerticalScrollIndicator={false}
-    >
+      contentContainerStyle={[styles.container, {opacity: fadeAnim}]}
+      showsVerticalScrollIndicator={false}>
       <View style={styles.imageWrapper}>
         <Animated.Image
           source={ImagePath?.logo}
-          style={[styles.image, { transform: [{ scale: scaleAnim }, { rotate: rotation }] }]}
+          style={[
+            styles.image,
+            {transform: [{scale: scaleAnim}, {rotate: rotation}]},
+          ]}
           resizeMode="contain"
         />
         {/* <ActivityIndicator size="large" color="#B68AD4" style={styles.spinner} /> */}
@@ -107,10 +117,8 @@ const styles = StyleSheet.create({
     minHeight: '100%',
   },
   imageWrapper: {
- 
     justifyContent: 'center',
     alignItems: 'center',
-
   },
   image: {
     width: 80,
@@ -127,3 +135,9 @@ const styles = StyleSheet.create({
 });
 
 export default LoadingComponent;
+
+export const loadingSpinner = (
+  <View className="absolute inset-0 bg-black/60 flex justify-center items-center z-10">
+    <ActivityIndicator size="large" color="#B68AD4" />
+  </View>
+);

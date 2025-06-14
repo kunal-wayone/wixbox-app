@@ -1,3 +1,4 @@
+// src/screens/authScreens/LoginScreen.tsx
 import React, {useState} from 'react';
 import {
   View,
@@ -18,9 +19,11 @@ import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {ImagePath} from '../../constants/ImagePath';
 import {useNavigation} from '@react-navigation/native';
-import {Post, TokenStorage} from '../../utils/apiUtils';
-import {useDispatch} from 'react-redux';
-import {setAuthStatus, getCurrentUser} from '../../store/slices/userSlice';
+import {useDispatch, useSelector} from 'react-redux';
+import {login} from '../../store/slices/authSlice';
+import {fetchUser} from '../../store/slices/userSlice';
+import {RootState} from '../../store/store';
+import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
 
 const {width, height} = Dimensions.get('screen');
 
@@ -33,67 +36,90 @@ const validationSchema = Yup.object().shape({
     .required('Password is required'),
 });
 
+type RootStackParamList = {
+  SplashScreen: undefined;
+  SplashScreen1: undefined;
+  AccountTypeScreen: undefined;
+  SignUpScreen: undefined;
+  LoginScreen: undefined;
+  ForgetPasswordScreen: undefined;
+  VerifyOtpScreen: undefined;
+  ResetPasswordScreen: undefined;
+  CreateShopScreen: undefined;
+  AddDineInServiceScreen: undefined;
+  HomeScreen: {screen?: string};
+  NotificationScreen: undefined;
+  AddProductScreen: undefined;
+  CreateAdScreen: undefined;
+  EditProfileScreen: undefined;
+  DeleteAccountScreen: undefined;
+  DeleteAccountVerifyOtpScreen: undefined;
+  AddCustomerScreen: undefined;
+  CustomerDetailsScreen: undefined;
+  AddCustomerFormScreen: undefined;
+  AddOrderScreen: undefined;
+  OrderSummaryScreen: undefined;
+  HighOnDemandScreen: undefined;
+  BookATableScreen: undefined;
+  LunchAndDinnerScreen: undefined;
+  PaymentScreen: undefined;
+  SearchScreen: undefined;
+  ShopDetailsScreen: undefined;
+  ProductDetailsScreen: undefined;
+  ManageStockScreen: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const LoginScreen = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const dispatch = useDispatch<any>();
   const [showPassword, setShowPassword] = useState(false);
-  const [apiErrors, setApiErrors] = useState({
-    email: '',
-    password: '',
-  });
+  const {error, loading: isSubmitting} = useSelector(
+    (state: RootState) => state.auth,
+  );
+  const {data: user} = useSelector((state: RootState) => state.user);
 
-  const handleLogin = async (values: any, {setSubmitting, resetForm}: any) => {
+  const handleLogin = async (
+    values: {email: string; password: string},
+    {resetForm}: any,
+  ) => {
     try {
-      const response: any = await Post(
-        '/auth/signin',
-        {
-          email: values.email,
-          password: values.password,
-        },
-        5000,
-      );
-      console.log(response, values);
-      if (!response.success) {
-        throw new Error('Login failed');
-      }
+      // Dispatch login action
+      const data = await dispatch(login(values)).unwrap();
+      console.log(data);
+      // Fetch user data
+      const userData = data?.user;
 
-      const data = response.data;
-
-      await TokenStorage.setToken(data?.token);
-      // const user = await dispatch(getCurrentUser()).unwrap();
-      // console.log(user);
-      await TokenStorage.setUserData(data?.user);
-      await TokenStorage.setUserRole(data?.user?.role);
-      dispatch(setAuthStatus(true));
-
+      // Reset form
       resetForm();
 
-      if (data?.user?.role === 'user') {
-        // navigation.reset({
-        //   index: 0,
-        //   routes: [{name: 'HomeScreen'}],
-        // });
-        navigation.navigate('HomeScreen');
-      } else {
-        if (data?.user?.shopcreated) {
-          navigation.navigate('HomeScreen');
+      // Navigate based on user role and shopcreated status
+      if (userData) {
+        if (userData.role === 'user') {
+          console.log("user")
+          navigation.reset({
+            index: 0,
+            routes: [{name: 'HomeScreen', params: {screen: 'Market'}}],
+          });
         } else {
-          navigation.navigate('CreateShopScreen');
+          console.log("Vendor")
+          navigation.reset({
+            index: 0,
+            routes: [
+              {name: userData.shopcreated ? 'HomeScreen' : 'CreateShopScreen'},
+            ],
+          });
         }
+      } else {
+        throw new Error('User data not found');
       }
-    } catch (error: any) {
-      const errorData = error?.message?.errors || {};
-      setApiErrors({
-        email: errorData.email?.[0] || '',
-        password: errorData.password?.[0] || '',
-      });
-
+    } catch (err: any) {
+      console.log(err);
       ToastAndroid.show(
-        error?.message?.message || 'Something went wrong. Please try again.',
+        error || 'Something went wrong. Please try again.',
         ToastAndroid.SHORT,
       );
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -149,7 +175,6 @@ const LoginScreen = () => {
               values,
               errors,
               touched,
-              isSubmitting,
             }) => (
               <View className="mt-4">
                 <View className="mb-3">
@@ -164,15 +189,11 @@ const LoginScreen = () => {
                     value={values.email}
                     keyboardType="email-address"
                     autoCapitalize="none"
+                    accessibilityLabel="Email input"
                   />
                   {touched.email && errors.email && (
                     <Text className="text-red-500 text-xs mt-1">
                       {errors.email}
-                    </Text>
-                  )}
-                  {apiErrors.email && (
-                    <Text className="text-red-500 text-xs mt-1">
-                      {apiErrors.email}
                     </Text>
                   )}
                 </View>
@@ -189,10 +210,14 @@ const LoginScreen = () => {
                       onBlur={handleBlur('password')}
                       value={values.password}
                       secureTextEntry={!showPassword}
+                      accessibilityLabel="Password input"
                     />
                     <TouchableOpacity
                       onPress={() => setShowPassword(!showPassword)}
-                      className="p-3 bg-gray-100">
+                      className="p-3 bg-gray-100"
+                      accessibilityLabel={
+                        showPassword ? 'Hide password' : 'Show password'
+                      }>
                       <Icon
                         name={showPassword ? 'eye-off' : 'eye'}
                         size={20}
@@ -205,26 +230,22 @@ const LoginScreen = () => {
                       {errors.password}
                     </Text>
                   )}
-                  {apiErrors.password && (
-                    <Text className="text-red-500 text-xs mt-1">
-                      {apiErrors.password}
-                    </Text>
-                  )}
                 </View>
 
-                <View className="flex-row items-center my-1">
-                  <TouchableOpacity
-                    onPress={() => navigation.navigate('ForgetPasswordScreen')}>
-                    <Text className="ml-2 text-sm text-orange-primary-80 font-poppins font-bold">
-                      Forget Password?
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('ForgetPasswordScreen')}
+                  className="my-1"
+                  accessibilityLabel="Forgot password link">
+                  <Text className="ml-2 text-sm text-orange-primary-80 font-poppins font-bold">
+                    Forget Password?
+                  </Text>
+                </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => handleSubmit()}
                   disabled={isSubmitting}
-                  className="mt-4">
+                  className="mt-4"
+                  accessibilityLabel="Login button">
                   <LinearGradient
                     colors={['#EE6447', '#7248B3']}
                     start={{x: 0, y: 0}}
@@ -243,22 +264,38 @@ const LoginScreen = () => {
             )}
           </Formik>
 
-          <Text className="text-center my-4 text-gray-600">
+          <Text className="text-center my-4 mt-10 text-gray-600">
             --------Or Continue with--------
           </Text>
 
-          <View className="flex-row justify-center gap-4 my-4">
-            <TouchableOpacity className="p-3 w-1/2 h-24 bg-orange-primary-10 rounded-2xl">
+          <View className="flex-row justify-center gap-4 my-10">
+            <TouchableOpacity
+              className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl"
+              accessibilityLabel="Google Sign Up"
+              onPress={() =>
+                ToastAndroid.show(
+                  'Google Sign-In not implemented yet.',
+                  ToastAndroid.SHORT,
+                )
+              }>
               <Image
                 source={ImagePath.google}
-                className="w-14 h-14 m-auto"
+                className="w-14 h-16 m-auto"
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            <TouchableOpacity className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl">
+            <TouchableOpacity
+              className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl"
+              accessibilityLabel="Facebook Sign-In"
+              onPress={() =>
+                ToastAndroid.show(
+                  'Facebook Sign-In not implemented yet.',
+                  ToastAndroid.SHORT,
+                )
+              }>
               <Image
                 source={ImagePath.facebook}
-                className="w-14 h-14 m-auto"
+                className="w-14 h-16 m-auto"
                 resizeMode="contain"
               />
             </TouchableOpacity>
@@ -269,7 +306,8 @@ const LoginScreen = () => {
               Don't have an account?{' '}
             </Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate('AccountTypeScreen')}>
+              onPress={() => navigation.navigate('AccountTypeScreen')}
+              accessibilityLabel="Sign Up link">
               <Text className="text-orange-primary-100 text-sm ml-1 underline font-bold">
                 Sign Up
               </Text>

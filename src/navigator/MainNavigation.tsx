@@ -1,7 +1,6 @@
+// src/navigator/MainNavigation.tsx
 import React from 'react';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {useSelector} from 'react-redux';
-import ProtectedRoute from '../components/ProtectedRoute';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 // Screens
 import SplashScreen from '../screens/splashScreens/SplashScreen';
@@ -33,80 +32,47 @@ import PaymentScreen from '../screens/otherScreen/PaymentScreen';
 import SearchScreen from '../screens/otherScreen/SearchScreen';
 import ShopDetailsScreen from '../screens/shopScreens/ShopDetailsScreen';
 import ProductDetailsScreen from '../screens/productScreens/ProductDetailsScreen';
-import LoadingComponent from '../screens/otherScreen/LoadingComponent';
 import ManageStockScreen from '../screens/stockScreens/ManageStockScreen';
 
 const Stack = createNativeStackNavigator();
 
 const MainNavigation = () => {
-  const isAuthenticated = useSelector(
-    (state: any) => state.user.isAuthenticated,
-  );
-  // const isLoading = useSelector((state: any) => state.app.isLoading); // Assumes you have a loading state
-  const status = useSelector((state: any) => state.user.status);
-  const isLoading = status === 'loading';
-
-  const publicScreens = {
-    SplashScreen,
-    SplashScreen1: IntroScreen,
-    AccountTypeScreen,
-    SignUpScreen,
-    LoginScreen,
-    ForgetPasswordScreen,
-    VerifyOtpScreen,
-    ResetPasswordScreen,
-  };
-
-  const protectedScreens = {
-    CreateShopScreen,
-    AddDineInServiceScreen,
-    HomeScreen: () => <BottomTabNavigator />,
-    NotificationScreen,
-    AddProductScreen,
-    CreateAdScreen,
-    EditProfileScreen,
-    DeleteAccountScreen,
-    DeleteAccountVerifyOtpScreen,
-    AddCustomerScreen,
-    CustomerDetailsScreen,
-    AddCustomerFormScreen,
-    AddOrderScreen,
-    OrderSummaryScreen,
-    HighOnDemandScreen,
-    BookATableScreen,
-    LunchAndDinnerScreen,
-    PaymentScreen,
-    SearchScreen,
-    ShopDetailsScreen,
-    ProductDetailsScreen,
-    ManageStockScreen,
-  };
-
-  if (isLoading) {
-    return <LoadingComponent />;
-  }
-
   return (
-    <Stack.Navigator
-      initialRouteName="SplashScreen"
-      screenOptions={{headerShown: false}}>
-      {/* Public Screens */}
-      {Object.entries(publicScreens).map(([name, Component]) => (
-        <Stack.Screen key={name} name={name} component={Component} />
-      ))}
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {/* Splash Always First */}
+      <Stack.Screen name="SplashScreen" component={SplashScreen} />
 
-      {/* Protected Screens */}
-      {Object.entries(protectedScreens).map(([name, Component]) => (
-        <Stack.Screen
-          key={name}
-          name={name}
-          children={(props: any) => (
-            <ProtectedRoute>
-              {React.createElement(Component, props)}
-            </ProtectedRoute>
-          )}
-        />
-      ))}
+
+      <Stack.Screen name="SplashScreen1" component={IntroScreen} />
+      <Stack.Screen name="AccountTypeScreen" component={AccountTypeScreen} />
+      <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
+      <Stack.Screen name="LoginScreen" component={LoginScreen} />
+      <Stack.Screen name="ForgetPasswordScreen" component={ForgetPasswordScreen} />
+      <Stack.Screen name="VerifyOtpScreen" component={VerifyOtpScreen} />
+      <Stack.Screen name="ResetPasswordScreen" component={ResetPasswordScreen} />
+
+      <Stack.Screen name="CreateShopScreen" component={CreateShopScreen} />
+      <Stack.Screen name="AddDineInServiceScreen" component={AddDineInServiceScreen} />
+      <Stack.Screen name="HomeScreen" component={BottomTabNavigator} />
+      <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
+      <Stack.Screen name="AddProductScreen" component={AddProductScreen} />
+      <Stack.Screen name="CreateAdScreen" component={CreateAdScreen} />
+      <Stack.Screen name="EditProfileScreen" component={EditProfileScreen} />
+      <Stack.Screen name="DeleteAccountScreen" component={DeleteAccountScreen} />
+      <Stack.Screen name="DeleteAccountVerifyOtpScreen" component={DeleteAccountVerifyOtpScreen} />
+      <Stack.Screen name="AddCustomerScreen" component={AddCustomerScreen} />
+      <Stack.Screen name="CustomerDetailsScreen" component={CustomerDetailsScreen} />
+      <Stack.Screen name="AddCustomerFormScreen" component={AddCustomerFormScreen} />
+      <Stack.Screen name="AddOrderScreen" component={AddOrderScreen} />
+      <Stack.Screen name="OrderSummaryScreen" component={OrderSummaryScreen} />
+      <Stack.Screen name="HighOnDemandScreen" component={HighOnDemandScreen} />
+      <Stack.Screen name="BookATableScreen" component={BookATableScreen} />
+      <Stack.Screen name="LunchAndDinnerScreen" component={LunchAndDinnerScreen} />
+      <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
+      <Stack.Screen name="SearchScreen" component={SearchScreen} />
+      <Stack.Screen name="ShopDetailsScreen" component={ShopDetailsScreen} />
+      <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
+      <Stack.Screen name="ManageStockScreen" component={ManageStockScreen} />
     </Stack.Navigator>
   );
 };

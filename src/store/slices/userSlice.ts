@@ -1,6 +1,6 @@
-
+// src/store/slices/userSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { TokenStorage, Fetch } from '../../utils/apiUtils';
+import { Fetch, TokenStorage } from '../../utils/apiUtils';
 
 interface User {
     id: string;
@@ -12,11 +12,10 @@ interface User {
 interface UserState {
     data: User | null;
     error: string | null;
-    isAuthenticated: boolean;
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
+    isAuthenticated: boolean;
 }
 
-// Initial state
 const initialState: UserState = {
     data: null,
     error: null,
@@ -24,32 +23,22 @@ const initialState: UserState = {
     isAuthenticated: false,
 };
 
-// Async thunk for getting current user
-export const getCurrentUser = createAsyncThunk(
-    '/user/profile',
-    async (_, thunkAPI) => {
+// Fetch current user
+export const fetchUser = createAsyncThunk(
+    'user/fetchUser',
+    async (_, { rejectWithValue }) => {
         try {
-            const token = await TokenStorage.getToken();
-            console.log(token)
-            if (!token)
-                return thunkAPI.rejectWithValue('Session expired. Please login again.');
 
-            const response: any = await Fetch<{ data: User; message?: string }>(
-                '/user/profile',
-            );
-            console.log(response)
-            TokenStorage.setUserData(response?.data)
-            return response.data || response;
+            const response: any = await Fetch<{ data: User }>('/user/profile', undefined, 5000);
+            console.log(response, "userslice")
+            await TokenStorage.setUserData(response?.data)
+            return response.data;
         } catch (error: any) {
-            console.log('getCurrentUser Error: ', error);
-            let errorMessage = 'Failed to get user data';
+            console.log(error)
+            let errorMessage = 'Failed to fetch user data';
             if (error?.response?.status === 401) {
-                errorMessage = 'Session expired. Please login again.'; // Clear token from storage
-                try {
-                    await TokenStorage.removeToken();
-                } catch (tokenError) {
-                    console.log('Error clearing token:', tokenError);
-                }
+                errorMessage = 'Session expired. Please login again.';
+                await TokenStorage.removeToken();
             } else if (error?.response?.status === 403) {
                 errorMessage = 'Access denied';
             } else if (error?.response?.status >= 500) {
@@ -57,37 +46,32 @@ export const getCurrentUser = createAsyncThunk(
             } else if (error?.message) {
                 errorMessage = error.message;
             }
-            return thunkAPI.rejectWithValue(errorMessage);
+            return rejectWithValue(errorMessage);
         }
-    },
+    }
 );
 
-// Async thunk for logout
+// Logout (aligned with authSlice)
 export const logoutUser = createAsyncThunk(
     'user/logout',
-    async (_, thunkAPI) => {
+    async (_, { rejectWithValue }) => {
         try {
             await TokenStorage.removeToken();
             return true;
         } catch (error: any) {
-            try {
-                await TokenStorage.removeToken();
-            } catch (tokenError) {
-                console.log('Error clearing token:', tokenError);
-            }
-            return thunkAPI.rejectWithValue(error?.message || 'Logout failed');
+            return rejectWithValue('Logout failed');
         }
-    },
+    }
 );
 
 const userSlice = createSlice({
     name: 'user',
     initialState,
     reducers: {
-        clearError: state => {
+        clearError: (state) => {
             state.error = null;
         },
-        resetUserState: state => {
+        resetUserState: (state) => {
             state.data = null;
             state.status = 'idle';
             state.error = null;
@@ -98,48 +82,37 @@ const userSlice = createSlice({
                 state.data = { ...state.data, ...action.payload };
             }
         },
-        setAuthStatus: (state, action: PayloadAction<boolean>) => {
-            state.isAuthenticated = action.payload;
-        },
     },
-    extraReducers: builder => {
+    extraReducers: (builder) => {
         builder
-            .addCase(getCurrentUser.pending, state => {
-                state.error = null;
+            .addCase(fetchUser.pending, (state) => {
                 state.status = 'loading';
-            })
-            .addCase(getCurrentUser.fulfilled, (state, action: any) => {
-                console.log(state)
                 state.error = null;
-                state.status = 'succeeded';
-                state.isAuthenticated = true;
-                state.data = action.payload.user;
             })
-            .addCase(getCurrentUser.rejected, (state, action) => {
-                state.data = null;
+            .addCase(fetchUser.fulfilled, (state, action: PayloadAction<User>) => {
+                state.status = 'succeeded';
+                state.data = action.payload;
+                state.isAuthenticated = true;
+                state.error = null;
+            })
+            .addCase(fetchUser.rejected, (state, action) => {
                 state.status = 'failed';
+                state.data = null;
                 state.isAuthenticated = false;
                 state.error = action.payload as string;
             })
-            .addCase(logoutUser.pending, state => {
-                state.status = 'loading';
-            })
-            .addCase(logoutUser.fulfilled, state => {
+            .addCase(logoutUser.fulfilled, (state) => {
                 state.data = null;
-                state.error = null;
                 state.status = 'idle';
+                state.error = null;
                 state.isAuthenticated = false;
             })
             .addCase(logoutUser.rejected, (state, action) => {
-                state.data = null;
                 state.status = 'failed';
-                state.isAuthenticated = false;
                 state.error = action.payload as string;
             });
     },
 });
 
-export const { clearError, resetUserState, updateUserData, setAuthStatus } =
-    userSlice.actions;
-
+export const { clearError, resetUserState, updateUserData } = userSlice.actions;
 export default userSlice.reducer;

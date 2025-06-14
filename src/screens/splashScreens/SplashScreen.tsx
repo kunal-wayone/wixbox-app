@@ -1,22 +1,28 @@
-import React, {use, useEffect, useRef} from 'react';
-import {View, Animated, Text, Easing} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
-import {ImagePath} from '../../constants/ImagePath';
+import React, { useEffect, useRef } from 'react';
+import { View, Animated, Text, Easing } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { ImagePath } from '../../constants/ImagePath';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {useDispatch} from 'react-redux';
-import {getCurrentUser} from '../../store/slices/userSlice';
-import {TokenStorage} from '../../utils/apiUtils';
+import { useDispatch, useSelector } from 'react-redux';
+import { TokenStorage } from '../../utils/apiUtils';
+import { fetchUser } from '../../store/slices/userSlice';
+import { RootState } from '../../store/store';
 
 const SplashScreen = () => {
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<any>();
-
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const text = 'Welcome to WixBox'.split('');
   const charAnims = useRef(text.map(() => new Animated.Value(0))).current;
-
+  const { status: userStatus, data: user }: any = useSelector(
+    (state: RootState) => state.user,
+  );
+  const getUserData = async () => {
+    const user = await dispatch(fetchUser());
+    return user;
+  };
   useEffect(() => {
     const animateLogo = () => {
       const charAnimations = charAnims.map((anim, index) =>
@@ -55,58 +61,56 @@ const SplashScreen = () => {
     };
 
     const checkAuthAndNavigate = async () => {
+
+      console.log(navigation.getState());
+
       const introViewed = await AsyncStorage.getItem('isIntroViewed');
+      const token: any = await TokenStorage.getToken();
+      const userData: any = await TokenStorage.getUserData();
+
+      if (token) {
+        await getUserData()
+      }
       if (introViewed !== 'true') {
         navigation.replace('SplashScreen1');
         return;
       }
-      const token = await TokenStorage.getToken();
-      console.log(token);
       if (!token) {
-        navigation.navigate('LoginScreen');
-        console.log(token, 'splash');
+        navigation.replace('LoginScreen');
+        return;
+      }
+      const userDetails = user || userData
+      console.log(userDetails,user, userDetails)
+      if (userDetails) {
+        if (userDetails?.role === 'user') {
+          navigation.navigate('HomeScreen', {
+            screen: 'Market',
+          });
+        } else {
+          if (userDetails?.shopcreated) {
+            navigation.navigate('HomeScreen', {
+              screen: 'Home',
+            });
+          } else {
+            navigation.navigate('CreateShopScreen');
+          }
+        }
+      } else {
+        TokenStorage.removeUser();
+        TokenStorage.removeToken();
+        navigation.replace('LoginScreen');
         return;
       }
 
-      try {
-        const user = await dispatch(getCurrentUser()).unwrap();
-        console.log(user);
-        if (user?.role === 'user') {
-          navigation.reset({
-            index: 0,
-            routes: [{name: 'HomeScreen', params: {screen: 'Home'}}],
-          });
-        } else {
-          if (user?.shopcreated) {
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'HomeScreen', params: {screen: 'Market'}}],
-            });
-            console.log(user?.shopcreated);
-          } else {
-            navigation.reset({
-              index: 0,
-              routes: [{name: 'CreateShopScreen'}],
-            });
-          }
-        }
-      } catch (error) {
-        console.log('User not authenticated:', error);
-        navigation.navigate('LoginScreen');
-        // console.log("LoginScreen")
-        // navigation.reset({
-        //   index: 0,
-        //   routes: [{name: 'LoginScreen'}],
-        // });
-        // console.log("demo")
-      }
     };
 
     animateLogo();
-    const timeout = setTimeout(checkAuthAndNavigate, 5000);
+    const timer = setTimeout(checkAuthAndNavigate, 3500);
 
-    return () => clearTimeout(timeout);
-  }, [fadeAnim, scaleAnim, rotateAnim, charAnims, navigation, dispatch]);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [dispatch, navigation]);
 
   const rotation = rotateAnim.interpolate({
     inputRange: [0, 1],
@@ -116,13 +120,13 @@ const SplashScreen = () => {
   return (
     <Animated.View
       className="flex-1 justify-center items-center bg-white"
-      style={{opacity: fadeAnim}}>
+      style={{ opacity: fadeAnim }}>
       <View className="w-48 h-auto rounded-2xl shadow-lg">
         <Animated.Image
           source={ImagePath?.logo}
           className="w-28 h-28 m-auto"
           resizeMode="contain"
-          style={{transform: [{scale: scaleAnim}, {rotate: rotation}]}}
+          style={{ transform: [{ scale: scaleAnim }, { rotate: rotation }] }}
         />
       </View>
       <View className="mt-4 flex-row">

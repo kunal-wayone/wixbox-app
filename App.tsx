@@ -1,19 +1,21 @@
+// App.tsx
 import React from 'react';
-import {Provider as ReduxProvider} from 'react-redux';
-import {NavigationContainer} from '@react-navigation/native';
-import MainNavigation from './src/navigator/MainNavigation';
+import { Provider as ReduxProvider } from 'react-redux';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {store} from './src/store/store';
+
+import { NavigationContainer } from '@react-navigation/native';
+import { store } from './src/store/store';
+import AuthProvider from './src/providers/AuthProvider';
 
 const App = () => {
   return (
     <ReduxProvider store={store}>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <MainNavigation />
-        </NavigationContainer>
-      </SafeAreaProvider>
+      <NavigationContainer>
+        <SafeAreaProvider>
+          <AuthProvider />
+        </SafeAreaProvider>
+      </NavigationContainer>
     </ReduxProvider>
   );
 };

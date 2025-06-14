@@ -17,6 +17,7 @@ import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import {launchImageLibrary} from 'react-native-image-picker';
 import {Fetch, Post, Put, Delete, IMAGE_URL} from '../../utils/apiUtils';
+import {loadingSpinner} from '../otherScreen/LoadingComponent';
 
 // Define types for better type safety
 interface Category {
@@ -65,10 +66,10 @@ const fetchCategories = async (
     return response.data;
   } catch (error: any) {
     console.error('fetchCategories error:', error.message); // Debug log
-    if (retries > 0) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      return fetchCategories(setLoading, retries - 1);
-    }
+    // if (retries > 0) {
+    //   await new Promise(resolve => setTimeout(resolve, 1000));
+    //   return fetchCategories(setLoading, retries - 1);
+    // }
     ToastAndroid.show(
       error?.message || 'Failed to load categories.',
       ToastAndroid.SHORT,
@@ -209,11 +210,15 @@ const ManageStockScreen = () => {
             name: values.categoryImage.fileName || 'category_image.jpg',
           });
         }
+        if (editingCategory) {
+          formData.append('_method', 'PUT');
+        }
         console.log(values);
         const response: any = editingCategory
-          ? await Put(`/user/categories/${editingCategory.id}`, formData, 5000)
+          ? await Post(`/user/categories/${editingCategory.id}`, formData, 5000)
           : await Post('/user/categories', formData, 5000);
 
+        console.log(response);
         if (!response.success) throw new Error('Failed to save category');
 
         const updatedCategories = await fetchCategories(setIsLoading);
@@ -313,11 +318,11 @@ const ManageStockScreen = () => {
   // Polling for real-time updates
   useEffect(() => {
     loadCategories();
-    const interval = setInterval(() => {
-      if (polling) loadCategories();
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [loadCategories, polling]);
+    // const interval = setInterval(() => {
+    //   if (polling) loadCategories();
+    // }, 30000);
+    // return () => clearInterval(interval);
+  }, [loadCategories]);
 
   // Fetch products when selectedCategory changes
   useEffect(() => {
@@ -449,29 +454,40 @@ const ManageStockScreen = () => {
   }, []);
 
   const renderCategoryItem = ({item}: {item: Category}) => (
-    <View className="items-center p-2 bg-gray-100 m-2 rounded-xl">
+    <View className="items-center p-1 bg-gray-100 m-2 rounded-xl">
       <TouchableOpacity
         onPress={() => setSelectedCategory(item)}
         disabled={isLoading}>
-        <Image
-          source={{uri: `${IMAGE_URL}${item?.image}`}}
-          resizeMode="stretch"
-          className="h-32 w-32 rounded-xl mb-1"
-        />
-        <Text className="text-lg font-medium">{item.name}</Text>
+        {/* Image Wrapper with Overlay */}
+        <View className="relative">
+          <Image
+            source={{uri: `${IMAGE_URL}${item?.image}`}}
+            resizeMode="stretch"
+            className="h-32 w-32 rounded-xl mb-1"
+          />
+          {/* Overlay */}
+          <View className="absolute top-0 left-0 h-32 w-32 rounded-xl bg-black opacity-40" />
+
+          {/* Text Over Image */}
+          <Text className="absolute bottom-2 left-2 right-2 text-white text-lg font-medium">
+            {item.name}
+          </Text>
+        </View>
       </TouchableOpacity>
-      <View className="flex-row justify-between gap-5 mt-1">
+
+      {/* Edit/Delete Buttons */}
+      <View className="flex-col justify-between gap-0 absolute top-0 right-0">
         <TouchableOpacity
           onPress={() => handleEditCategory(item)}
-          className="p-2 bg-primary-90 rounded-lg"
+          className="p-2 bg-white rounded-t-lg rounded-tl-none"
           disabled={isLoading}>
-          <Icon name="edit" size={20} color="white" />
+          <Icon name="edit" size={20} color={'#B68AD4'} />
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleDeleteCategory(item.id, item.name)}
-          className="p-2 bg-red-500 rounded-lg"
+          className="p-2 bg-white rounded-b-3xl rounded-br-none"
           disabled={isLoading}>
-          <Icon name="delete" size={20} color="white" />
+          <Icon name="delete" size={20} color="red" />
         </TouchableOpacity>
       </View>
     </View>
@@ -479,13 +495,17 @@ const ManageStockScreen = () => {
 
   const renderProductItem = ({item}: {item: Product}) => (
     <View className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm">
-      <View className="w-2/5 mr-3 items-center">
+      <TouchableOpacity
+        className="w-2/5 mr-3 items-center"
+        onPress={() =>
+          navigation.navigate('ProductDetailsScreen', {productId: item?.id})
+        }>
         <Image
           source={{uri: `${IMAGE_URL}${item?.images[0]?.url}`}}
           className="w-full h-28 rounded-2xl mb-2"
           resizeMode="cover"
         />
-      </View>
+      </TouchableOpacity>
       <View className="flex-1">
         <Text className="text-lg font-semibold text-gray-800">
           {item.item_name}
@@ -535,11 +555,7 @@ const ManageStockScreen = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {isLoading && (
-        <View className="absolute inset-0 bg-black/30 flex justify-center items-center z-10">
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
-      )}
+      {isLoading && loadingSpinner}
       <View className="flex-row items-center p-4 border-gray-200">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -721,7 +737,7 @@ const ManageStockScreen = () => {
       {selectedCategory && (
         <View className="mt-4 flex-1">
           <View className="flex-row items-center justify-between px-4">
-            <Text className="text-xl font-bold mb-4">
+            <Text className="text-xl font-bold ">
               Products in {selectedCategory.name}
             </Text>
             <TouchableOpacity
@@ -741,7 +757,7 @@ const ManageStockScreen = () => {
               data={products[selectedCategory.name]}
               renderItem={renderProductItem}
               keyExtractor={item => item.id}
-              className="px-4"
+              className="px-4 mt-2"
               nestedScrollEnabled={true}
             />
           ) : (

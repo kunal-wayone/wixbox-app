@@ -13,7 +13,7 @@ import {useNavigation} from '@react-navigation/native';
 import {Formik} from 'formik';
 import * as Yup from 'yup';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {TokenStorage} from '../../utils/apiUtils'; // Ensure this utility is properly implemented
+import {Fetch, Post, TokenStorage} from '../../utils/apiUtils'; // Ensure this utility is properly implemented
 import LoadingComponent from './LoadingComponent';
 
 // Validation schema using Yup
@@ -77,23 +77,15 @@ const EditProfileScreen = () => {
       setSubmitting(true);
 
       // Replace with your actual API endpoint
-      const response = await fetch('https://api.example.com/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          // Add authorization token if needed
-          // 'Authorization': `Bearer ${await TokenStorage.getToken()}`,
-        },
-        body: JSON.stringify(values),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
+      const response: any = await Post('/user/update-profile', values, 5000);
+      console.log(response, values);
+      if (!response.success) {
+        const errorData = await response?.data;
         throw new Error(errorData.message || 'Failed to update profile');
       }
 
       // Update local user data
-      const updatedUser = await response.json();
+      const updatedUser = await response?.data;
       await TokenStorage.setUserData(updatedUser); // Save updated data to storage
       setUserData(updatedUser); // Update local state
 

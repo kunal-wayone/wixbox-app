@@ -1,6 +1,9 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL, IMAGE_BASE_URL } from "@env"
+import { useSelector } from 'react-redux';
+
+// const { token } = useSelector((state: any) => state.auth);
 
 
 export const IMAGE_URL = IMAGE_BASE_URL;
@@ -18,6 +21,7 @@ api.interceptors.request.use(
     async config => {
         try {
             const token = await TokenStorage.getToken();
+            console.log(token)
             if (token) config.headers['Authorization'] = `Bearer ${token}`;
         } catch (error) {
             console.log('Error retrieving token from AsyncStorage:', error);
@@ -62,7 +66,6 @@ const request = async <T>(
         clearTimeout(timeoutId);
         return response;
     } catch (error: any) {
-        console.log(error?.response?.data)
         clearTimeout(timeoutId);
         const response = error?.response?.data;
         throw response;
@@ -102,8 +105,10 @@ export const Post = async <T>(
             data,
             timeout,
         });
+        console.log(response)
         return response.data;
     } catch (error: unknown) {
+        console.log(error)
         throw error;
     }
 };
