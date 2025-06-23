@@ -33,6 +33,10 @@ import SearchScreen from '../screens/otherScreen/SearchScreen';
 import ShopDetailsScreen from '../screens/shopScreens/ShopDetailsScreen';
 import ProductDetailsScreen from '../screens/productScreens/ProductDetailsScreen';
 import ManageStockScreen from '../screens/stockScreens/ManageStockScreen';
+import PostScreen from '../screens/postScreens/PostScreen';
+import PostDetailScreen from '../screens/postScreens/PostDetailScreen';
+import AdsListScreen from '../screens/adsScreens/AdsListScreen';
+import AdsDetailScreen from '../screens/adsScreens/AdsDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -73,6 +77,15 @@ const MainNavigation = () => {
       <Stack.Screen name="ShopDetailsScreen" component={ShopDetailsScreen} />
       <Stack.Screen name="ProductDetailsScreen" component={ProductDetailsScreen} />
       <Stack.Screen name="ManageStockScreen" component={ManageStockScreen} />
+
+      <Stack.Screen name="PostScreen" component={PostScreen} />
+      <Stack.Screen name="PostDetailScreen" component={PostDetailScreen} />
+      <Stack.Screen name="AdsListScreen" component={AdsListScreen} />
+      <Stack.Screen name="AdsDetailScreen" component={AdsDetailScreen} />
+
+
+
+
     </Stack.Navigator>
   );
 };

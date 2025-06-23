@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,12 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {ImagePath} from '../constants/ImagePath';
-import {useDispatch} from 'react-redux';
-import {TokenStorage} from '../utils/apiUtils';
-import {logout} from '../store/slices/authSlice';
+import { ImagePath } from '../constants/ImagePath';
+import { useDispatch } from 'react-redux';
+import { TokenStorage } from '../utils/apiUtils';
+import { logout } from '../store/slices/authSlice';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<any>();
@@ -32,13 +32,14 @@ const ProfileScreen = () => {
       icon: 'storefront-outline',
       link: 'CreateShopScreen',
     },
-    {name: 'Manage Stock', icon: 'cube-outline', link: 'ManageStockScreen'},
+    { name: 'Manage Stock', icon: 'cube-outline', link: 'ManageStockScreen' },
     {
       name: 'Edit Products',
       icon: 'pricetags-outline',
       link: 'AddProductScreen',
     },
-    {name: 'Added Customer', icon: 'people-outline', link: 'AddCustomerScreen'},
+    { name: 'Manage Ads', icon: 'cube-outline', link: 'AdsListScreen' },
+    { name: 'Manage Orders', icon: 'people-outline', link: 'AddCustomerScreen' },
   ];
 
   const userTabs = [
@@ -52,7 +53,7 @@ const ProfileScreen = () => {
       icon: 'storefront-outline',
       link: 'CreateShopScreen',
     },
-    {name: 'Order History', icon: 'grid-outline', link: ''},
+    { name: 'Order History', icon: 'grid-outline', link: '' },
     {
       name: 'Edit Table',
       icon: 'restaurant-outline',
@@ -62,10 +63,10 @@ const ProfileScreen = () => {
   ];
 
   const moreLinks = [
-    {name: 'About Us', route: 'AboutUs', link: ''},
-    {name: 'Contact Us', route: 'ContactUs', link: ''},
-    {name: 'Terms & Conditions', route: 'TermsConditions', link: ''},
-    {name: 'Privacy Policy', route: 'PrivacyPolicy', link: ''},
+    { name: 'About Us', route: 'AboutUs', link: '' },
+    { name: 'Contact Us', route: 'ContactUs', link: '' },
+    { name: 'Terms & Conditions', route: 'TermsConditions', link: '' },
+    { name: 'Privacy Policy', route: 'PrivacyPolicy', link: '' },
   ];
 
   const handleAction = (action: string) => {
@@ -81,7 +82,7 @@ const ProfileScreen = () => {
           console.log('Fetched User:', success);
           navigation.reset({
             index: 0,
-            routes: [{name: 'LoginScreen'}], // ⛔ Reset navigation stack
+            routes: [{ name: 'LoginScreen' }], // ⛔ Reset navigation stack
           });
           // navigation.navigate('LoginScreen');
         });
@@ -129,43 +130,43 @@ const ProfileScreen = () => {
         <View className="mt-6">
           {userData?.role === 'vendor'
             ? tabs?.map((tab, index) => (
-                <TouchableOpacity
-                  key={index}
-                  className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
-                  onPress={() => navigation.navigate(tab?.link)}>
-                  <View className="flex-row items-center">
-                    <Icon
-                      name={tab?.icon}
-                      size={20}
-                      color="#000"
-                      className="bg-primary-20 p-2 rounded-full"
-                    />
-                    <Text className="ml-3 text-base text-gray-900">
-                      {tab?.name}
-                    </Text>
-                  </View>
-                  <Icon name="chevron-forward-outline" size={20} color="#000" />
-                </TouchableOpacity>
-              ))
+              <TouchableOpacity
+                key={index}
+                className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
+                onPress={() => navigation.navigate(tab?.link)}>
+                <View className="flex-row items-center">
+                  <Icon
+                    name={tab?.icon}
+                    size={20}
+                    color="#000"
+                    className="bg-primary-20 p-2 rounded-full"
+                  />
+                  <Text className="ml-3 text-base text-gray-900">
+                    {tab?.name}
+                  </Text>
+                </View>
+                <Icon name="chevron-forward-outline" size={20} color="#000" />
+              </TouchableOpacity>
+            ))
             : userTabs?.map((tab, index) => (
-                <TouchableOpacity
-                  key={index}
-                  className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
-                  onPress={() => navigation.navigate(tab.link)}>
-                  <View className="flex-row items-center">
-                    <Icon
-                      name={tab?.icon}
-                      size={20}
-                      color="#000"
-                      className="bg-primary-20 p-2 rounded-full"
-                    />
-                    <Text className="ml-3 text-base text-gray-900">
-                      {tab?.name}
-                    </Text>
-                  </View>
-                  <Icon name="chevron-forward-outline" size={20} color="#000" />
-                </TouchableOpacity>
-              ))}
+              <TouchableOpacity
+                key={index}
+                className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
+                onPress={() => navigation.navigate(tab.link)}>
+                <View className="flex-row items-center">
+                  <Icon
+                    name={tab?.icon}
+                    size={20}
+                    color="#000"
+                    className="bg-primary-20 p-2 rounded-full"
+                  />
+                  <Text className="ml-3 text-base text-gray-900">
+                    {tab?.name}
+                  </Text>
+                </View>
+                <Icon name="chevron-forward-outline" size={20} color="#000" />
+              </TouchableOpacity>
+            ))}
         </View>
 
         {/* More Links */}

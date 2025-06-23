@@ -57,7 +57,7 @@ const request = async <T>(
             url: BASE_URL + config.url,
             signal: controller.signal,
         });
-
+        console.log("response", "res")
         if (response.data.code === 200) {
             const token = response?.data?.tokan || response?.data?.data?.tokan;
             if (token) await TokenStorage.setToken(token);
@@ -66,6 +66,8 @@ const request = async <T>(
         clearTimeout(timeoutId);
         return response;
     } catch (error: any) {
+        console.log(error.response)
+        console.log(error < "error request")
         clearTimeout(timeoutId);
         const response = error?.response?.data;
         throw response;
@@ -105,10 +107,10 @@ export const Post = async <T>(
             data,
             timeout,
         });
-        console.log(response)
+        console.log("response")
         return response.data;
     } catch (error: unknown) {
-        console.log(error)
+        console.log(error.response, "ppst error")
         throw error;
     }
 };

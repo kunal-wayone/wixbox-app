@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,14 +14,18 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import {Picker} from '@react-native-picker/picker';
-import {Formik} from 'formik';
+import { Picker } from '@react-native-picker/picker';
+import { Formik } from 'formik';
 import * as Yup from 'yup';
-import {ImagePath} from '../../constants/ImagePath';
-import {useNavigation} from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // Added for check icon
+import { ImagePath } from '../../constants/ImagePath';
+import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import Octicons from 'react-native-vector-icons/Octicons';
 
-const {width, height} = Dimensions.get('screen');
+import { Post, TokenStorage } from '../../utils/apiUtils';
+import { useSelector } from 'react-redux';
+
+const { width, height } = Dimensions.get('screen');
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
@@ -32,75 +36,77 @@ const validationSchema = Yup.object().shape({
     .positive('Price must be positive'),
 });
 
-const AddDineInServiceScreen = () => {
+const AddDineInServiceScreen = ({ route }: any) => {
   const navigation = useNavigation<any>();
+  const [shopId, setShopId] = useState<any>(route?.params?.shopId || null); // For edit mode
+  const { status: userStatus, data: user }: any = useSelector((state: any) => state.user);
   const [floor, setFloor] = useState('Ground');
-  const [tableType, setTableType] = useState('Standard');
-  const [isPremium, setIsPremium] = useState(false);
-  const [paymentMethods, setPaymentMethods] = useState({
-    cash: false,
-    card: false,
-    upi: false,
-  });
-  const [tables, setTables] = useState<any[]>([]);
-  const [showForm, setShowForm] = useState(true); // State to toggle form visibility
-
-  const handleAddTable = (values: any, {resetForm}: any) => {
+  const [type, setType] = useState('Standard');
+  const [premium, setPremium] = useState(false);
+  const [tables, setTables] = useState<any>(shopId ? user?.shop?.tables : []);
+  const [showForm, setShowForm] = useState(true);
+  console.log(user?.shop?.tables,tables,shopId)
+  const handleAddTable = (values: any, { resetForm }: any) => {
     const newTable = {
       floor,
-      tableNumber: values.tableNumber,
-      tableType,
-      tablePrice: values.tablePrice,
-      isPremium,
+      table_number: values.table_number,
+      type: type,
+      price: values.price,
+      premium: premium ? 1 : 0,
     };
     setTables([...tables, newTable]);
     resetForm();
     ToastAndroid.show('Table added successfully!', ToastAndroid.SHORT);
   };
 
-  const handleCreateShop = async () => {
-    navigation.navigate("HomeScreen")
+  const handleRemoveTable = (index: any) => {
+    const updatedTables = tables.filter((_: any, i: any) => i !== index);
+    setTables(updatedTables);
+    ToastAndroid.show('Table removed successfully!', ToastAndroid.SHORT);
+  };
+
+  const handleCreateTables = async () => {
     if (tables.length === 0) {
       ToastAndroid.show('Please add at least one table', ToastAndroid.SHORT);
       return;
     }
-    if (!paymentMethods.cash && !paymentMethods.card && !paymentMethods.upi) {
-      ToastAndroid.show(
-        'Please select at least one payment method',
-        ToastAndroid.SHORT,
-      );
-      return;
-    }
+
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch('https://api.example.com/create-shop', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tables,
-          paymentMethods,
-        }),
+      const formData = new FormData();
+      tables.forEach((table: any, index: any) => {
+        formData.append(`table[${index}]`, JSON.stringify(table));
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create shop');
+
+      const token = await TokenStorage.getToken();
+      if (!token) {
+        throw new Error('No authentication token found');
       }
 
-      ToastAndroid.show('Shop created successfully!', ToastAndroid.SHORT);
-      navigation.navigate('HomeScreen'); // Adjust navigation as needed
-    } catch (error: any) {
+      const url = '/user/vendor/dining-table';
+      const response: any = await Post(url, { table: tables }, 5000);
+      console.log(url, response)
+      if (!response.success) {
+        throw new Error(response?.message || 'Failed to create tables');
+      }
+
       ToastAndroid.show(
-        error.message || 'Something went wrong. Please try again.',
+        response?.data?.message || 'Tables created successfully!',
         ToastAndroid.SHORT,
       );
+
+      navigation.navigate('HomeScreen');
+    } catch (error: any) {
+      console.log(error);
+      const errorMessage =
+        error?.message || 'Something went wrong. Please try again.';
+      ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
     }
   };
 
   return (
     <KeyboardAvoidingView
-      style={{flex: 1}}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
       <ScrollView
@@ -122,7 +128,7 @@ const AddDineInServiceScreen = () => {
           }}
           resizeMode="contain"
         />
-        <View style={{marginTop: 80}}>
+        <View style={{ marginTop: 80 }}>
           <MaskedView
             maskElement={
               <Text
@@ -137,8 +143,8 @@ const AddDineInServiceScreen = () => {
             }>
             <LinearGradient
               colors={['#EE6447', '#7248B3']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}>
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}>
               <Text
                 style={{
                   textAlign: 'center',
@@ -152,7 +158,7 @@ const AddDineInServiceScreen = () => {
             </LinearGradient>
           </MaskedView>
           <Text
-            style={{textAlign: 'center', marginVertical: 8, color: '#4B5563'}}>
+            style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
             Add your table details below
           </Text>
 
@@ -180,21 +186,20 @@ const AddDineInServiceScreen = () => {
                   errors,
                   touched,
                   isSubmitting,
-                }: any) => (
+                }) => (
                   <View>
                     <View
                       className="bg-gray-100"
                       style={{
                         borderWidth: 1,
                         borderColor: '#D1D5DB',
-
                         borderRadius: 8,
                         marginBottom: 12,
                       }}>
                       <Picker
                         selectedValue={floor}
-                        onValueChange={itemValue => setTableType(itemValue)}
-                        style={{height: 50, width: '100%'}}>
+                        onValueChange={itemValue => setFloor(itemValue)}
+                        style={{ height: 50, width: '100%' }}>
                         <Picker.Item label="Ground" value="Ground" />
                         <Picker.Item label="1st" value="1st" />
                         <Picker.Item label="2nd" value="2nd" />
@@ -219,16 +224,16 @@ const AddDineInServiceScreen = () => {
                         marginBottom: 12,
                       }}>
                       <Picker
-                        selectedValue={tableType}
-                        onValueChange={itemValue => setTableType(itemValue)}
-                        style={{height: 50, width: '100%'}}>
+                        selectedValue={type}
+                        onValueChange={itemValue => setType(itemValue)}
+                        style={{ height: 50, width: '100%' }}>
                         <Picker.Item label="Standard" value="Standard" />
                         <Picker.Item label="Booth" value="Booth" />
                         <Picker.Item label="Outdoor" value="Outdoor" />
                       </Picker>
                     </View>
 
-                    <View className="bg-gray-100" style={{marginBottom: 12}}>
+                    <View className="bg-gray-100" style={{ marginBottom: 12 }}>
                       <TextInput
                         style={styles.input}
                         placeholder="Enter table number"
@@ -244,7 +249,7 @@ const AddDineInServiceScreen = () => {
                       )}
                     </View>
 
-                    <View className="bg-gray-100" style={{marginBottom: 12}}>
+                    <View className="bg-gray-100" style={{ marginBottom: 12 }}>
                       <TextInput
                         style={styles.input}
                         placeholder="Enter table price"
@@ -260,26 +265,26 @@ const AddDineInServiceScreen = () => {
                       )}
                     </View>
 
-                    <View className="bg-gray-100" style={{marginBottom: 12}}>
-                      <View style={{flexDirection: 'row', gap: 16}}>
+                    <View className="bg-gray-100" style={{ marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', gap: 16 }}>
                         <TouchableOpacity
-                          onPress={() => setIsPremium(false)}
+                          onPress={() => setPremium(false)}
                           style={styles.radioContainer}>
                           <View
                             style={[
                               styles.radio,
-                              !isPremium && styles.radioSelected,
+                              !premium && styles.radioSelected,
                             ]}
                           />
                           <Text style={styles.radioText}>Non-Premium</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                          onPress={() => setIsPremium(true)}
+                          onPress={() => setPremium(true)}
                           style={styles.radioContainer}>
                           <View
                             style={[
                               styles.radio,
-                              isPremium && styles.radioSelected,
+                              premium && styles.radioSelected,
                             ]}
                           />
                           <Text style={styles.radioText}>Premium</Text>
@@ -288,7 +293,7 @@ const AddDineInServiceScreen = () => {
                     </View>
 
                     <TouchableOpacity
-                      onPress={handleSubmit}
+                      onPress={() => handleSubmit()}
                       disabled={isSubmitting}
                       style={styles.addButton}>
                       <Text style={styles.addButtonText}>
@@ -301,85 +306,77 @@ const AddDineInServiceScreen = () => {
             </View>
           )}
 
-          <Text
-            style={{
-              fontSize: 14,
-              fontWeight: '500',
-              color: '#374151',
-              marginTop: 16,
-              marginBottom: 8,
-            }}>
-            Payment Acceptance By
-          </Text>
-          <View style={{flexDirection: 'row', gap: 16, marginBottom: 16}}>
-            <TouchableOpacity
-              onPress={() =>
-                setPaymentMethods({
-                  ...paymentMethods,
-                  cash: !paymentMethods.cash,
-                })
-              }
-              style={styles.checkboxContainer}>
-              <View
-                style={[
-                  styles.checkbox,
-                  paymentMethods.cash && styles.checkboxSelected,
-                ]}>
-                {paymentMethods.cash && (
-                  <Icon name="check" size={13} color="#fff" />
-                )}
-              </View>
-              <Text style={styles.checkboxText}>Cash</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                setPaymentMethods({
-                  ...paymentMethods,
-                  card: !paymentMethods.card,
-                })
-              }
-              style={styles.checkboxContainer}>
-              <View
-                style={[
-                  styles.checkbox,
-                  paymentMethods.card && styles.checkboxSelected,
-                ]}>
-                {paymentMethods.card && (
-                  <Icon name="check" size={13} color="#fff" />
-                )}
-              </View>
-              <Text style={styles.checkboxText}>Card</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() =>
-                setPaymentMethods({...paymentMethods, upi: !paymentMethods.upi})
-              }
-              style={styles.checkboxContainer}>
-              <View
-                style={[
-                  styles.checkbox,
-                  paymentMethods.upi && styles.checkboxSelected,
-                ]}>
-                {paymentMethods.upi && (
-                  <Icon name="check" size={13} color="#fff"  />
-                )}
-              </View>
-              <Text style={styles.checkboxText}>UPI</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Added Tables List */}
+          {tables.length > 0 && (
+            <View style={styles.tableListContainer}>
+              <Text style={styles.tableListTitle}>Added Tables</Text>
+              {tables.map((table: any, index: number) => (
+                <View
+                  key={index}
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    backgroundColor: '#fff',
+                    padding: 16,
+                    borderRadius: 12,
+                    marginBottom: 12,
+                    borderColor: "lightgray",
+                    borderWidth: 1,
+                    elevation: 2
+                  }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1F2937' }}>
+                      Table {table.table_number} • Floor {table.floor}
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#4B5563', marginTop: 4 }}>
+                      Type: <Text style={{ fontWeight: '600' }}>{table.type}</Text>
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#4B5563', marginTop: 2 }}>
+                      Price: <Text style={{ fontWeight: '600' }}>₹ {table.price}/-</Text>
+                    </Text>
+                    <View
+                      style={{
+                        marginTop: 6,
+                        alignSelf: 'flex-start',
+                        backgroundColor: table.premium === 1 ? '#F59E0B' : '#9CA3AF',
+                        paddingHorizontal: 10,
+                        paddingVertical: 4,
+                        borderRadius: 20,
+                      }}>
+                      <Text style={{ fontSize: 12, color: '#fff', fontWeight: 'bold' }}>
+                        {table.premium === 1 ? 'Premium Table' : 'Standard Table'}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => handleRemoveTable(index)}
+                    style={{
+                      marginLeft: 12,
+                      backgroundColor: '#FEE2E2',
+                      padding: 8,
+                      borderRadius: 999,
+                    }}>
+                    <Octicons name="trash" size={20} color="#DC2626" />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
 
-          <TouchableOpacity onPress={handleCreateShop} style={{marginTop: 16}}>
+
+          <TouchableOpacity onPress={handleCreateTables} style={{ marginTop: 16 }}>
             <LinearGradient
               colors={['#EE6447', '#7248B3']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
               style={{
                 padding: 16,
                 borderRadius: 10,
                 alignItems: 'center',
               }}>
-              <Text style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>
-                Create Shop
+              <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                Save Tables
               </Text>
             </LinearGradient>
           </TouchableOpacity>
@@ -395,7 +392,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginTop: 16,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
@@ -475,6 +472,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: '#374151',
+  },
+  tableListContainer: {
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  tableListTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  tableItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  tableItemText: {
+    fontSize: 14,
+    color: '#374151',
+    marginBottom: 4,
+  },
+  removeButton: {
+    padding: 8,
   },
 });
 

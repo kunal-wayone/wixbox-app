@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -7,126 +7,193 @@ import {
   FlatList,
   Switch,
   TouchableOpacity,
+  ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
-import {ImagePath} from '../../constants/ImagePath';
-
-const menuItems = [
-  {
-    id: '1',
-    name: 'Margherita Pizza',
-    category: 'Pizza',
-    price: 249,
-    currency: '₹',
-    quantity: '1 Plate',
-    rating: 4.5,
-    stock: 20,
-    image: ImagePath.item1,
-    offer: '10% OFF',
-    status: true,
-  },
-  {
-    id: '2',
-    name: 'Veg Burger',
-    category: 'Burger',
-    price: 99,
-    currency: '₹',
-    quantity: '1 Piece',
-    rating: 4.2,
-    stock: 15,
-    image: ImagePath.item2,
-    offer: 'Buy 1 Get 1',
-    status: false,
-  },
-];
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { ImagePath } from '../../constants/ImagePath';
+import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 
 const Menu = () => {
-  const [search, setSearch] = useState('');
+  const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
 
-  const renderCard = ({item}: {item: (typeof menuItems)[0]}) => {
-    return (
-      <View className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm">
+  const [search, setSearch] = useState('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [toggleLoadingIds, setToggleLoadingIds] = useState<string[]>([]);
+
+  // Fetch menu items from server
+  const fetchProducts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response: any = await Fetch(`/user/menu-items`, {}, 5000);
+      console.log(response)
+      if (!response.success) throw new Error('Failed to fetch products');
+      setProducts(response.data.menu_items || []);
+    } catch (error: any) {
+      console.error('fetchProducts error:', error.message);
+      ToastAndroid.show(
+        error?.message || 'Failed to load products.',
+        ToastAndroid.SHORT
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Toggle product status
+  const toggleProductStatus = useCallback(
+    async (id: string, currentStatus: boolean) => {
+      try {
+        setToggleLoadingIds((prev) => [...prev, id]);
+        const response: any = await Fetch(
+          `/user/menu-items/${id}/active-inactive`,
+          { status: currentStatus ? 0 : 1 },
+          5000
+        );
+        if (!response.success) throw new Error('Failed to toggle status');
+
+        // Update products state optimistically
+        setProducts((prevProducts) =>
+          prevProducts.map((item) =>
+            item.id === id ? { ...item, status: currentStatus ? 0 : 1 } : item)
+
+        );
+
+        ToastAndroid.show('Status updated successfully!', ToastAndroid.SHORT);
+        return response.data;
+      } catch (error: any) {
+        console.error('toggleProductStatus error:', error.message);
+        ToastAndroid.show(
+          error?.message || 'Failed to toggle status.',
+          ToastAndroid.SHORT
+        );
+        throw error;
+      } finally {
+        setToggleLoadingIds((prev) => prev.filter((itemId) => itemId !== id));
+      }
+    },
+    []
+  );
+
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchProducts();
+    }
+  }, [isFocused]);
+
+  // Memoized filtered products
+  const filteredProducts = React.useMemo(() => products.filter((item) =>
+    item?.item_name?.toLowerCase().includes(search?.toLowerCase())
+  ), [products, search]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: any }) => (
+      <View key={item?.id} className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm">
         {/* Left: Image + Switch */}
         <View className="w-2/5 mr-3 items-center">
           <Image
-            source={item.image}
-            className="w-full h-44 rounded-2xl mb-2"
+            source={item?.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
+            className="w-full h-40 rounded-lg mb-2"
             resizeMode="cover"
           />
-          <View className="flex-row items-center">
+          <View className="flex-row items-center h-10">
             <Text className="text-xs text-gray-500 mr-2">Status</Text>
-            <Switch value={item.status} />
+            <View className='w-1/2'>
+              {toggleLoadingIds.includes(item.id) ? (
+                <ActivityIndicator size="small" color="#007AFF" style={{ marginLeft: 8 }} />
+              ) : (<Switch
+                value={item?.status === 1}
+                onValueChange={() => toggleProductStatus(item.id, item.status === 1)}
+                disabled={toggleLoadingIds.includes(item.id)}
+              />)}
+            </View>
           </View>
         </View>
 
         {/* Right: Content */}
         <View className="flex-1">
-          {/* Offer */}
-          <View className="self-start bg-primary-100 px-2 py-1 rounded-md mb-1">
-            <Text className="text-white text-xs font-semibold">
-              {item.offer}
+          {item?.offer && (
+            <View className="self-start bg-primary-80 px-2 py-1 rounded-md mb-2">
+              <Text className="text-white text-xs font-semibold">{item?.offer}</Text>
+            </View>
+          )}
+          <Text className="text-lg font-semibold text-gray-800">{item?.item_name}</Text>
+          <View className="flex-row justify-between items-center">
+            <Text className="text-sm text-gray-500">{item?.category?.name || 'N/A'} •</Text>
+            <Text className="text-md font-bold">
+              {item?.currency || '₹'}
+              {item?.price}
             </Text>
           </View>
-
-          {/* Name */}
-          <Text className="text-lg font-semibold text-gray-800">
-            {item.name}
-          </Text>
-          <View className="flex-row items-center  justify-between">
-            {/* Category & Price */}
-            <Text className="text-sm text-gray-500">{item.category} •</Text>
-            <Text className="text-md font-poppins font-bold">
-              {item.currency}
-              {item.price}
-            </Text>
-          </View>
-
-          {/* Quantity */}
-          <Text className="text-sm text-gray-600 mt-1">{item.quantity}</Text>
-
-          {/* Rating */}
-          <View className="flex-row items-center mt-1 bg-primary-20 rounded-md px-2 py-1 w-16">
+          <Text className="text-sm text-gray-600 mt-1">{item?.unit || 'N/A'}</Text>
+          <View className="flex-row items-center mt-1 bg-gray-200 rounded-md px-2 py-1 w-16">
             <AntDesign name="star" color="#FBBF24" size={16} />
-            <Text className="ml-1 text-sm text-gray-700">{item.rating}</Text>
+            <Text className="ml-1 text-sm text-gray-700">{item?.rating || '0'}</Text>
           </View>
-
-          {/* Stock */}
-          <View className='flex-row items-center justify-between'>
-            <Text className="text-sm text-gray-600 mt-1">Stock Count:</Text>
-            <Text className="font-semibold">{item.stock}</Text>
+          <View className="flex-row items-center justify-between mt-1">
+            <Text className="text-sm text-gray-600">Stock Count:</Text>
+            <Text className="font-semibold">{item?.stock_quantity || '0'}</Text>
           </View>
-
-          {/* Edit Button */}
-          <TouchableOpacity className="mt-2 bg-primary-80 w-full px-3 py-2 rounded-lg self-start">
-            <Text className="text-white  text-center text-md font-medium">
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AddProductScreen', { productId: item?.id })}
+            className="mt-2 bg-primary-90 w-full px-3 py-2 rounded-lg"
+          >
+            <Text className="text-white text-center text-md font-medium">
               Edit Item Details
             </Text>
           </TouchableOpacity>
         </View>
       </View>
-    );
-  };
+    ),
+    [toggleLoadingIds, toggleProductStatus, navigation]
+  );
 
   return (
-    <View className=" min-h-screen">
-      {/* Search */}
-      <View className="flex-row items-center bg-white px-3 py-1 border  mt-4 rounded-xl mb-4 shadow-sm">
-        <AntDesign name="search1" color="#6B7280" size={20} />
-        <TextInput
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search Item..."
-          className="ml-2 flex-1 text-sm text-gray-700"
-        />
+    <View className="min-h-[85vh] bg-gray-50">
+      {/* Search & Add Button */}
+      <View className="flex-row items-center gap-3 mt-4  mb-4">
+        <View className="flex-row items-center flex-1 bg-white px-3 py-0.5 border rounded-xl shadow-sm">
+          <AntDesign name="search1" color="#6B7280" size={20} />
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder="Search Item..."
+            className="ml-2 flex-1 text-sm text-gray-700"
+            autoCapitalize="none"
+          />
+        </View>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('AddProductScreen')}
+          className="bg-primary-90 p-3 rounded-lg"
+        >
+          <Icon name="add" size={20} color="white" />
+        </TouchableOpacity>
       </View>
 
-      {/* List of Cards */}
-      <FlatList
-        data={menuItems}
-        keyExtractor={item => item.id}
-        renderItem={renderCard}
-        showsVerticalScrollIndicator={false}
-      />
+      {/* Product List */}
+      {isLoading ? (
+        <View className="flex-1 justify-center items-center mt-10">
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      ) : filteredProducts.length === 0 ? (
+        <View className="flex-1 justify-center items-center mt-10">
+          <Text className="text-gray-500 text-lg">No products found</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredProducts}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+          initialNumToRender={10}
+        />
+      )}
     </View>
   );
 };

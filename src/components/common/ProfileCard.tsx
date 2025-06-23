@@ -32,7 +32,7 @@ const ProfileCard = ({
 
   return (
     <View
-      className={`py-4 bg-white rounded-2xl shadow-md ${
+      className={`pt-4 bg-white rounded-2xl shadow-md ${
         layout === 'row' ? 'flex-row' : 'flex-col'
       } items-center justify-start w-full mb-4`}>
       {/* Section 1: Profile Image */}

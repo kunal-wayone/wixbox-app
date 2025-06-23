@@ -92,6 +92,8 @@ export const signup = createAsyncThunk(
 export const logout = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
     try {
         await TokenStorage.removeToken();
+        await TokenStorage.removeUser();
+        await TokenStorage.removeRole();
         return true;
     } catch (error: any) {
         return thunkAPI.rejectWithValue('Logout failed');

@@ -30,22 +30,14 @@ export const fetchUser = createAsyncThunk(
         try {
 
             const response: any = await Fetch<{ data: User }>('/user/profile', undefined, 5000);
-            console.log(response, "userslice")
             await TokenStorage.setUserData(response?.data)
             return response.data;
         } catch (error: any) {
             console.log(error)
             let errorMessage = 'Failed to fetch user data';
-            if (error?.response?.status === 401) {
-                errorMessage = 'Session expired. Please login again.';
-                await TokenStorage.removeToken();
-            } else if (error?.response?.status === 403) {
-                errorMessage = 'Access denied';
-            } else if (error?.response?.status >= 500) {
-                errorMessage = 'Server error. Please try again later.';
-            } else if (error?.message) {
-                errorMessage = error.message;
-            }
+            TokenStorage.removeToken();
+            TokenStorage.removeUser();
+            TokenStorage.removeRole();
             return rejectWithValue(errorMessage);
         }
     }

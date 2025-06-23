@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,13 @@ import {
   TextInput,
   FlatList,
   Image,
+  ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {ImagePath} from '../../constants/ImagePath';
+import { ImagePath } from '../../constants/ImagePath';
+import { Fetch } from '../../utils/apiUtils';
 
 // Mock customer data
 const mockCustomers = [
@@ -31,10 +34,44 @@ const mockCustomers = [
 
 const AddCustomerScreen = () => {
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
   const [searchQuery, setSearchQuery] = useState('');
+  const [ordersList, setOrdersList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false)
+  // const [filterOrders, setFilterOrders] = useState([])
 
+  // Fetch menu items from server
+  const fetchAds = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response: any = await Fetch(`/user/ads`, {}, 5000);
+      console.log(response)
+      if (!response.success) throw new Error('Failed to fetch ads');
+      setOrdersList(response.data.ads || []);
+    } catch (error: any) {
+      console.error('fetchAds error:', error.message);
+      ToastAndroid.show(
+        error?.message || 'Failed to load ads.',
+        ToastAndroid.SHORT
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchAds();
+    }
+  }, [isFocused]);
+
+  // Memoized filtered ads
+  const filteredOrders = React.useMemo(() => ordersList.filter((item: any) =>
+    item?.order?.toLowerCase().includes(searchQuery?.toLowerCase())
+  ), [ordersList,]);
   // Render each customer card
-  const renderCustomerCard = ({item}: any) => (
+  const renderCustomerCard = ({ item }: any) => (
     <View
       className={`bg-primary-20 border border-primary-20 rounded-xl p-4 mb-4 shadow-sm`}>
       <View className={`flex-row mb-4`}>
@@ -71,21 +108,21 @@ const AddCustomerScreen = () => {
   return (
     <View className={`flex-1 bg-white p-4`}>
       {/* Header with Back Button */}
-      <View className={`flex-row items-center`}>
+      <View className={`flex-row items-center absolute left-2 top-2`}>
         <TouchableOpacity onPress={() => navigation.goBack()} className={`p-2`}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
       </View>
 
       {/* Title */}
-      <Text className={`text-2xl font-poppins text-center mb-4 `}>
-        Add Customer
+      <Text className={`text-2xl font-semibold text-center mb-4 `}>
+        Manage Orders
       </Text>
 
       {/* Search and Add Customer Section */}
-      <View className={`flex-row justify-beeen mb-6`}>
+      <View className={`flex-row justify-between mb-6`}>
         <View
-          className={`flex-1 flex-row items-center w-1/2 border border-gray-300 rounded-lg mr-3`}>
+          className={`flex-1 flex-row items-center w-auto border border-gray-300 rounded-xl  mr-3`}>
           <Ionicons
             name="search"
             size={20}
@@ -93,30 +130,36 @@ const AddCustomerScreen = () => {
             className={`ml-2`}
           />
           <TextInput
-            className={`flex-1 h-10 text-base`}
+            className={`flex-1 text-base`}
             placeholder="Search Customer"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
         <TouchableOpacity
-        onPress={()=>navigation.navigate("AddCustomerFormScreen")}
-          className={`flex-row items-center w-1/2 border border-gray-300   py-2.5 px-3 rounded-lg`}>
-          <Ionicons name="add" size={20} color="gray" />
-          <Text className={`text-gray-700 text-sm font-bold ml-2`}>
-            Add Customer
-          </Text>
+          onPress={() => navigation.navigate("AddCustomerFormScreen")}
+          className={`flex-row items-center bg-primary-80 border border-gray-300   py-2.5 px-3 rounded-lg`}>
+          <Ionicons name="add" size={20} color="white" />
         </TouchableOpacity>
       </View>
 
       {/* Customer List */}
-      <FlatList
-        data={mockCustomers}
-        renderItem={renderCustomerCard}
-        keyExtractor={item => item.id}
-        // contentContainerStyle=}
-        showsVerticalScrollIndicator={false}
-      />
+      {isLoading ? (
+        <View className="flex-1 justify-center items-center mt-10">
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      ) : filteredOrders.length === 0 ? (
+        <View className="flex-1 justify-center items-center mt-10">
+          <Text className="text-gray-500 text-lg">No orders found</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={mockCustomers}
+          renderItem={renderCustomerCard}
+          keyExtractor={item => item.id}
+          // contentContainerStyle=}
+          showsVerticalScrollIndicator={false}
+        />)}
     </View>
   );
 };

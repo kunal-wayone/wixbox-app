@@ -1,49 +1,35 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  Dimensions,
-  Image,
-  TouchableOpacity,
-  TextInput,
-  ScrollView,
-  KeyboardAvoidingView,
-  Platform,
-  ToastAndroid,
-  Modal,
-  FlatList,
+  View, Text, Dimensions, Image, TouchableOpacity,
+  TextInput, ScrollView, KeyboardAvoidingView, Platform,
+  ToastAndroid, Modal, FlatList, StyleSheet,
 } from 'react-native';
-import {Picker} from '@react-native-picker/picker';
+import { Picker } from '@react-native-picker/picker';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import {Formik} from 'formik';
+import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {ImagePath} from '../../constants/ImagePath';
-import ShiftCard, {ShiftData} from '../../components/common/ShiftCard';
-import * as ImagePicker from 'react-native-image-picker'; // Added for image picking
-import {useNavigation} from '@react-navigation/native';
-import {useDispatch} from 'react-redux';
-import {setAuthStatus, getCurrentUser} from '../../store/slices/userSlice';
-import {TokenStorage, Put, Post, Fetch} from '../../utils/apiUtils';
-import {convertShiftData} from '../../utils/tools/shiftConverter';
+import IconM from 'react-native-vector-icons/MaterialIcons';
+import * as ImagePicker from 'react-native-image-picker';
+import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
 
-const {width} = Dimensions.get('screen');
+import { fetchUser } from '../../store/slices/userSlice';
+import { TokenStorage, Post, IMAGE_URL } from '../../utils/apiUtils';
+import { convertShiftData, revertShiftData } from '../../utils/tools/shiftConverter';
+import { ImagePath } from '../../constants/ImagePath';
+import { states } from '../../utils/data/constant';
+import ShiftCard from '../../components/common/ShiftCard';
 
-// Validation schema
+const { width } = Dimensions.get('screen');
+const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
 const validationSchema = Yup.object().shape({
   businessName: Yup.string().required('Business name is required'),
-  phoneNumber: Yup.string()
-    .matches(/^[0-9]{10}$/, 'Must be a valid 10-digit phone number')
-    .required('Phone number is required'),
-  gstId: Yup.string()
-    // .matches(
-    //   /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/,
-    //   'Invalid GST ID format',
-    // )
-    .required('GST ID is required'),
+  phoneNumber: Yup.string().matches(/^[0-9]{10}$/, 'Must be a valid 10-digit phone number').required(),
+  gstId: Yup.string().required('GST ID is required'),
   addressLine1: Yup.string().required('Address Line 1 is required'),
-  addressLine2: Yup.string(),
   zipCode: Yup.string().required('Zip Code is required'),
   city: Yup.string().required('City is required'),
   state: Yup.string().required('State is required'),
@@ -52,226 +38,131 @@ const validationSchema = Yup.object().shape({
   dineInService: Yup.string().required('Dine-in service selection is required'),
 });
 
-const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-
-const CreateShopScreen = ({route}: any) => {
+const CreateShopScreen = ({ route }: any) => {
   const dispatch = useDispatch<any>();
   const navigation = useNavigation<any>();
+  const { data: user } = useSelector((state: any) => state.user);
+  const shopId = route?.params?.shopId ?? null;
+  const [loading, setLoading] = useState<any>(false);
   const [images, setImages] = useState<any>([]);
-  const [viewImageModal, setViewImageModal] = useState(null);
-  const [schedules, setSchedules] = useState(
-    daysOfWeek.map(day => ({
-      day,
-      status: false,
-      shift1: {from: '', to: ''},
-      shift2: {from: '', to: ''},
-      state: 'active',
-    })),
-  );
-  const [shopId, setShopId] = useState(route?.params?.shopId || null); // For edit mode
-  const [loading, setLoading] = useState(false);
+  const [viewImageModal, setViewImageModal] = useState<any>(null);
+  const [schedules, setSchedules] = useState<any>(daysOfWeek.map(day => ({
+    day, status: false, shift1: { from: '', to: '' }, shift2: { from: '', to: '' }, state: 'active'
+  })));
+  const [paymentMethods, setPaymentMethods] = useState<any>({ cash: false, card: false, upi: false });
 
-  // Fetch shop data for edit mode
+  useEffect(() => { if (shopId) dispatch(fetchUser()); }, [shopId]);
+
   useEffect(() => {
-    if (shopId) {
-      fetchShopData();
+    if (!shopId || !user?.shop) return;
+
+    const remoteImgs = (user.shop.restaurant_images || []).map((url: any) => ({
+      id: `remote_${url}`, uri: IMAGE_URL + url, remote: true,
+    }));
+    setImages(remoteImgs);
+
+    if (user.shop.shift_details) {
+      setSchedules(revertShiftData(JSON.parse(user.shop.shift_details)));
     }
-  }, [shopId]);
 
-  const fetchShopData = async () => {
-    try {
-      setLoading(true);
-      const response: any = await Fetch(`/shops/${shopId}`, undefined, 5000);
+    setPaymentMethods({
+      cash: !!user.shop.payment_cash,
+      card: !!user.shop.payment_card,
+      upi: !!user.shop.payment_upi,
+    });
+  }, [user?.shop]);
 
-      if (!response.success) {
-        throw new Error('Failed to fetch shop data');
-      }
-
-      const shopData = await response?.data;
-      setImages(shopData.images || []);
-      setSchedules(shopData.schedules || schedules);
-    } catch (error: any) {
-      ToastAndroid.show(
-        error.message || 'Failed to load shop data',
-        ToastAndroid.SHORT,
-      );
-    } finally {
-      setLoading(false);
-    }
+  const handleShiftChange = (index: any) => (updated: any) => {
+    setSchedules((prev: any) => {
+      const copy = [...prev];
+      copy[index] = updated;
+      return copy;
+    });
   };
 
-  // Handle updates to a specific day's shift data
-  const handleShiftChange = (index: any) => (updatedData: any) => {
-    const updatedSchedules = [...schedules];
-    updatedSchedules[index] = updatedData;
-    setSchedules(updatedSchedules);
-  };
-
-  // Image upload handler
   const handleImageUpload = async () => {
-    if (images.length >= 5) {
-      ToastAndroid.show('Maximum 5 images allowed!', ToastAndroid.SHORT);
-      return;
+    if (images.filter((img: any) => !img.remote).length >= 5) {
+      return ToastAndroid.show('Maximum 5 images allowed!', ToastAndroid.SHORT);
     }
 
-    try {
-      const response = await ImagePicker.launchImageLibrary({
-        mediaType: 'photo',
-        quality: 0.7,
-      });
-
-      if (response.assets && response.assets[0].uri) {
-        const newImage = {
-          id: Date.now(),
-          uri: response.assets[0].uri,
-          fileName: response.assets[0].fileName || `image_${Date.now()}`,
-          type: response.assets[0].type,
-        };
-        setImages([...images, newImage]);
-        ToastAndroid.show('Image uploaded successfully!', ToastAndroid.SHORT);
-      }
-    } catch (error) {
-      ToastAndroid.show('Failed to upload image', ToastAndroid.SHORT);
+    const res = await ImagePicker.launchImageLibrary({ mediaType: 'photo', quality: 0.7 });
+    if (res.assets?.[0]?.uri) {
+      const asset = res.assets[0];
+      setImages((prev: any) => [...prev, {
+        id: `local_${Date.now()}`,
+        uri: asset.uri,
+        fileName: asset.fileName ?? `photo_${Date.now()}.jpg`,
+        type: asset.type ?? 'image/jpeg',
+        remote: false,
+      }]);
     }
   };
 
-  // Remove image
-  const handleRemoveImage = (id: any) => {
-    setImages(images.filter((img: any) => img.id !== id));
-    ToastAndroid.show('Image removed successfully!', ToastAndroid.SHORT);
-  };
+  const handleRemoveImage = (id: any) => setImages((prev: any) => prev.filter((img: any) => img.id !== id));
 
-  // Handle form submission (POST for create, PUT for update)
-  const handleSubmit = async (values: any, {setSubmitting, resetForm}: any) => {
-    console.log(convertShiftData(schedules));
+  const handleSubmit = async (values: any, { setSubmitting, resetForm }: any) => {
     try {
       setSubmitting(true);
-      // Prepare form data for API
       const formData = new FormData();
+
       formData.append('business_name', values.businessName);
       formData.append('phone', values.phoneNumber);
       formData.append('gst', values.gstId);
       formData.append('address', values.addressLine1);
-      formData.append('addressLine2', values.addressLine2 || '');
-      formData.append('zip_code', values.zipCode || '');
+      formData.append('zip_code', values.zipCode);
       formData.append('city', values.city);
       formData.append('state', values.state);
       formData.append('about_business', values.aboutShop);
-      formData.append(
-        'single_shift',
-        values.openingDays === 'Single Shift' ? 0 : 1,
-      );
-      formData.append(
-        'dine_in_service',
-        values.dineInService === 'yes' ? 1 : 0,
-      );
+      formData.append('single_shift', values.openingDays === 'Single Shift' ? 1 : 0);
+      formData.append('dine_in_service', values.dineInService === 'yes' ? 1 : 0);
+      formData.append('shift_details', JSON.stringify(convertShiftData(schedules)));
+      formData.append('payment_cash', paymentMethods.cash ? 1 : 0);
+      formData.append('payment_card', paymentMethods.card ? 1 : 0);
+      formData.append('payment_upi', paymentMethods.upi ? 1 : 0);
 
-      formData.append(
-        'shift_details',
-        JSON.stringify(convertShiftData(schedules)),
-      );
-      // formData.append('shift_details', schedules);
-      console.log(
-        'Shift details payload:',
-        JSON.stringify(convertShiftData(schedules)),
-      );
-
-      // Append images to form data
-      images.forEach((image: any, index: number) => {
+      if (shopId) formData.append('_method', 'PUT');
+      images.forEach((img: any, index: any) => {
+        console.log(images)
+        // if (!img.remote) {
         formData.append('business_image[]', {
-          uri: image.uri,
-          name: image.fileName,
-          type: image.type,
+          uri: Platform.OS === 'ios' ? img.uri.replace('file://', '') : img.uri,
+          name: img.fileName || `photo_${index}.jpg`,
+          type: img.type || 'image/jpeg',
         });
+        // }
       });
 
-      // Get token for authorization
-      const token = await TokenStorage.getToken();
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      const response: any = await Post('/user/shop', formData, 5000);
+      if (!response.success) throw new Error(response.message || 'Failed to save shop.');
 
-      // API endpoint and method
-      const url = shopId ? `/user/shop/${shopId}` : '/user/shop';
-      const method = shopId ? Put : Post;
-
-      // Make API call
-      const response: any = await method(url, formData, 5000);
-      console.log(values, images, schedules, url, method, response);
-
-      if (!response.success) {
-        throw new Error(
-          response?.message ||
-            (shopId ? 'Shop update failed' : 'Shop creation failed'),
-        );
-      }
-
-      const data = response?.data;
-
-      ToastAndroid.show(
-        data?.message ||
-          (shopId
-            ? 'Shop updated successfully!'
-            : 'Shop created successfully!'),
-        ToastAndroid.SHORT,
-      );
-
-      // Reset form on successful creation (not for updates)
+      ToastAndroid.show(shopId ? 'Shop updated' : 'Shop created', ToastAndroid.SHORT);
       if (!shopId) {
         resetForm();
         setImages([]);
-        setSchedules(
-          daysOfWeek.map(day => ({
-            day,
-            status: false,
-            shift1: {from: '', to: ''},
-            shift2: {from: '', to: ''},
-            state: 'active',
-          })),
-        );
+        setSchedules(daysOfWeek.map(day => ({
+          day, status: false, shift1: { from: '', to: '' }, shift2: { from: '', to: '' }, state: 'active',
+        })));
       }
-      if (values.dineInService === 'yes') {
-        // Navigate to next screen
-        navigation.navigate('AddDineInServiceScreen');
-      } else {
-        navigation.navigate('HomeScreen');
+
+      if (values?.dineInService === "yes") {
+        shopId ?
+          navigation.navigate('AddDineInServiceScreen', { shopId }) : navigation.navigate("AddDineInServiceScreen")
+      }
+      else {
+        navigation.navigate("HomeScreen")
       }
     } catch (error: any) {
-      console.log(error);
-      const errorData = error?.errors || {};
-      const errorMessage =
-        error?.message || 'Something went wrong. Please try again.';
-
-      // Set API errors for form fields (if your API returns field-specific errors)
-      // Example: setApiErrors({ businessName: errorData.businessName?.[0] || '', ... });
-      ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+      ToastAndroid.show(error.message || 'Something went wrong', ToastAndroid.SHORT);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Mock location pinning
-  const handlePinLocation = () => {
-    ToastAndroid.show(
-      'Location pinning not implemented yet!',
-      ToastAndroid.SHORT,
-    );
-    // Integrate with react-native-maps or geolocation service here
-  };
+  const handlePinLocation = () => ToastAndroid.show('Pinning not implemented yet.', ToastAndroid.SHORT);
 
   return (
-    <KeyboardAvoidingView
-      style={{flex: 1}}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: 16,
-          backgroundColor: '#fff',
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
         <Image
           source={ImagePath.signBg}
           style={{
@@ -283,7 +174,7 @@ const CreateShopScreen = ({route}: any) => {
           }}
           resizeMode="contain"
         />
-        <View style={{marginTop: 40}}>
+        <View style={{ marginTop: 40 }}>
           <MaskedView
             maskElement={
               <Text
@@ -298,8 +189,8 @@ const CreateShopScreen = ({route}: any) => {
             }>
             <LinearGradient
               colors={['#EE6447', '#7248B3']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}>
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}>
               <Text
                 style={{
                   textAlign: 'center',
@@ -313,7 +204,7 @@ const CreateShopScreen = ({route}: any) => {
             </LinearGradient>
           </MaskedView>
           <Text
-            style={{textAlign: 'center', marginVertical: 8, color: '#4B5563'}}>
+            style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
             {shopId
               ? 'Update your shop details.'
               : 'Set up your shop details to get started.'}
@@ -324,17 +215,16 @@ const CreateShopScreen = ({route}: any) => {
           ) : (
             <Formik
               initialValues={{
-                businessName: '',
-                phoneNumber: '',
-                gstId: '',
-                addressLine1: '',
-                addressLine2: '',
-                zipCode: '',
-                city: '',
-                state: '',
-                aboutShop: '',
-                openingDays: '',
-                dineInService: '',
+                businessName: shopId ? user?.shop?.restaurant_name : '',
+                phoneNumber: shopId ? user?.shop?.phone : '',
+                gstId: shopId ? user?.shop?.gst : '',
+                addressLine1: shopId ? user?.shop?.address : '',
+                zipCode: shopId ? user?.shop?.zip_code : '',
+                city: shopId ? user?.shop?.city : '',
+                state: shopId ? user?.shop?.state : '',
+                aboutShop: shopId ? user?.shop?.about_business : '',
+                openingDays: shopId ? (user?.shop?.single_shift ? "Single Shift" : "Double Shift") : '',
+                dineInService: shopId ? (user?.shop?.dine_in_service ? "yes" : "no") : '',
               }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
@@ -348,10 +238,10 @@ const CreateShopScreen = ({route}: any) => {
                 errors,
                 touched,
                 isSubmitting,
-              }) => (
-                <View style={{marginTop: 16}}>
+              }: any) => (
+                <View style={{ marginTop: 16 }}>
                   {/* Business Name */}
-                  <View style={{marginBottom: 12}}>
+                  <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
                         fontSize: 14,
@@ -361,7 +251,7 @@ const CreateShopScreen = ({route}: any) => {
                       }}>
                       Business Name
                     </Text>
-                    <View style={{position: 'relative'}}>
+                    <View style={{ position: 'relative' }}>
                       <TextInput
                         style={{
                           borderWidth: 1,
@@ -383,19 +273,19 @@ const CreateShopScreen = ({route}: any) => {
                         name="storefront-outline"
                         size={20}
                         color="#4B5563"
-                        style={{position: 'absolute', left: 12, top: 12}}
+                        style={{ position: 'absolute', left: 12, top: 12 }}
                       />
                     </View>
                     {touched.businessName && errors.businessName && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.businessName}
                       </Text>
                     )}
                   </View>
 
                   {/* Store Image Upload */}
-                  <View style={{marginBottom: 12}}>
+                  <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
                         fontSize: 14,
@@ -425,7 +315,7 @@ const CreateShopScreen = ({route}: any) => {
                         color="#4B5563"
                       />
                       <Text
-                        style={{color: '#4B5563', fontSize: 14, marginTop: 4}}>
+                        style={{ color: '#4B5563', fontSize: 14, marginTop: 4 }}>
                         Upload store front and other images
                       </Text>
                     </TouchableOpacity>
@@ -433,8 +323,8 @@ const CreateShopScreen = ({route}: any) => {
                       <FlatList
                         horizontal
                         data={images}
-                        keyExtractor={item => item.id.toString()}
-                        renderItem={({item}) => (
+                        keyExtractor={(item, index) => index?.toString()}
+                        renderItem={({ item }) => (
                           <View
                             style={{
                               marginTop: 8,
@@ -446,12 +336,12 @@ const CreateShopScreen = ({route}: any) => {
                               accessible
                               accessibilityLabel="View uploaded image">
                               <Image
-                                source={{uri: item.uri}}
-                                style={{width: 80, height: 80, borderRadius: 8}}
+                                source={{ uri: item.uri }}
+                                style={{ width: 80, height: 80, borderRadius: 8 }}
                               />
                             </TouchableOpacity>
                             <TouchableOpacity
-                              style={{position: 'absolute', top: -8, right: -8}}
+                              style={{ position: 'absolute', top: -8, right: -8 }}
                               onPress={() => handleRemoveImage(item.id)}
                               accessible
                               accessibilityLabel="Remove uploaded image">
@@ -463,13 +353,13 @@ const CreateShopScreen = ({route}: any) => {
                             </TouchableOpacity>
                           </View>
                         )}
-                        style={{marginTop: 8}}
+                        style={{ marginTop: 8 }}
                       />
                     )}
                   </View>
 
                   {/* Phone Number */}
-                  <View style={{marginBottom: 12}}>
+                  <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
                         fontSize: 14,
@@ -479,7 +369,7 @@ const CreateShopScreen = ({route}: any) => {
                       }}>
                       Phone Number
                     </Text>
-                    <View style={{position: 'relative'}}>
+                    <View style={{ position: 'relative' }}>
                       <TextInput
                         style={{
                           borderWidth: 1,
@@ -503,19 +393,19 @@ const CreateShopScreen = ({route}: any) => {
                         name="call-outline"
                         size={20}
                         color="#4B5563"
-                        style={{position: 'absolute', left: 12, top: 12}}
+                        style={{ position: 'absolute', left: 12, top: 12 }}
                       />
                     </View>
                     {touched.phoneNumber && errors.phoneNumber && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.phoneNumber}
                       </Text>
                     )}
                   </View>
 
                   {/* GST ID */}
-                  <View style={{marginBottom: 12}}>
+                  <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
                         fontSize: 14,
@@ -543,14 +433,14 @@ const CreateShopScreen = ({route}: any) => {
                     />
                     {touched.gstId && errors.gstId && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.gstId}
                       </Text>
                     )}
                   </View>
 
                   {/* Address Fields */}
-                  <View style={{marginBottom: 12}}>
+                  <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
                         fontSize: 14,
@@ -583,31 +473,28 @@ const CreateShopScreen = ({route}: any) => {
                     </TouchableOpacity>
                     <View
                       style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        paddingHorizontal: 10,
                         marginVertical: 8,
                       }}>
-                      <Picker
-                        selectedValue={values.city}
-                        onValueChange={handleChange('city')}
+                      <TextInput
                         style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          padding: 12,
                           fontSize: 16,
-                          height: 50,
                         }}
+                        placeholder="Enter your city"
+                        onChangeText={handleChange('city')}
+                        onBlur={handleBlur('city')}
+                        value={values.city}
                         accessible
-                        accessibilityLabel="Select city">
-                        <Picker.Item label="Select City" value="" />
-                        <Picker.Item label="Mumbai" value="Mumbai" />
-                        <Picker.Item label="Delhi" value="Delhi" />
-                        <Picker.Item label="Bangalore" value="Bangalore" />
-                      </Picker>
+                        accessibilityLabel="City"
+                      />
                     </View>
                     {touched.city && errors.city && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.city}
                       </Text>
                     )}
@@ -630,14 +517,14 @@ const CreateShopScreen = ({route}: any) => {
                         accessible
                         accessibilityLabel="Select state">
                         <Picker.Item label="Select State" value="" />
-                        <Picker.Item label="Maharashtra" value="Maharashtra" />
-                        <Picker.Item label="Delhi" value="Delhi" />
-                        <Picker.Item label="Karnataka" value="Karnataka" />
+                        {states.map((state) => (
+                          <Picker.Item key={state?.id} label={state?.name} value={state?.name} />
+                        ))}
                       </Picker>
                     </View>
                     {touched.state && errors.state && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.state}
                       </Text>
                     )}
@@ -651,7 +538,7 @@ const CreateShopScreen = ({route}: any) => {
                         fontSize: 16,
                         marginBottom: 12,
                       }}
-                      placeholder="Address Line 1"
+                      placeholder="Enter your address"
                       onChangeText={handleChange('addressLine1')}
                       onBlur={handleBlur('addressLine1')}
                       value={values.addressLine1}
@@ -660,10 +547,11 @@ const CreateShopScreen = ({route}: any) => {
                     />
                     {touched.addressLine1 && errors.addressLine1 && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.addressLine1}
                       </Text>
                     )}
+
                     <TextInput
                       style={{
                         borderWidth: 1,
@@ -674,24 +562,7 @@ const CreateShopScreen = ({route}: any) => {
                         fontSize: 16,
                         marginBottom: 12,
                       }}
-                      placeholder="Address Line 2 (Optional)"
-                      onChangeText={handleChange('addressLine2')}
-                      onBlur={handleBlur('addressLine2')}
-                      value={values.addressLine2}
-                      accessible
-                      accessibilityLabel="Address Line 2 input"
-                    />
-                    <TextInput
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        padding: 12,
-                        fontSize: 16,
-                        marginBottom: 12,
-                      }}
-                      placeholder="Zip Code"
+                      placeholder="Enter your zip code"
                       onChangeText={handleChange('zipCode')}
                       onBlur={handleBlur('zipCode')}
                       value={values.zipCode}
@@ -701,14 +572,14 @@ const CreateShopScreen = ({route}: any) => {
                     />
                     {touched.zipCode && errors.zipCode && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.zipCode}
                       </Text>
                     )}
                   </View>
 
                   {/* About Shop */}
-                  <View style={{marginBottom: 12}}>
+                  <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
                         fontSize: 14,
@@ -739,14 +610,14 @@ const CreateShopScreen = ({route}: any) => {
                     />
                     {touched.aboutShop && errors.aboutShop && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.aboutShop}
                       </Text>
                     )}
                   </View>
 
                   {/* Opening Days */}
-                  <View style={{marginBottom: 12}}>
+                  <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
                         fontSize: 14,
@@ -780,7 +651,7 @@ const CreateShopScreen = ({route}: any) => {
                         }
                         accessible
                         accessibilityLabel="Select Single Shift">
-                        <Text style={{fontSize: 14, color: '#374151'}}>
+                        <Text style={{ fontSize: 14, color: '#374151' }}>
                           Single Shift
                         </Text>
                       </TouchableOpacity>
@@ -802,18 +673,18 @@ const CreateShopScreen = ({route}: any) => {
                         }
                         accessible
                         accessibilityLabel="Select Double Shift">
-                        <Text style={{fontSize: 14, color: '#374151'}}>
+                        <Text style={{ fontSize: 14, color: '#374151' }}>
                           Double Shift
                         </Text>
                       </TouchableOpacity>
                     </View>
                     {touched.openingDays && errors.openingDays && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.openingDays}
                       </Text>
                     )}
-                    {schedules.map((data, index) => (
+                    {schedules.map((data: any, index: any) => (
                       <ShiftCard
                         key={data.day}
                         shift={values.openingDays !== 'Single Shift' ? 2 : 1}
@@ -824,7 +695,7 @@ const CreateShopScreen = ({route}: any) => {
                   </View>
 
                   {/* Dine-in Service */}
-                  <View style={{marginBottom: 12}}>
+                  <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
                         fontSize: 14,
@@ -856,7 +727,7 @@ const CreateShopScreen = ({route}: any) => {
                         onPress={() => handleChange('dineInService')('yes')}
                         accessible
                         accessibilityLabel="Yes Dine-in Service">
-                        <Text style={{fontSize: 14, color: '#374151'}}>
+                        <Text style={{ fontSize: 14, color: '#374151' }}>
                           Yes
                         </Text>
                       </TouchableOpacity>
@@ -877,29 +748,95 @@ const CreateShopScreen = ({route}: any) => {
                         onPress={() => handleChange('dineInService')('no')}
                         accessible
                         accessibilityLabel="No Dine-in Service">
-                        <Text style={{fontSize: 14, color: '#374151'}}>No</Text>
+                        <Text style={{ fontSize: 14, color: '#374151' }}>No</Text>
                       </TouchableOpacity>
                     </View>
                     {touched.dineInService && errors.dineInService && (
                       <Text
-                        style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.dineInService}
                       </Text>
                     )}
                   </View>
 
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: 8,
+                    }}>
+                    Payment Acceptance By
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setPaymentMethods({
+                          ...paymentMethods,
+                          cash: !paymentMethods.cash,
+                        })
+                      }
+                      style={styles.checkboxContainer}>
+                      <View
+                        style={[
+                          styles.checkbox,
+                          paymentMethods.cash && styles.checkboxSelected,
+                        ]}>
+                        {paymentMethods.cash && (
+                          <IconM name="check" size={13} color="#fff" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxText}>Cash</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setPaymentMethods({
+                          ...paymentMethods,
+                          card: !paymentMethods.card,
+                        })
+                      }
+                      style={styles.checkboxContainer}>
+                      <View
+                        style={[
+                          styles.checkbox,
+                          paymentMethods.card && styles.checkboxSelected,
+                        ]}>
+                        {paymentMethods.card && (
+                          <IconM name="check" size={13} color="#fff" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxText}>Card</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() =>
+                        setPaymentMethods({ ...paymentMethods, upi: !paymentMethods.upi })
+                      }
+                      style={styles.checkboxContainer}>
+                      <View
+                        style={[
+                          styles.checkbox,
+                          paymentMethods.upi && styles.checkboxSelected,
+                        ]}>
+                        {paymentMethods.upi && (
+                          <IconM name="check" size={13} color="#fff" />
+                        )}
+                      </View>
+                      <Text style={styles.checkboxText}>UPI</Text>
+                    </TouchableOpacity>
+                  </View>
+
                   <TouchableOpacity
                     onPress={() => handleSubmit()}
                     disabled={isSubmitting}
-                    style={{marginTop: 16}}
+                    style={{ marginTop: 16 }}
                     accessible
                     accessibilityLabel={
                       shopId ? 'Update shop button' : 'Create shop button'
                     }>
                     <LinearGradient
                       colors={['#EE6447', '#7248B3']}
-                      start={{x: 0, y: 0}}
-                      end={{x: 1, y: 0}}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
                       style={{
                         padding: 16,
                         borderRadius: 10,
@@ -916,8 +853,8 @@ const CreateShopScreen = ({route}: any) => {
                             ? 'Updating...'
                             : 'Creating...'
                           : shopId
-                          ? 'Update Shop'
-                          : 'Create Shop'}
+                            ? 'Update Shop'
+                            : 'Create Shop'}
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -950,7 +887,7 @@ const CreateShopScreen = ({route}: any) => {
                 alignItems: 'center',
               }}>
               <Image
-                source={{uri: viewImageModal}}
+                source={{ uri: viewImageModal }}
                 style={{
                   width: width * 0.8,
                   height: width * 0.8,
@@ -958,7 +895,7 @@ const CreateShopScreen = ({route}: any) => {
                 }}
               />
               <TouchableOpacity
-                style={{position: 'absolute', top: 8, right: 8}}
+                style={{ position: 'absolute', top: 8, right: 8 }}
                 onPress={() => setViewImageModal(null)}
                 accessible
                 accessibilityLabel="Close image modal">
@@ -973,3 +910,49 @@ const CreateShopScreen = ({route}: any) => {
 };
 
 export default CreateShopScreen;
+
+const styles = StyleSheet.create({
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkbox: {
+    width: 15,
+    height: 15,
+    borderWidth: 2,
+    borderColor: '#374151',
+    borderRadius: 4,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxSelected: {
+    backgroundColor: '#EE6447',
+    borderColor: '#EE6447',
+  },
+  checkboxText: {
+    fontSize: 14,
+    color: '#374151',
+  },
+  addButton: {
+    backgroundColor: '#fff',
+    borderRadius: 50,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  addTableButton: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  addButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#374151',
+  },
+})

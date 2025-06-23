@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,73 +7,114 @@ import {
   FlatList,
   Image,
   Dimensions,
+  ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Modal from 'react-native-modal';
-import {ImagePath} from '../../constants/ImagePath';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart, removeFromCart } from '../../store/slices/cartSlice';
+import { ImagePath } from '../../constants/ImagePath';
+import { RootState } from '../../store/store';
+import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 
 const mockProducts = [
-  {id: '1', name: 'Product 1', price: 19.99, image: ImagePath.item2},
-  {id: '2', name: 'Product 2', price: 29.99, image: ImagePath.item2},
-  {id: '3', name: 'Product 3', price: 39.99, image: ImagePath.item3},
-  {id: '4', name: 'Product 4', price: 49.99, image: ImagePath.item3},
+  { id: '1', name: 'Product 1', price: 19.99, image: ImagePath.item2 },
+  { id: '2', name: 'Product 2', price: 29.99, image: ImagePath.item2 },
+  { id: '3', name: 'Product 3', price: 39.99, image: ImagePath.item3 },
+  { id: '4', name: 'Product 4', price: 49.99, image: ImagePath.item3 },
 ];
 
 const AddOrderScreen = () => {
   const navigation = useNavigation<any>();
+  const dispatch = useDispatch();
+  const isFocused = useIsFocused();
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const [Products, setProducts] = useState<any>([])
+  const [isLoading, setIsLoading] = useState(false)
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartItems, setCartItems] = useState<any[]>([]);
   const [isCartVisible, setIsCartVisible] = useState(false);
 
-  const filteredProducts = mockProducts.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()),
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response: any = await Fetch(`/user/menu-items`, {}, 5000);
+      console.log(response)
+      if (!response.success) throw new Error('Failed to fetch products');
+      setProducts(response.data.menu_items || []);
+    } catch (error: any) {
+      console.error('fetchProducts error:', error.message);
+      ToastAndroid.show(
+        error?.message || 'Failed to load products.',
+        ToastAndroid.SHORT
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+
+  useEffect(() => {
+    if (isFocused) {
+      fetchProducts();
+    }
+  }, [isFocused]);
+
+
+  const filteredProducts = Products.filter((product: any) =>
+    product.item_name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const addToCart = (product: any) => {
-    const existing = cartItems.find(item => item.id === product.id);
-    if (existing) {
-      setCartItems(prev =>
-        prev.map(item =>
-          item.id === product.id ? {...item, quantity: item.quantity + 1} : item,
-        ),
-      );
-    } else {
-      setCartItems(prev => [...prev, {...product, quantity: 1}]);
-    }
-  };
-
-  const updateQuantity = (id: string, change: number) => {
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: Math.max(1, item.quantity + change),
-            }
-          : item,
-      ),
+  const handleAddToCart = (product: any) => {
+    dispatch(
+      addToCart({
+        id: product.id,
+        item_name: product.item_name,
+        price: product.price,
+        quantity: 1,
+        image: product.image,
+      })
     );
   };
 
-  const renderProductItem = ({item}: {item: any}) => (
+  const updateQuantity = (id: string, change: number) => {
+    const item = cartItems.find(i => i.id === id);
+    if (!item) return;
+
+    const newQty = item.quantity + change;
+    if (newQty <= 0) {
+      dispatch(removeFromCart(id));
+    } else {
+      dispatch(
+        addToCart({
+          ...item,
+          quantity: change,
+        })
+      );
+    }
+  };
+
+  const renderProductItem = ({ item }: { item: any }) => (
     <TouchableOpacity
-      style={{flex: 1, margin: 8, alignItems: 'center'}}
-      onPress={() => addToCart(item)}>
-      <View style={{height: 180, width: '100%'}}>
+      style={{ flex: 1, margin: 8, alignItems: 'center', elevation: 2 }}
+      onPress={() => handleAddToCart(item)}>
+      <View style={{ height: 140, width: '100%', marginBottom: 10 }}>
         <Image
-          source={item.image}
-          style={{width: '100%', height: '100%', borderRadius: 12, marginBottom: 8}}
-          resizeMode="contain"
+          source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
+          style={{ width: '100%', height: '100%', borderRadius: 12 }}
+          resizeMode="stretch"
         />
       </View>
-      <Text style={{fontSize: 14, color: '#374151', textAlign: 'center'}}>
-        {item.name}
+      <Text style={{ fontSize: 14, color: '#374151', textAlign: 'center' }}>
+        {item.item_name}
       </Text>
     </TouchableOpacity>
   );
 
-  const renderCartItem = ({item}: {item: any}) => (
+  const renderCartItem = ({ item }: { item: any }) => (
     <View
       style={{
         flexDirection: 'row',
@@ -83,66 +124,55 @@ const AddOrderScreen = () => {
         padding: 12,
       }}>
       <Image
-        source={item.image}
-        style={{width: 80, height: 80, borderRadius: 10, marginRight: 12}}
+        source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
+        style={{ width: 80, height: 80, borderRadius: 10, marginRight: 12 }}
         resizeMode="cover"
       />
-      <View style={{flex: 1}}>
-        <Text style={{fontSize: 16, fontWeight: 'bold', marginBottom: 4}}>
-          {item.name}
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 4 }}>
+          {item?.item_name}
         </Text>
-        <Text style={{color: '#6B7280', marginBottom: 4}}>
-          ${item.price.toFixed(2)}
+        <Text style={{ color: '#6B7280', marginBottom: 4 }}>
+          ₹{item?.price}
         </Text>
-        <Text style={{color: '#6B7280', marginBottom: 4}}>
-          Quantity: {item.quantity}
-        </Text>
-        <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 8}}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }} className='gap-2'>
           <TouchableOpacity
+            className='bg-primary-30'
             style={{
-              backgroundColor: '#D1D5DB',
               borderRadius: 6,
               paddingHorizontal: 10,
-              marginRight: 10,
             }}
             onPress={() => updateQuantity(item.id, -1)}>
-            <Text style={{fontSize: 18}}>-</Text>
+            <Text style={{ fontSize: 18 }}>-</Text>
           </TouchableOpacity>
+          <Text style={{ color: '#6B7280', marginBottom: 4 }}>
+            {item?.quantity}
+          </Text>
           <TouchableOpacity
+            className='bg-primary-30'
             style={{
-              backgroundColor: '#D1D5DB',
               borderRadius: 6,
               paddingHorizontal: 10,
             }}
-            onPress={() => updateQuantity(item.id, 1)}>
-            <Text style={{fontSize: 18}}>+</Text>
+            onPress={() => updateQuantity(item?.id, 1)}>
+            <Text style={{ fontSize: 18 }}>+</Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#B68AD4',
-            paddingVertical: 8,
-            borderRadius: 8,
-            alignItems: 'center',
-          }}>
-          <Text style={{color: '#fff', fontWeight: 'bold'}}>Save</Text>
-        </TouchableOpacity>
       </View>
-    </View>
+    </View >
   );
 
   return (
-    <View style={{flex: 1, backgroundColor: '#fff', padding: 16}}>
+    <View style={{ flex: 1, backgroundColor: '#fff', padding: 16 }}>
       {/* Header */}
       <View
+        className='absolute left-2 top-2'
         style={{
           flexDirection: 'row',
           alignItems: 'center',
-          borderBottomWidth: 1,
-          borderBottomColor: '#D1D5DB',
           paddingBottom: 8,
         }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{padding: 8}}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
           <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
       </View>
@@ -154,13 +184,13 @@ const AddOrderScreen = () => {
           fontSize: 20,
           fontWeight: 'bold',
           color: '#374151',
-          marginVertical: 16,
+          marginBottom: 16,
         }}>
-        Add Order
+        Add Products
       </Text>
 
       {/* Search & Cart */}
-      <View style={{flexDirection: 'row', alignItems: 'center', marginBottom: 16}}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
         <View
           style={{
             flex: 1,
@@ -172,9 +202,9 @@ const AddOrderScreen = () => {
             borderRadius: 10,
             paddingHorizontal: 12,
           }}>
-          <Ionicons name="search-outline" size={20} color="#374151" style={{marginRight: 8}} />
+          <Ionicons name="search-outline" size={20} color="#374151" style={{ marginRight: 8 }} />
           <TextInput
-            style={{flex: 1, fontSize: 16, paddingVertical: 10}}
+            style={{ flex: 1, fontSize: 16, paddingVertical: 10 }}
             placeholder="Search product"
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -182,7 +212,7 @@ const AddOrderScreen = () => {
         </View>
         <TouchableOpacity
           onPress={() => setIsCartVisible(true)}
-          style={{backgroundColor: '#B68AD4', padding: 12, borderRadius: 10, marginLeft: 12}}>
+          style={{ backgroundColor: '#B68AD4', padding: 12, borderRadius: 10, marginLeft: 12 }}>
           <Ionicons name="cart-outline" size={24} color="#fff" />
           {cartItems.length > 0 && (
             <View
@@ -197,30 +227,40 @@ const AddOrderScreen = () => {
                 justifyContent: 'center',
                 alignItems: 'center',
               }}>
-              <Text style={{color: '#fff', fontSize: 10}}>{cartItems.length}</Text>
+              <Text style={{ color: '#fff', fontSize: 10 }}>{cartItems.length}</Text>
             </View>
           )}
         </TouchableOpacity>
       </View>
 
-      <Text style={{fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 12}}>
+      <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 12 }}>
         Tap to Add Product
       </Text>
 
-      <FlatList
-        data={filteredProducts}
-        renderItem={renderProductItem}
-        keyExtractor={item => item.id}
-        numColumns={2}
-        contentContainerStyle={{paddingBottom: 16}}
-        showsVerticalScrollIndicator={false}
-      />
-
+      {/* Product List */}
+      {isLoading ? (
+        <View className="flex-1 justify-center items-center mt-10">
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      ) : filteredProducts.length === 0 ? (
+        <View className="flex-1 justify-center items-center mt-10">
+          <Text className="text-gray-500 text-lg">No products found</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredProducts}
+          renderItem={renderProductItem}
+          keyExtractor={item => item.id}
+          numColumns={2}
+          contentContainerStyle={{ paddingBottom: 16 }}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
       {/* Cart Modal */}
       <Modal
         isVisible={isCartVisible}
         onBackdropPress={() => setIsCartVisible(false)}
-        style={{justifyContent: 'flex-end', margin: 0}}>
+        style={{ justifyContent: 'flex-end', margin: 0 }}>
         <View
           style={{
             height: Dimensions.get('window').height * 0.75,
@@ -229,7 +269,7 @@ const AddOrderScreen = () => {
             borderTopRightRadius: 20,
             padding: 16,
           }}>
-          <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 12}}>Your Cart</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Your Cart</Text>
           <FlatList
             data={cartItems}
             renderItem={renderCartItem}

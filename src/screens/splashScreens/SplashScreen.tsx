@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Animated, Text, Easing } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ImagePath } from '../../constants/ImagePath';
@@ -11,18 +11,27 @@ import { RootState } from '../../store/store';
 const SplashScreen = () => {
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<any>();
+  const [isLoading, setIsLoading] = useState(false)
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const text = 'Welcome to WixBox'.split('');
   const charAnims = useRef(text.map(() => new Animated.Value(0))).current;
-  const { status: userStatus, data: user }: any = useSelector(
-    (state: RootState) => state.user,
-  );
+
   const getUserData = async () => {
-    const user = await dispatch(fetchUser());
-    return user;
+    try {
+      setIsLoading(true);
+      const data = await dispatch(fetchUser());
+      console.log(data?.payload)
+      return data?.payload;
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
   };
+
   useEffect(() => {
     const animateLogo = () => {
       const charAnimations = charAnims.map((anim, index) =>
@@ -61,16 +70,10 @@ const SplashScreen = () => {
     };
 
     const checkAuthAndNavigate = async () => {
-
-      console.log(navigation.getState());
-
       const introViewed = await AsyncStorage.getItem('isIntroViewed');
       const token: any = await TokenStorage.getToken();
-      const userData: any = await TokenStorage.getUserData();
 
-      if (token) {
-        await getUserData()
-      }
+
       if (introViewed !== 'true') {
         navigation.replace('SplashScreen1');
         return;
@@ -79,15 +82,22 @@ const SplashScreen = () => {
         navigation.replace('LoginScreen');
         return;
       }
-      const userDetails = user || userData
-      console.log(userDetails,user, userDetails)
-      if (userDetails) {
-        if (userDetails?.role === 'user') {
+
+      console.log(token)
+      if (!token) {
+        console.log("No Token")
+        return;
+      }
+      const user = await getUserData()
+
+      if (user) {
+        console.log(user, "dskjfkjjdsk")
+        if (user?.role === 'user') {
           navigation.navigate('HomeScreen', {
             screen: 'Market',
           });
         } else {
-          if (userDetails?.shopcreated) {
+          if (user?.shopcreated) {
             navigation.navigate('HomeScreen', {
               screen: 'Home',
             });
@@ -96,11 +106,13 @@ const SplashScreen = () => {
           }
         }
       } else {
-        TokenStorage.removeUser();
         TokenStorage.removeToken();
+        TokenStorage.removeUser();
+        TokenStorage.removeRole();
         navigation.replace('LoginScreen');
         return;
       }
+
 
     };
 

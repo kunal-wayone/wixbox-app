@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,16 @@ import {
   Platform,
   ToastAndroid,
 } from 'react-native';
-import {Picker} from '@react-native-picker/picker';
-import {useNavigation, useRoute} from '@react-navigation/native';
-import {Formik} from 'formik';
+import { Picker } from '@react-native-picker/picker';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Formik } from 'formik';
 import * as Yup from 'yup';
-import {launchImageLibrary} from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {BASE_URL, Fetch, IMAGE_URL, Post, Put} from '../../utils/apiUtils';
+import { BASE_URL, Fetch, IMAGE_URL, Post, Put } from '../../utils/apiUtils';
 import LoadingComponent from '../otherScreen/LoadingComponent';
 
-const {width} = Dimensions.get('screen');
+const { width } = Dimensions.get('screen');
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
@@ -44,8 +44,9 @@ const AddProductScreen = () => {
   const productId = route.params?.productId || null;
   const [itemDetails, setItemDetails] = useState<any>(null);
   const [images, setImages] = useState<any>([]); // Store selected images
-  const [categories, setCategories] = useState([]); // Store categories from API
-  const [units, setUnits] = useState([]); // Store units from API
+  const [categories, setCategories] = useState<any[]>([]); // Store categories from API
+  const [units, setUnits] = useState<any[]>([]); // Store units from API
+  const [subUits, setSubUits] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(false);
 
   // Fetch product details if editing
@@ -61,6 +62,8 @@ const AddProductScreen = () => {
         if (!response.success) {
           throw new Error('Failed to fetch product');
         }
+
+        console.log(response)
         const data = response?.data?.menu_item; // Fixed typo here
         const images = response?.data?.menu_item?.images || [];
         setItemDetails(data);
@@ -99,6 +102,7 @@ const AddProductScreen = () => {
   const fetchUnit = async () => {
     try {
       const response: any = await Fetch('/user/menu-units', undefined, 5000);
+      console.log(response)
       if (response.success) {
         setUnits(response?.data?.units);
       }
@@ -106,6 +110,21 @@ const AddProductScreen = () => {
       ToastAndroid.show('Failed to fetch units', ToastAndroid.SHORT);
     }
   };
+
+  // const fetchSubUnit = async (unit: any) => {
+  //   console.log(unit)
+  //   const selectedUnit = units.find((u: any) => u.id === unit);
+  //   console.log(selectedUnit)
+  //   try {
+  //     const response: any = await Fetch(`/user/units/${selectedUnit}/subunits`, undefined, 5000);
+  //     console.log(response)
+  //     if (response.success) {
+  //       setSubUits(response?.data?.subunits);
+  //     }
+  //   } catch (error) {
+  //     ToastAndroid.show('Failed to fetch units', ToastAndroid.SHORT);
+  //   }
+  // };
 
   useEffect(() => {
     getProductData(productId);
@@ -144,7 +163,7 @@ const AddProductScreen = () => {
   // Handle form submission
   const handleSaveProduct = async (
     values: any,
-    {setSubmitting, resetForm}: any,
+    { setSubmitting, resetForm }: any,
   ) => {
     try {
       const formData = new FormData();
@@ -152,7 +171,8 @@ const AddProductScreen = () => {
       formData.append('price', values.price);
       formData.append('description', values.description);
       formData.append('stock_quantity', values.stock_quantity);
-      formData.append('unit', values.unit);
+      formData.append('unit', units && units?.find(u => u?.id === values.unit)?.short_name);
+      formData.append('sub_unit', subUits.length !== 0 && subUits?.find(su => su?.id === values.sub_unit)?.short_name);
       formData.append('category_id', values.category_id);
       formData.append('status', values.status);
 
@@ -207,7 +227,7 @@ const AddProductScreen = () => {
 
   return (
     <KeyboardAvoidingView
-      style={{flex: 1}}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
       <ScrollView
@@ -223,7 +243,7 @@ const AddProductScreen = () => {
             <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
         </View>
-        <View style={{marginTop: 10}}>
+        <View style={{ marginTop: 10 }}>
           <Text
             style={{
               textAlign: 'center',
@@ -234,7 +254,7 @@ const AddProductScreen = () => {
             {itemDetails ? 'Edit Product' : 'Add Product'}
           </Text>
           <Text
-            style={{textAlign: 'center', marginVertical: 8, color: '#4B5563'}}>
+            style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
             {itemDetails
               ? 'Update the product details below.'
               : 'Enter the product details to add a new product.'}
@@ -248,7 +268,8 @@ const AddProductScreen = () => {
               stock_quantity: itemDetails?.stock_quantity
                 ? String(itemDetails.stock_quantity)
                 : '',
-              unit: itemDetails?.unit || '',
+              unit: units && units?.find(u => u?.short_name === itemDetails?.unit)?.id || '',
+              sub_unit: subUits.length != 0 && subUits?.find(u => u?.short_name === itemDetails?.sub_unit)?.id || '',
               category_id: itemDetails?.category?.id
                 ? itemDetails.category.id
                 : '', // Fixed category_id
@@ -268,9 +289,9 @@ const AddProductScreen = () => {
               isSubmitting,
               setFieldValue,
             }: any) => (
-              <View style={{marginTop: 16}}>
+              <View style={{ marginTop: 16 }}>
                 {/* Image Upload and Preview */}
-                <View style={{marginBottom: 12}}>
+                <View style={{ marginBottom: 12 }}>
                   <Text
                     style={{
                       fontSize: 14,
@@ -294,7 +315,7 @@ const AddProductScreen = () => {
                     }}
                     onPress={() => pickImages(setFieldValue)}>
                     <Ionicons name="image-outline" size={40} color="#4B5563" />
-                    <Text style={{color: '#4B5563', marginTop: 8}}>
+                    <Text style={{ color: '#4B5563', marginTop: 8 }}>
                       Upload Images
                     </Text>
                   </TouchableOpacity>
@@ -306,12 +327,12 @@ const AddProductScreen = () => {
                       return (
                         <View
                           key={index}
-                          style={{marginRight: 10, position: 'relative'}}>
+                          style={{ marginRight: 10, position: 'relative' }}>
                           <Image
                             source={{
                               uri: `${image.uri}`,
                             }}
-                            style={{width: 100, height: 100, borderRadius: 8}}
+                            style={{ width: 100, height: 100, borderRadius: 8 }}
                           />
                           <TouchableOpacity
                             style={{
@@ -331,14 +352,14 @@ const AddProductScreen = () => {
                   </ScrollView>
                   {touched.images && errors.images && (
                     <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.images}
                     </Text>
                   )}
                 </View>
 
                 {/* Item Name */}
-                <View style={{marginBottom: 12}}>
+                <View style={{ marginBottom: 12 }}>
                   <Text
                     style={{
                       fontSize: 14,
@@ -364,14 +385,14 @@ const AddProductScreen = () => {
                   />
                   {touched.item_name && errors.item_name && (
                     <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.item_name}
                     </Text>
                   )}
                 </View>
 
                 {/* Price */}
-                <View style={{marginBottom: 12}}>
+                <View style={{ marginBottom: 12 }}>
                   <Text
                     style={{
                       fontSize: 14,
@@ -398,14 +419,14 @@ const AddProductScreen = () => {
                   />
                   {touched.price && errors.price && (
                     <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.price}
                     </Text>
                   )}
                 </View>
 
                 {/* Description */}
-                <View style={{marginBottom: 12}}>
+                <View style={{ marginBottom: 12 }}>
                   <Text
                     style={{
                       fontSize: 14,
@@ -434,14 +455,14 @@ const AddProductScreen = () => {
                   />
                   {touched.description && errors.description && (
                     <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.description}
                     </Text>
                   )}
                 </View>
 
                 {/* Category Picker */}
-                <View style={{marginBottom: 12}}>
+                <View style={{ marginBottom: 12 }}>
                   <Text
                     style={{
                       fontSize: 14,
@@ -463,7 +484,7 @@ const AddProductScreen = () => {
                       onValueChange={value =>
                         setFieldValue('category_id', value)
                       }
-                      style={{fontSize: 16}}>
+                      style={{ fontSize: 16 }}>
                       <Picker.Item label="Select a category" value="" />
                       {categories.map((category: any) => (
                         <Picker.Item
@@ -476,14 +497,14 @@ const AddProductScreen = () => {
                   </View>
                   {touched.category_id && errors.category_id && (
                     <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.category_id}
                     </Text>
                   )}
                 </View>
 
                 {/* Unit Picker */}
-                <View style={{marginBottom: 12}}>
+                <View style={{ marginBottom: 12 }}>
                   <Text
                     style={{
                       fontSize: 14,
@@ -502,28 +523,67 @@ const AddProductScreen = () => {
                     }}>
                     <Picker
                       selectedValue={values.unit}
-                      onValueChange={value => setFieldValue('unit', value)}
-                      style={{fontSize: 16}}>
+                      onValueChange={value => { setFieldValue('unit', value); setSubUits(units.find((u: any) => u.id === value)?.sub_units) }}
+                      style={{ fontSize: 16 }}>
                       <Picker.Item label="Select a unit" value="" />
-                      {units.map((unit: any) => (
+                      {units?.length != 0 && units.map((unit: any) => (
                         <Picker.Item
                           key={unit.id}
                           label={unit.name}
-                          value={unit.short_name}
+                          value={unit.id}
                         />
                       ))}
                     </Picker>
                   </View>
                   {touched.unit && errors.unit && (
                     <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.unit}
                     </Text>
                   )}
                 </View>
 
+                {subUits.length != 0 && subUits?.length != 0 && <View style={{ marginBottom: 12 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: 4,
+                    }}>
+                    Sub Unit
+                  </Text>
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#D1D5DB',
+                      backgroundColor: '#F3F4F6',
+                      borderRadius: 8,
+                    }}>
+                    <Picker
+                      selectedValue={values.subUits}
+                      onValueChange={value => setFieldValue('sub_unit', value)}
+                      style={{ fontSize: 16 }}>
+                      <Picker.Item label="Select a sub unit" value="" />
+                      {subUits.map((subUnit: any) => (
+                        <Picker.Item
+                          key={subUnit.id}
+                          label={subUnit.name}
+                          value={subUnit.id}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                  {touched.unit && errors.unit && (
+                    <Text
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                      {errors.unit}
+                    </Text>
+                  )}
+                </View>
+                }
                 {/* Stock Quantity */}
-                <View style={{marginBottom: 12}}>
+                <View style={{ marginBottom: 12 }}>
                   <Text
                     style={{
                       fontSize: 14,
@@ -550,14 +610,14 @@ const AddProductScreen = () => {
                   />
                   {touched.stock_quantity && errors.stock_quantity && (
                     <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.stock_quantity}
                     </Text>
                   )}
                 </View>
 
                 {/* Status Picker */}
-                <View style={{marginBottom: 12}}>
+                <View style={{ marginBottom: 12 }}>
                   <Text
                     style={{
                       fontSize: 14,
@@ -577,7 +637,7 @@ const AddProductScreen = () => {
                     <Picker
                       selectedValue={values.status}
                       onValueChange={value => setFieldValue('status', value)}
-                      style={{fontSize: 16}}>
+                      style={{ fontSize: 16 }}>
                       <Picker.Item label="Select status" value="" />
                       <Picker.Item label="Active" value="1" />
                       <Picker.Item label="Inactive" value="0" />
@@ -585,7 +645,7 @@ const AddProductScreen = () => {
                   </View>
                   {touched.status && errors.status && (
                     <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.status}
                     </Text>
                   )}
@@ -603,22 +663,22 @@ const AddProductScreen = () => {
                     marginTop: 16,
                   }}>
                   <Text
-                    style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>
+                    style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
                     {isSubmitting
                       ? productId
                         ? 'Saving...'
                         : 'Saving...'
                       : productId
-                      ? 'Update Product'
-                      : 'Save Product'}
+                        ? 'Update Product'
+                        : 'Save Product'}
                   </Text>
                 </TouchableOpacity>
               </View>
             )}
           </Formik>
         </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+      </ScrollView >
+    </KeyboardAvoidingView >
   );
 };
 

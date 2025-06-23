@@ -1,5 +1,5 @@
 // src/screens/authScreens/LoginScreen.tsx
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,18 +14,18 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import {Formik} from 'formik';
+import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {ImagePath} from '../../constants/ImagePath';
-import {useNavigation} from '@react-navigation/native';
-import {useDispatch, useSelector} from 'react-redux';
-import {login} from '../../store/slices/authSlice';
-import {fetchUser} from '../../store/slices/userSlice';
-import {RootState} from '../../store/store';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { ImagePath } from '../../constants/ImagePath';
+import { useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
+import { login } from '../../store/slices/authSlice';
+import { fetchUser } from '../../store/slices/userSlice';
+import { RootState } from '../../store/store';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-const {width, height} = Dimensions.get('screen');
+const { width, height } = Dimensions.get('screen');
 
 const validationSchema = Yup.object().shape({
   email: Yup.string()
@@ -47,7 +47,7 @@ type RootStackParamList = {
   ResetPasswordScreen: undefined;
   CreateShopScreen: undefined;
   AddDineInServiceScreen: undefined;
-  HomeScreen: {screen?: string};
+  HomeScreen: { screen?: string };
   NotificationScreen: undefined;
   AddProductScreen: undefined;
   CreateAdScreen: undefined;
@@ -75,14 +75,14 @@ const LoginScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const dispatch = useDispatch<any>();
   const [showPassword, setShowPassword] = useState(false);
-  const {error, loading: isSubmitting} = useSelector(
+  const { error, loading: isSubmitting } = useSelector(
     (state: RootState) => state.auth,
   );
-  const {data: user} = useSelector((state: RootState) => state.user);
+  const { data: user } = useSelector((state: RootState) => state.user);
 
   const handleLogin = async (
-    values: {email: string; password: string},
-    {resetForm}: any,
+    values: { email: string; password: string },
+    { resetForm }: any,
   ) => {
     try {
       // Dispatch login action
@@ -90,7 +90,7 @@ const LoginScreen = () => {
       console.log(data);
       // Fetch user data
       const userData = data?.user;
-
+      await dispatch(fetchUser())
       // Reset form
       resetForm();
 
@@ -100,14 +100,14 @@ const LoginScreen = () => {
           console.log("user")
           navigation.reset({
             index: 0,
-            routes: [{name: 'HomeScreen', params: {screen: 'Market'}}],
+            routes: [{ name: 'HomeScreen', params: { screen: 'Market' } }],
           });
         } else {
           console.log("Vendor")
           navigation.reset({
             index: 0,
             routes: [
-              {name: userData.shopcreated ? 'HomeScreen' : 'CreateShopScreen'},
+              { name: userData.shopcreated ? 'HomeScreen' : 'CreateShopScreen' },
             ],
           });
         }
@@ -125,7 +125,7 @@ const LoginScreen = () => {
 
   return (
     <KeyboardAvoidingView
-      style={{flex: 1}}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
       <ScrollView
@@ -150,11 +150,11 @@ const LoginScreen = () => {
             }>
             <LinearGradient
               colors={['#EE6447', '#7248B3']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}>
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}>
               <Text
                 className="text-center text-3xl font-bold font-poppins"
-                style={{opacity: 0}}>
+                style={{ opacity: 0 }}>
                 Welcome Back!
               </Text>
             </LinearGradient>
@@ -165,7 +165,7 @@ const LoginScreen = () => {
           </Text>
 
           <Formik
-            initialValues={{email: '', password: ''}}
+            initialValues={{ email: '', password: '' }}
             validationSchema={validationSchema}
             onSubmit={handleLogin}>
             {({
@@ -248,8 +248,8 @@ const LoginScreen = () => {
                   accessibilityLabel="Login button">
                   <LinearGradient
                     colors={['#EE6447', '#7248B3']}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 0}}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
                     style={{
                       padding: 16,
                       borderRadius: 10,
