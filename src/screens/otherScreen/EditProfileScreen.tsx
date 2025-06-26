@@ -19,6 +19,9 @@ import LoadingComponent from './LoadingComponent';
 import { RootState } from '@reduxjs/toolkit/query';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUser } from '../../store/slices/userSlice';
+import { formatDateToYYYYMMDD } from '../../utils/tools/tools';
+import { Picker } from '@react-native-picker/picker';
+import { states } from '../../utils/data/constant';
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
@@ -51,12 +54,12 @@ const validationSchema = Yup.object().shape({
 const EditProfileScreen = () => {
   const navigation = useNavigation();
   const dispatch = useDispatch<any>();
-  const [userData, setUserData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const { status: userStatus, data: user }: any = useSelector(
     (state: any) => state.user,
   );
+  const [userData, setUserData] = useState<any>(user);
 
   // Fetch user data on component mount
   useEffect(() => {
@@ -74,7 +77,7 @@ const EditProfileScreen = () => {
             ...address[0],
             type: user.role === 'user' ? 'Home' : user.role === 'vendor' ? 'Shop' : address[0].type,
           }];
-          console.log(user?.role);
+          console.log({ ...user, address: updatedAddress }  ,"gfyhudsnmif");
           setUserData({ ...user, address: updatedAddress });
         } else {
           ToastAndroid.show('Failed to load user data', ToastAndroid.SHORT);
@@ -96,8 +99,8 @@ const EditProfileScreen = () => {
       // Structure the payload to match the required format
       const payload = {
         fullName: values.fullName,
-        dateOfBirth: values.dateOfBirth,
-        phoneNumber: values.phoneNumber,
+        dob: formatDateToYYYYMMDD(values.dateOfBirth),
+        phone: values.phoneNumber,
         gender: values.gender,
         email: values.email,
         address: [
@@ -112,7 +115,7 @@ const EditProfileScreen = () => {
       };
 
       const response: any = await Post('/user/update-profile', payload, 5000);
-      console.log(response);
+      console.log(response, payload);
       if (!response.success) {
         const errorData = await response?.data;
         throw new Error(errorData.message || 'Failed to update profile');
@@ -183,18 +186,18 @@ const EditProfileScreen = () => {
         <Formik
           enableReinitialize
           initialValues={{
-            fullName: userData?.name || '',
-            dateOfBirth: userData?.dob || '',
-            phoneNumber: userData?.phone || '',
-            gender: userData?.gender || '',
-            email: userData?.email || '',
+            fullName: user?.name || '',
+            dateOfBirth: user?.dob || '',
+            phoneNumber: user?.phone || '',
+            gender: user?.gender || '',
+            email: user?.email || '',
             address: [
               {
-                address: userData?.address?.[0]?.address || 'B block 2 satya vihar Burari',
-                type: userData?.address?.[0]?.type || (userData?.role === 'user' ? 'Home' : userData?.role === 'vendor' ? 'Shop' : ''),
-                state: userData?.address?.[0]?.state || 'New Delhi',
-                city: userData?.address?.[0]?.city || 'New Delhi',
-                pincode: userData?.address?.[0]?.pincode || '110084',
+                address: user?.user_addresses?.[0]?.address || '',
+                type: user?.user_addresses?.[0]?.type || (user?.role === 'user' ? 'Home' : user?.role === 'vendor' ? 'Shop' : ''),
+                state: user?.user_addresses?.[0]?.state || '',
+                city: user?.user_addresses?.[0]?.city || '',
+                pincode: user?.user_addresses?.[0]?.pincode || '',
               },
             ],
           }}
@@ -249,11 +252,10 @@ const EditProfileScreen = () => {
                     backgroundColor: '#F3F4F6',
                     borderRadius: 8,
                     padding: 12,
-                    fontSize: 16,
                   }}
                 >
                   <Text style={{ fontSize: 16, color: values.dateOfBirth ? '#374151' : '#9CA3AF' }}>
-                    {values.dateOfBirth || 'Select date of birth'}
+                    {values?.dateOfBirth?.split(" ")[0] || 'Select date of birth'}
                   </Text>
                 </TouchableOpacity>
                 {showDatePicker && (
@@ -432,20 +434,31 @@ const EditProfileScreen = () => {
                 <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                   State
                 </Text>
-                <TextInput
+                <View
                   style={{
+                    backgroundColor: '#F3F4F6',
                     borderWidth: 1,
                     borderColor: touched.address?.[0]?.state && errors.address?.[0]?.state ? '#EF4444' : '#D1D5DB',
-                    backgroundColor: '#F3F4F6',
                     borderRadius: 8,
-                    padding: 12,
-                    fontSize: 16,
-                  }}
-                  placeholder="Enter state"
-                  onChangeText={handleChange('address[0].state')}
-                  onBlur={handleBlur('address[0].state')}
-                  value={values.address[0].state}
-                />
+                    paddingHorizontal: 10,
+                    marginVertical: 8,
+                  }}>
+                  <Picker
+                    selectedValue={values.address[0].state}
+                    onValueChange={handleChange('address[0].state')}
+                    style={{
+                      fontSize: 16,
+
+                      height: 50,
+                    }}
+                    accessible
+                    accessibilityLabel="Select state">
+                    <Picker.Item label="Select State" value="" />
+                    {states.map((state) => (
+                      <Picker.Item key={state?.id} label={state?.name} value={state?.name} />
+                    ))}
+                  </Picker>
+                </View>
                 {touched.address?.[0]?.state && errors.address?.[0]?.state && (
                   <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].state}</Text>
                 )}

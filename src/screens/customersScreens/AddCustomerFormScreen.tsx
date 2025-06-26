@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,55 +8,97 @@ import {
   KeyboardAvoidingView,
   Platform,
   ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Post } from '../../utils/apiUtils';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { removeFromCart } from '../../store/slices/cartSlice';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
   customerName: Yup.string().required('Customer name is required'),
-  orderItems: Yup.array()
-    .of(Yup.string().required('Item cannot be empty'))
-    .min(1, 'At least one order item is required'),
-  arrivedAt: Yup.string()
-    .required('Arrival time is required')
-    // .matches(
-    //   /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/,
-    //   'Arrival time must be in HH:MM format (24-hour)',
-    // ),
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  phone: Yup.string()
+    .matches(/^[0-9]{10}$/, 'Phone number must be 10 digits')
+    .required('Phone number is required'),
+  // orderItems: Yup.array()
+  //   .of(
+  //     Yup.object().shape({
+  //       id: Yup.number().required(),
+  //       quantity: Yup.number().required(),
+  //       price: Yup.number().required(),
+  //       name: Yup.string().required(),
+  //     })
+  //   )
+  //   .min(1, 'At least one order item is required'),
+  arrivedAt: Yup.string().required('Arrival time is required'),
 });
 
 const AddCustomerFormScreen = () => {
   const navigation = useNavigation<any>();
-  const [orderItems, setOrderItems] = useState<string[]>(['']);
+  const isFocused = useIsFocused();
+  const dispatch = useDispatch();
+  const route = useRoute<any>();
+  const orderDetails = route.params?.orderDetails || null;
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const [orderItems, setOrderItems] = useState(cartItems || []);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  console.log(orderDetails)
+  useEffect(() => {
+    setIsLoading(true);
+    if (isFocused) {
+      setOrderItems(cartItems || []);
+    }
+    setIsLoading(false);
+  }, [isFocused, cartItems]);
 
-  // Mock API call for adding customer
-  const handleAddCustomer = async (
-    values: any,
-    { setSubmitting, resetForm }: any,
-  ) => {
-    navigation.navigate("OrderSummaryScreen")
+  // Format time to HH:MM
+  const formatTime = (date: any) => {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  // Handle form submission
+  const handleAddCustomer = async (values: any, { setSubmitting, resetForm }: any) => {
     try {
-      // Replace with your actual API endpoint
-      const response = await fetch('https://api.example.com/add-customer', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(values),
-      });
+      // Structure payload as per desired format
+      const payload = {
+        name: values.customerName,
+        email: values.email,
+        phone: values.phone,
+        order: orderItems.map((item: any) => ({
+          id: item.id,
+          quantity: item.quantity,
+          price: Math.floor(Number(item.price)), // removes decimal part
+          name: item.name,
+          image: item?.image
+        })),
+        arrived_at: values.arrivedAt,
+      };
 
-      if (!response.ok) {
-        throw new Error('Failed to add customer');
-      }
+      // Replace with your actual API endpoint
+      // const response: any = await Post('/user/vendor/place-order', payload, 5000);
+      // console.log(response)
+      // if (!response.success) {
+      //   throw new Error('Failed to add customer');
+      // }
 
       ToastAndroid.show('Customer added successfully!', ToastAndroid.SHORT);
-      resetForm();
-      setOrderItems(['']);
-      navigation.goBack();
+      // resetForm();
+      // setOrderItems([]);
+      // dispatch(removeFromCart('')); // Clear cart if needed
+      navigation.navigate('OrderSummaryScreen', { payload });
     } catch (error: any) {
+      console.log(error)
       ToastAndroid.show(
         error.message || 'Something went wrong. Please try again.',
         ToastAndroid.SHORT,
@@ -70,7 +112,7 @@ const AddCustomerFormScreen = () => {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0}
     >
       <ScrollView
         contentContainerStyle={{
@@ -79,7 +121,7 @@ const AddCustomerFormScreen = () => {
           backgroundColor: '#fff',
         }}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+        keyboardShouldPersistTaps="always"
       >
         {/* Header with Back Button and Title */}
         <View className="flex-row items-center border-gray-200">
@@ -102,8 +144,10 @@ const AddCustomerFormScreen = () => {
 
           <Formik
             initialValues={{
-              customerName: '',
-              orderItems: [''],
+              customerName: orderDetails ? orderDetails?.name : '',
+              email: orderDetails ? orderDetails?.email : '',
+              phone: orderDetails ? orderDetails?.phone : '',
+              orderItems: cartItems || [],
               arrivedAt: '',
             }}
             validationSchema={validationSchema}
@@ -153,7 +197,7 @@ const AddCustomerFormScreen = () => {
                   )}
                 </View>
 
-                {/* Order Items */}
+                {/* Email */}
                 <View style={{ marginBottom: 12 }}>
                   <Text
                     style={{
@@ -163,56 +207,143 @@ const AddCustomerFormScreen = () => {
                       marginBottom: 4,
                     }}
                   >
-                    Order Items
+                    Email
                   </Text>
-                  {orderItems.map((item, index) => (
-                    <View key={index} style={{ marginBottom: 8, flexDirection: 'row', alignItems: 'center' }}>
-                      <TextInput
-                        style={{
-                          flex: 1,
-                          borderWidth: 1,
-                          borderColor: '#D1D5DB',
-                          backgroundColor: '#F3F4F6',
-                          borderRadius: 8,
-                          padding: 12,
-                          fontSize: 16,
-                        }}
-                        placeholder={`Item ${index + 1}`}
-                        onChangeText={(text) => {
-                          const updatedItems = [...orderItems];
-                          updatedItems[index] = text;
-                          setOrderItems(updatedItems);
-                          setFieldValue('orderItems', updatedItems);
-                        }}
-                        onBlur={handleBlur(`orderItems[${index}]`)}
-                        value={orderItems[index]}
-                      />
-                      {index > 0 && (
-                        <TouchableOpacity
-                          onPress={() => {
-                            const updatedItems = orderItems.filter((_, i) => i !== index);
-                            setOrderItems(updatedItems);
-                            setFieldValue('orderItems', updatedItems);
-                          }}
-                          style={{ marginLeft: 8, padding: 8 }}
-                        >
-                          <Ionicons name="trash-outline" size={20} color="#EF4444" />
-                        </TouchableOpacity>
-                      )}
-                    </View>
-                  ))}
-                  {touched.orderItems && errors.orderItems && (
+                  <TextInput
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#D1D5DB',
+                      backgroundColor: '#F3F4F6',
+                      borderRadius: 8,
+                      padding: 12,
+                      fontSize: 16,
+                    }}
+                    placeholder="Enter email"
+                    onChangeText={handleChange('email')}
+                    onBlur={handleBlur('email')}
+                    value={values.email}
+                    keyboardType="email-address"
+                  />
+                  {touched.email && errors.email && (
                     <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.orderItems}
+                      {errors.email}
                     </Text>
                   )}
-                  <TouchableOpacity
-                    onPress={() => {
-                    //   const updatedItems = [...orderItems, ''];
-                    //   setOrderItems(updatedItems);
-                    //   setFieldValue('orderItems', updatedItems);
-                    navigation.navigate("AddOrderScreen")
+                </View>
+
+                {/* Phone */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: 4,
                     }}
+                  >
+                    Phone
+                  </Text>
+                  <TextInput
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#D1D5DB',
+                      backgroundColor: '#F3F4F6',
+                      borderRadius: 8,
+                      padding: 12,
+                      fontSize: 16,
+                    }}
+                    maxLength={10}
+                    placeholder="Enter phone number"
+                    onChangeText={handleChange('phone')}
+                    onBlur={handleBlur('phone')}
+                    value={values.phone}
+                    keyboardType="phone-pad"
+                  />
+                  {touched.phone && errors.phone && (
+                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                      {errors.phone}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Order Items */}
+                <View style={{ marginBottom: 12 }}>
+                  <View className="flex-row items-center justify-start gap-10">
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Item Name
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Qnt.
+                    </Text>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Price
+                    </Text>
+                  </View>
+                  {isLoading ? (
+                    <ActivityIndicator />
+                  ) : orderItems.length === 0 ? (
+                    <Text>No items added</Text>
+                  ) : (
+                    <View>
+                      {orderItems.map((item, index) => (
+                        <View
+                          key={item.id || index}
+                          style={{
+                            marginBottom: 8,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <View className="flex-1 flex-row items-center justify-start gap-10">
+                            <Text className='w-24'>
+                              {item.name.length > 10 ? `${item.name.slice(0, 10)}...` : item.name}
+                            </Text>
+                            <Text>{item.quantity}</Text>
+                            <Text>₹ {item.price}/-</Text>
+                          </View>
+                          <TouchableOpacity
+                            onPress={() => {
+                              dispatch(removeFromCart(item.id));
+                              const updatedItems = orderItems.filter((_, i) => i !== index);
+                              setOrderItems(updatedItems);
+                              setFieldValue('orderItems', updatedItems);
+                            }}
+                            style={{ marginLeft: 8 }}
+                          >
+                            <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                          </TouchableOpacity>
+                        </View>
+                      ))}
+                      {touched.orderItems && errors.orderItems && (
+                        <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.orderItems}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('AddOrderScreen')}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -229,30 +360,39 @@ const AddCustomerFormScreen = () => {
 
                 {/* Arrived At */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Arrived At
-                  </Text>
-                  <TextInput
+                  <TouchableOpacity
                     style={{
                       borderWidth: 1,
                       borderColor: '#D1D5DB',
                       backgroundColor: '#F3F4F6',
                       borderRadius: 8,
                       padding: 12,
-                      fontSize: 16,
+                      flexDirection: 'row',
+                      alignItems: 'center',
                     }}
-                    placeholder=""
-                    onChangeText={handleChange('arrivedAt')}
-                    onBlur={handleBlur('arrivedAt')}
-                    value={values.arrivedAt}
-                    keyboardType="numeric"
+                    onPress={() => {
+                      console.log('Opening time picker');
+                      setShowStartTimePicker(true);
+                    }}
+                  >
+                    <Text style={{ fontSize: 16, color: '#374151', flex: 1 }}>
+                      {values.arrivedAt || 'Arrived At'}
+                    </Text>
+                    <Icon name="access-time" size={20} color="#374151" />
+                  </TouchableOpacity>
+                  <DateTimePickerModal
+                    isVisible={showStartTimePicker}
+                    mode="time"
+                    is24Hour={true}
+                    onConfirm={(time) => {
+                      console.log('Time selected:', time);
+                      setFieldValue('arrivedAt', formatTime(time));
+                      setShowStartTimePicker(false);
+                    }}
+                    onCancel={() => {
+                      console.log('Time picker cancelled');
+                      setShowStartTimePicker(false);
+                    }}
                   />
                   {touched.arrivedAt && errors.arrivedAt && (
                     <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
@@ -263,7 +403,7 @@ const AddCustomerFormScreen = () => {
 
                 {/* Submit Button */}
                 <TouchableOpacity
-                  onPress={handleSubmit}
+                  onPress={() => handleSubmit()}
                   disabled={isSubmitting}
                   style={{
                     backgroundColor: isSubmitting ? '#B68AD480' : '#B68AD4',

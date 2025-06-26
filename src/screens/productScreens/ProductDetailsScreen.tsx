@@ -264,9 +264,9 @@ const ProductDetailsScreen = () => {
           {/* Review Section */}
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-lg font-semibold text-gray-800">Reviews</Text>
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
+            {/* <TouchableOpacity onPress={() => setModalVisible(true)}>
               <Text className="text-gray-800">View All</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {reviews?.map((item: any, index: number) => {
@@ -354,10 +354,10 @@ const ProductDetailsScreen = () => {
               renderItem={({item}) => (
                 <View className="mb-4 p-4 bg-gray-50 rounded-lg">
                   <View className="flex-row items-center mb-2">
-                    <Image
+                    {/* <Image
                       source={{uri: item.profileImage}}
                       className="w-10 h-10 rounded-full mr-3"
-                    />
+                    /> */}
                     <View className="flex-1">
                       <View className="flex-row justify-between">
                         <Text className="text-gray-800 font-semibold">

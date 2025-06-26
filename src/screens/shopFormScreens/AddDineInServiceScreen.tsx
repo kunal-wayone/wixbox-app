@@ -29,8 +29,8 @@ const { width, height } = Dimensions.get('screen');
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
-  tableNumber: Yup.string().required('Table number is required'),
-  tablePrice: Yup.number()
+  table_number: Yup.string().required('Table number is required'),
+  price: Yup.number()
     .typeError('Price must be a number')
     .required('Table price is required')
     .positive('Price must be positive'),
@@ -43,9 +43,9 @@ const AddDineInServiceScreen = ({ route }: any) => {
   const [floor, setFloor] = useState('Ground');
   const [type, setType] = useState('Standard');
   const [premium, setPremium] = useState(false);
-  const [tables, setTables] = useState<any>(shopId ? user?.shop?.tables : []);
+  const [tables, setTables] = useState<any>(shopId ? (user?.shop?.tables || []) : []);
   const [showForm, setShowForm] = useState(true);
-  console.log(user?.shop?.tables,tables,shopId)
+  console.log(user?.shop?.tables, tables, shopId)
   const handleAddTable = (values: any, { resetForm }: any) => {
     const newTable = {
       floor,
@@ -65,8 +65,8 @@ const AddDineInServiceScreen = ({ route }: any) => {
     ToastAndroid.show('Table removed successfully!', ToastAndroid.SHORT);
   };
 
-  const handleCreateTables = async () => {
-    if (tables.length === 0) {
+  const handleCreateTables = async ({ setErrors }: any) => {
+    if (tables?.length === 0) {
       ToastAndroid.show('Please add at least one table', ToastAndroid.SHORT);
       return;
     }
@@ -97,7 +97,14 @@ const AddDineInServiceScreen = ({ route }: any) => {
 
       navigation.navigate('HomeScreen');
     } catch (error: any) {
-      console.log(error);
+      console.log(error)
+      if (error.errors) {
+        const formattedErrors: any = {};
+        for (const key in error.errors) {
+          formattedErrors[key] = error.errors[key][0];
+        }
+        setErrors(formattedErrors);
+      }
       const errorMessage =
         error?.message || 'Something went wrong. Please try again.';
       ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
@@ -158,23 +165,18 @@ const AddDineInServiceScreen = ({ route }: any) => {
             </LinearGradient>
           </MaskedView>
           <Text
-            style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
+            style={{ textAlign: 'center', marginTop: 8, color: '#4B5563' }}>
             Add your table details below
           </Text>
 
-          <TouchableOpacity
-            onPress={() => setShowForm(true)}
-            style={styles.addTableButton}>
-            <Text style={styles.addButtonText}>+ Add your table details</Text>
-          </TouchableOpacity>
 
           {showForm && (
             <View style={styles.card} className="bg-gray-50">
               <Formik
                 initialValues={{
                   floor: '',
-                  tableNumber: '',
-                  tablePrice: '',
+                  table_number: '',
+                  price: '',
                 }}
                 validationSchema={validationSchema}
                 onSubmit={handleAddTable}>
@@ -237,14 +239,14 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       <TextInput
                         style={styles.input}
                         placeholder="Enter table number"
-                        onChangeText={handleChange('tableNumber')}
-                        onBlur={handleBlur('tableNumber')}
-                        value={values.tableNumber}
+                        onChangeText={handleChange('table_number')}
+                        onBlur={handleBlur('table_number')}
+                        value={values.table_number}
                         keyboardType="number-pad"
                       />
-                      {touched.tableNumber && errors.tableNumber && (
+                      {touched.table_number && errors.table_number && (
                         <Text style={styles.errorText}>
-                          {errors.tableNumber}
+                          {errors.table_number}
                         </Text>
                       )}
                     </View>
@@ -253,14 +255,14 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       <TextInput
                         style={styles.input}
                         placeholder="Enter table price"
-                        onChangeText={handleChange('tablePrice')}
-                        onBlur={handleBlur('tablePrice')}
-                        value={values.tablePrice}
+                        onChangeText={handleChange('price')}
+                        onBlur={handleBlur('price')}
+                        value={values.price}
                         keyboardType="numeric"
                       />
-                      {touched.tablePrice && errors.tablePrice && (
+                      {touched.price && errors.price && (
                         <Text style={styles.errorText}>
-                          {errors.tablePrice}
+                          {errors.price}
                         </Text>
                       )}
                     </View>
@@ -307,7 +309,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
           )}
 
           {/* Added Tables List */}
-          {tables.length > 0 && (
+          {tables?.length > 0 && (
             <View style={styles.tableListContainer}>
               <Text style={styles.tableListTitle}>Added Tables</Text>
               {tables.map((table: any, index: number) => (

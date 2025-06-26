@@ -70,9 +70,9 @@ const AddProductScreen = () => {
         console.log(itemDetails?.status);
         // Convert API images to match the format expected by the UI
         setImages(
-          images.map((img: any) => ({
-            uri: IMAGE_URL + img.url, // Use the URL from the API
-            id: img.id,
+          images.map((img: any, index: any) => ({
+            uri: IMAGE_URL + img, // Use the URL from the API
+            id: index,
           })),
         );
       } catch (error) {
@@ -323,14 +323,14 @@ const AddProductScreen = () => {
                   {/* Image Preview */}
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     {images.map((image: any, index: any) => {
-                      console.log(image);
+                      console.log(image?.uri,"dfd");
                       return (
                         <View
                           key={index}
                           style={{ marginRight: 10, position: 'relative' }}>
                           <Image
                             source={{
-                              uri: `${image.uri}`,
+                              uri: `${image?.uri}`,
                             }}
                             style={{ width: 100, height: 100, borderRadius: 8 }}
                           />

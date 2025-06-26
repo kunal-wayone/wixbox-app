@@ -30,19 +30,19 @@ const { width } = Dimensions.get('screen');
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
-  productName: Yup.string().required('Product name is required'),
-  offerTag: Yup.string().required('Offer tag is required'),
-  promotionTag: Yup.string().required('Promotion tag is required'),
-  offerStartDate: Yup.date().required('Offer start date is required'),
-  offerEndDate: Yup.date()
+  product_name: Yup.string().required('Product name is required'),
+  offer_tag: Yup.string().required('Offer tag is required'),
+  promotion_tag: Yup.string().required('Promotion tag is required'),
+  offer_starts_at: Yup.date().required('Offer start date is required'),
+  offer_ends_at: Yup.date()
     .required('Offer end date is required')
-    .min(Yup.ref('offerStartDate'), 'End date must be after start date'),
-  offerStartTime: Yup.date().required('Offer start time is required'),
-  offerEndTime: Yup.date().required('Offer end time is required'),
-  originalPrice: Yup.number()
+    .min(Yup.ref('offer_starts_at'), 'End date must be after start date'),
+  offer_start_time: Yup.date().required('Offer start time is required'),
+  offer_end_time: Yup.date().required('Offer end time is required'),
+  original_price: Yup.number()
     .required('Original price is required')
     .positive('Price must be positive'),
-  discountedPrice: Yup.number()
+  discounted_price: Yup.number()
     .positive('Discounted price must be positive')
     .nullable(),
   caption: Yup.string().required('Caption is required'),
@@ -71,7 +71,7 @@ const CreateAdScreen = () => {
         try {
           setIsFetching(true);
           const response: any = await Fetch(`/user/ads/${adDetails.id}`, undefined, 5000);
-
+          console.log(response)
           if (!response.success) {
             throw new Error('Failed to fetch ad details');
           }
@@ -117,7 +117,7 @@ const CreateAdScreen = () => {
   };
 
   // API call handler
-  const handleSaveAd = async (values: any, { setSubmitting, resetForm }: any) => {
+  const handleSaveAd = async (values: any, { setSubmitting, resetForm, setErrors }: any) => {
     console.log(values, "saved value h y")
     try {
       const formData = new FormData();
@@ -128,20 +128,20 @@ const CreateAdScreen = () => {
         return date.toISOString().split('T')[1]; // Extracts only the date part in yyyy-mm-dd format
       };
 
-      formData.append('product_name', values.productName);
-      formData.append('offer_tag', values.offerTag);
-      formData.append('promotion_tag', values.promotionTag);
-      formData.append('offer_starts_at', formatDate(values.offerStartDate));
-      formData.append('offer_ends_at', formatDate(values.offerEndDate));
-      formData.append('offer_start_time', formatTime(values.offerStartTime)); // if you want time, see below
-      formData.append('offer_end_time', formatTime(values.offerEndTime));
-      formData.append('original_price', values.originalPrice);
-      formData.append('discounted_price', values.discountedPrice || '');
+      formData.append('product_name', values.product_name);
+      formData.append('offer_tag', values.offer_tag);
+      formData.append('promotion_tag', values.promotion_tag);
+      formData.append('offer_starts_at', formatDate(values.offer_starts_at));
+      formData.append('offer_ends_at', formatDate(values.offer_ends_at));
+      formData.append('offer_start_time', formatTime(values.offer_start_time)); // if you want time, see below
+      formData.append('offer_end_time', formatTime(values.offer_end_time));
+      formData.append('original_price', values.original_price);
+      formData.append('discounted_price', values.discounted_price || '');
       formData.append('caption', values.caption);
       formData.append('status', values.status ? '1' : '0');
       // formData.append('images', images); // Append images as JSON string
 
-      if(fetchedAdDetails?.id) {
+      if (fetchedAdDetails?.id) {
         formData.append('_method', "PUT");
       }
 
@@ -153,7 +153,7 @@ const CreateAdScreen = () => {
         } as any);
       });
       const url = adDetails ? `/user/ads/${adDetails.id}` : '/user/ads';
-      const method = adDetails ? Put : Post;
+      const method = adDetails ? Post : Post;
       const response: any = await method(url, formData, 5000);
       console.log(url, values, formData, response)
 
@@ -168,6 +168,14 @@ const CreateAdScreen = () => {
       resetForm();
       navigation.goBack();
     } catch (error: any) {
+      console.log(error)
+      if (error.errors) {
+        const formattedErrors: any = {};
+        for (const key in error.errors) {
+          formattedErrors[key] = error.errors[key][0];
+        }
+        setErrors(formattedErrors);
+      }
       ToastAndroid.show(
         error.response?.data?.message || 'Something went wrong. Please try again.',
         ToastAndroid.LONG,
@@ -176,6 +184,8 @@ const CreateAdScreen = () => {
       setSubmitting(false);
     }
   };
+
+  console.log(fetchedAdDetails)
 
   return (
     <KeyboardAvoidingView
@@ -236,25 +246,25 @@ const CreateAdScreen = () => {
 
           <Formik
             initialValues={{
-              productName: fetchedAdDetails?.product_name || '',
-              offerTag: fetchedAdDetails?.offer_tag || '',
-              promotionTag: fetchedAdDetails?.promotion_tag || '',
-              offerStartDate: fetchedAdDetails?.offer_starts_at
+              product_name: fetchedAdDetails?.product_name || '',
+              offer_tag: fetchedAdDetails?.offer_tag || '',
+              promotion_tag: fetchedAdDetails?.promotion_tag || '',
+              offer_starts_at: fetchedAdDetails?.offer_starts_at
                 ? new Date(fetchedAdDetails.offer_starts_at)
                 : null,
-              offerEndDate: fetchedAdDetails?.offer_ends_at
+              offer_ends_at: fetchedAdDetails?.offer_ends_at
                 ? new Date(fetchedAdDetails.offer_ends_at)
                 : null,
-              offerStartTime: fetchedAdDetails?.offer_starts_time
-                ? new Date(fetchedAdDetails.offer_starts_time)
+              offer_start_time: fetchedAdDetails?.offer_start_time
+                ? new Date(`1970-01-01T${fetchedAdDetails.offer_start_time}`)
                 : null,
-              offerEndTime: fetchedAdDetails?.offer_ends_time
-                ? new Date(fetchedAdDetails.offer_ends_time)
+              offer_end_time: fetchedAdDetails?.offer_end_time
+                ? new Date(`1970-01-01T${fetchedAdDetails.offer_end_time}`)
                 : null,
-              originalPrice: fetchedAdDetails?.original_price
+              original_price: fetchedAdDetails?.original_price
                 ? String(fetchedAdDetails.original_price)
                 : '',
-              discountedPrice: fetchedAdDetails?.discounted_price
+              discounted_price: fetchedAdDetails?.discounted_price
                 ? String(fetchedAdDetails.discounted_price)
                 : '',
               caption: fetchedAdDetails?.caption || '',
@@ -344,14 +354,14 @@ const CreateAdScreen = () => {
                       fontSize: 16,
                     }}
                     placeholder="Enter product name"
-                    onChangeText={handleChange('productName')}
-                    onBlur={handleBlur('productName')}
-                    value={values.productName}
+                    onChangeText={handleChange('product_name')}
+                    onBlur={handleBlur('product_name')}
+                    value={values.product_name}
                   />
-                  {touched.productName && errors.productName && (
+                  {touched.product_name && errors.product_name && (
                     <Text
                       style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.productName}
+                      {errors.product_name}
                     </Text>
                   )}
                 </View>
@@ -375,18 +385,18 @@ const CreateAdScreen = () => {
                           key={tag}
                           style={{
                             backgroundColor:
-                              values.offerTag === tag ? '#B68AD4' : '#F3F4F6',
+                              values.offer_tag === tag ? '#B68AD4' : '#F3F4F6',
                             borderWidth: 1,
                             borderColor: '#D1D5DB',
                             borderRadius: 10,
                             paddingVertical: 8,
                             paddingHorizontal: 16,
                           }}
-                          onPress={() => setFieldValue('offerTag', tag)}>
+                          onPress={() => setFieldValue('offer_tag', tag)}>
                           <Text
                             style={{
                               color:
-                                values.offerTag === tag ? '#fff' : '#374151',
+                                values.offer_tag === tag ? '#fff' : '#374151',
                               fontSize: 14,
                               fontWeight: '500',
                             }}>
@@ -396,10 +406,10 @@ const CreateAdScreen = () => {
                       ),
                     )}
                   </View>
-                  {touched.offerTag && errors.offerTag && (
+                  {touched.offer_tag && errors.offer_tag && (
                     <Text
                       style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.offerTag}
+                      {errors.offer_tag}
                     </Text>
                   )}
                 </View>
@@ -423,18 +433,18 @@ const CreateAdScreen = () => {
                           key={tag}
                           style={{
                             backgroundColor:
-                              values.promotionTag === tag ? '#B68AD4' : '#F3F4F6',
+                              values.promotion_tag === tag ? '#B68AD4' : '#F3F4F6',
                             borderWidth: 1,
                             borderColor: '#D1D5DB',
                             borderRadius: 10,
                             paddingVertical: 8,
                             paddingHorizontal: 16,
                           }}
-                          onPress={() => setFieldValue('promotionTag', tag)}>
+                          onPress={() => setFieldValue('promotion_tag', tag)}>
                           <Text
                             style={{
                               color:
-                                values.promotionTag === tag ? '#fff' : '#374151',
+                                values.promotion_tag === tag ? '#fff' : '#374151',
                               fontSize: 14,
                               fontWeight: '500',
                             }}>
@@ -444,10 +454,10 @@ const CreateAdScreen = () => {
                       ),
                     )}
                   </View>
-                  {touched.promotionTag && errors.promotionTag && (
+                  {touched.promotion_tag && errors.promotion_tag && (
                     <Text
                       style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.promotionTag}
+                      {errors.promotion_tag}
                     </Text>
                   )}
                 </View>
@@ -501,8 +511,8 @@ const CreateAdScreen = () => {
                         onPress={() => setShowStartDatePicker(true)}>
                         <Text style={{ fontSize: 16, color: '#374151' }}>
                           {
-                            values.offerStartDate
-                              ? new Date(values.offerStartDate).toLocaleDateString()
+                            values.offer_starts_at
+                              ? new Date(values.offer_starts_at).toLocaleDateString()
                               : 'Start date'
                           }
                         </Text>
@@ -517,7 +527,7 @@ const CreateAdScreen = () => {
                         isVisible={showStartDatePicker}
                         mode="date"
                         onConfirm={date => {
-                          setFieldValue('offerStartDate', date);
+                          setFieldValue('offer_starts_at', date);
                           setShowStartDatePicker(false);
                         }}
                         onCancel={() => setShowStartDatePicker(false)}
@@ -537,9 +547,10 @@ const CreateAdScreen = () => {
                         }}
                         onPress={() => setShowEndDatePicker(true)}>
                         <Text style={{ fontSize: 16, color: '#374151' }}>
-                          {values.offerEndDate
-                            ? new Date(values.offerEndDate).toLocaleDateString()
-                            : 'End date'}
+                          {values.offer_ends_at
+                            ? new Date(values.offer_ends_at).toLocaleDateString()
+                            : 'End date'
+                          }
                         </Text>
                         <Icon
                           name="calendar-today"
@@ -552,7 +563,7 @@ const CreateAdScreen = () => {
                         isVisible={showEndDatePicker}
                         mode="date"
                         onConfirm={date => {
-                          setFieldValue('offerEndDate', date);
+                          setFieldValue('offer_ends_at', date);
                           setShowEndDatePicker(false);
                         }}
                         onCancel={() => setShowEndDatePicker(false)}
@@ -561,16 +572,16 @@ const CreateAdScreen = () => {
                       />
                     </View>
                   </View>
-                  {touched.offerStartDate && errors.offerStartDate && (
+                  {touched.offer_starts_at && errors.offer_starts_at && (
                     <Text
                       style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.offerStartDate}
+                      {errors.offer_starts_at}
                     </Text>
                   )}
-                  {touched.offerEndDate && errors.offerEndDate && (
+                  {touched.offer_ends_at && errors.offer_ends_at && (
                     <Text
                       style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.offerEndDate}
+                      {errors.offer_ends_at}
                     </Text>
                   )}
                 </View>
@@ -594,9 +605,10 @@ const CreateAdScreen = () => {
                         }}
                         onPress={() => setShowStartTimePicker(true)}>
                         <Text style={{ fontSize: 16, color: '#374151' }}>
-                          {values.offerStartTime
-                            ? new Date(values.offerStartTime).toLocaleTimeString()
-                            : 'Start time'}
+                          {values.offer_start_time
+                            ? new Date(values.offer_start_time).toLocaleTimeString()
+                            : 'Start time'
+                          }
                         </Text>
                         <Icon
                           name="access-time"
@@ -610,7 +622,7 @@ const CreateAdScreen = () => {
                         mode="time"
                         is24Hour={false}
                         onConfirm={time => {
-                          setFieldValue('offerStartTime', time);
+                          setFieldValue('offer_start_time', time);
                           setShowStartTimePicker(false);
                         }}
                         onCancel={() => setShowStartTimePicker(false)}
@@ -630,8 +642,8 @@ const CreateAdScreen = () => {
                         }}
                         onPress={() => setShowEndTimePicker(true)}>
                         <Text style={{ fontSize: 16, color: '#374151' }}>
-                          {values.offerEndTime
-                            ? new Date(values.offerEndTime).toLocaleTimeString()
+                          {values.offer_end_time
+                            ? new Date(values.offer_end_time).toLocaleTimeString()
                             : 'End time'}
                         </Text>
                         <Icon
@@ -646,7 +658,7 @@ const CreateAdScreen = () => {
                         mode="time"
                         is24Hour={false}
                         onConfirm={time => {
-                          setFieldValue('offerEndTime', time);
+                          setFieldValue('offer_end_time', time);
                           setShowEndTimePicker(false);
                         }}
                         onCancel={() => setShowEndTimePicker(false)}
@@ -655,16 +667,16 @@ const CreateAdScreen = () => {
                       />
                     </View>
                   </View>
-                  {touched.offerStartTime && errors.offerStartTime && (
+                  {touched.offer_start_time && errors.offer_start_time && (
                     <Text
                       style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.offerStartTime}
+                      {errors.offer_start_time}
                     </Text>
                   )}
-                  {touched.offerEndTime && errors.offerEndTime && (
+                  {touched.offer_end_time && errors.offer_end_time && (
                     <Text
                       style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.offerEndTime}
+                      {errors.offer_end_time}
                     </Text>
                   )}
                 </View>
@@ -705,19 +717,19 @@ const CreateAdScreen = () => {
                           fontSize: 16,
                         }}
                         placeholder="Enter original price"
-                        onChangeText={handleChange('originalPrice')}
-                        onBlur={handleBlur('originalPrice')}
-                        value={values.originalPrice}
+                        onChangeText={handleChange('original_price')}
+                        onBlur={handleBlur('original_price')}
+                        value={values.original_price}
                         keyboardType="numeric"
                       />
-                      {touched.originalPrice && errors.originalPrice && (
+                      {touched.original_price && errors.original_price && (
                         <Text
                           style={{
                             color: '#EF4444',
                             fontSize: 12,
                             marginTop: 4,
                           }}>
-                          {errors.originalPrice}
+                          {errors.original_price}
                         </Text>
                       )}
                     </View>
@@ -741,19 +753,19 @@ const CreateAdScreen = () => {
                           fontSize: 16,
                         }}
                         placeholder="Enter discounted price"
-                        onChangeText={handleChange('discountedPrice')}
-                        onBlur={handleBlur('discountedPrice')}
-                        value={values.discountedPrice}
+                        onChangeText={handleChange('discounted_price')}
+                        onBlur={handleBlur('discounted_price')}
+                        value={values.discounted_price}
                         keyboardType="numeric"
                       />
-                      {touched.discountedPrice && errors.discountedPrice && (
+                      {touched.discounted_price && errors.discounted_price && (
                         <Text
                           style={{
                             color: '#EF4444',
                             fontSize: 12,
                             marginTop: 4,
                           }}>
-                          {errors.discountedPrice}
+                          {errors.discounted_price}
                         </Text>
                       )}
                     </View>

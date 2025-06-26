@@ -46,7 +46,7 @@ export const login = createAsyncThunk(
             }
             throw new Error('Token not found');
         } catch (error: any) {
-            return thunkAPI.rejectWithValue(error.message || 'Login failed');
+            return thunkAPI.rejectWithValue(error || 'Login failed');
         }
     }
 );
@@ -79,10 +79,7 @@ export const signup = createAsyncThunk(
             }
         } catch (error: any) {
             console.log(error)
-            return rejectWithValue({
-                message: error?.message || 'Signup failed',
-                errors: error?.response?.data?.errors || {},
-            });
+            return rejectWithValue(error);
         }
     }
 );

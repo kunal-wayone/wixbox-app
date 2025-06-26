@@ -32,7 +32,7 @@ const ImageSliderWithBookmark: React.FC<ImageSliderProps> = ({
         renderItem={({item}: any) => (
           <View className="relative">
             <Image
-              source={{uri: `${IMAGE_URL}${item?.url}`}}
+              source={{uri: `${IMAGE_URL}${item}`}}
               className="w-[96vw] h-64 rounded-xl mx-2"
               resizeMode="cover"
             />

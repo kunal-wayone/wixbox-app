@@ -73,7 +73,7 @@ const SplashScreen = () => {
       const introViewed = await AsyncStorage.getItem('isIntroViewed');
       const token: any = await TokenStorage.getToken();
 
-
+      // TokenStorage.clearAll()
       if (introViewed !== 'true') {
         navigation.replace('SplashScreen1');
         return;
@@ -103,6 +103,7 @@ const SplashScreen = () => {
             });
           } else {
             navigation.navigate('CreateShopScreen');
+            console.log("shor creaetd")
           }
         }
       } else {
@@ -117,7 +118,7 @@ const SplashScreen = () => {
     };
 
     animateLogo();
-    const timer = setTimeout(checkAuthAndNavigate, 3500);
+    const timer = setTimeout(checkAuthAndNavigate, 5000);
 
     return () => {
       clearTimeout(timer);

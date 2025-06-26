@@ -162,8 +162,8 @@ const AdsDetailScreen = () => {
         </View>
 
         <View className='flex-row items-center gap-1 mt-2 border-b border-gray-300 pb-2'>
-          <Text className='font-semibold text-lg'>₹{ads.original_price}/-</Text>
-          <Text className='text-xs line-through '> ₹{ads.discounted_price}/-</Text>
+          <Text className='font-semibold text-lg'>₹{ads.discounted_price}/-</Text>
+          <Text className='text-xs line-through '> ₹{ads.original_price}/-</Text>
           <Text style={{ fontSize: 14, }} className='text-orange-500 ml-2'> • {ads.offer_tag}</Text>
         </View>
 

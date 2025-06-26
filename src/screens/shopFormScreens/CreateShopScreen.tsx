@@ -26,16 +26,16 @@ const { width } = Dimensions.get('screen');
 const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const validationSchema = Yup.object().shape({
-  businessName: Yup.string().required('Business name is required'),
-  phoneNumber: Yup.string().matches(/^[0-9]{10}$/, 'Must be a valid 10-digit phone number').required(),
-  gstId: Yup.string().required('GST ID is required'),
-  addressLine1: Yup.string().required('Address Line 1 is required'),
-  zipCode: Yup.string().required('Zip Code is required'),
+  business_name: Yup.string().required('Business name is required'),
+  phone: Yup.string().matches(/^[0-9]{10}$/, 'Must be a valid 10-digit phone number').required(),
+  // gst: Yup.string().required('GST ID is required'),
+  address: Yup.string().required('Address is required'),
+  zip_code: Yup.string().required('Zip Code is required'),
   city: Yup.string().required('City is required'),
   state: Yup.string().required('State is required'),
-  aboutShop: Yup.string().required('About shop is required'),
-  openingDays: Yup.string().required('Opening days selection is required'),
-  dineInService: Yup.string().required('Dine-in service selection is required'),
+  about_business: Yup.string().required('About shop is required'),
+  single_shift: Yup.string().required('Opening days selection is required'),
+  dine_in_service: Yup.string().required('Dine-in service selection is required'),
 });
 
 const CreateShopScreen = ({ route }: any) => {
@@ -50,6 +50,9 @@ const CreateShopScreen = ({ route }: any) => {
     day, status: false, shift1: { from: '', to: '' }, shift2: { from: '', to: '' }, state: 'active'
   })));
   const [paymentMethods, setPaymentMethods] = useState<any>({ cash: false, card: false, upi: false });
+  const [apiErrors, setApiErrors] = useState({
+    bussenessname: ''
+  })
 
   useEffect(() => { if (shopId) dispatch(fetchUser()); }, [shopId]);
 
@@ -100,21 +103,21 @@ const CreateShopScreen = ({ route }: any) => {
 
   const handleRemoveImage = (id: any) => setImages((prev: any) => prev.filter((img: any) => img.id !== id));
 
-  const handleSubmit = async (values: any, { setSubmitting, resetForm }: any) => {
+  const handleSubmit = async (values: any, { setSubmitting, resetForm, setErrors }: any) => {
     try {
       setSubmitting(true);
       const formData = new FormData();
 
-      formData.append('business_name', values.businessName);
-      formData.append('phone', values.phoneNumber);
-      formData.append('gst', values.gstId);
-      formData.append('address', values.addressLine1);
-      formData.append('zip_code', values.zipCode);
+      formData.append('business_name', values.business_name);
+      formData.append('phone', values.phone);
+      formData.append('gst', values.gst);
+      formData.append('address', values.address);
+      formData.append('zip_code', values.zip_code);
       formData.append('city', values.city);
       formData.append('state', values.state);
-      formData.append('about_business', values.aboutShop);
-      formData.append('single_shift', values.openingDays === 'Single Shift' ? 1 : 0);
-      formData.append('dine_in_service', values.dineInService === 'yes' ? 1 : 0);
+      formData.append('about_business', values.about_business);
+      formData.append('single_shift', values.single_shift === 'Single Shift' ? 1 : 0);
+      formData.append('dine_in_service', values.dine_in_service === 'yes' ? 1 : 0);
       formData.append('shift_details', JSON.stringify(convertShiftData(schedules)));
       formData.append('payment_cash', paymentMethods.cash ? 1 : 0);
       formData.append('payment_card', paymentMethods.card ? 1 : 0);
@@ -144,7 +147,7 @@ const CreateShopScreen = ({ route }: any) => {
         })));
       }
 
-      if (values?.dineInService === "yes") {
+      if (values?.dine_in_service === "yes") {
         shopId ?
           navigation.navigate('AddDineInServiceScreen', { shopId }) : navigation.navigate("AddDineInServiceScreen")
       }
@@ -153,6 +156,14 @@ const CreateShopScreen = ({ route }: any) => {
       }
     } catch (error: any) {
       ToastAndroid.show(error.message || 'Something went wrong', ToastAndroid.SHORT);
+      if (error.errors) {
+        const formattedErrors: any = {};
+        for (const key in error.errors) {
+          formattedErrors[key] = error.errors[key][0];
+        }
+        setErrors(formattedErrors);
+      }
+
     } finally {
       setSubmitting(false);
     }
@@ -215,16 +226,16 @@ const CreateShopScreen = ({ route }: any) => {
           ) : (
             <Formik
               initialValues={{
-                businessName: shopId ? user?.shop?.restaurant_name : '',
-                phoneNumber: shopId ? user?.shop?.phone : '',
-                gstId: shopId ? user?.shop?.gst : '',
-                addressLine1: shopId ? user?.shop?.address : '',
-                zipCode: shopId ? user?.shop?.zip_code : '',
+                business_name: shopId ? user?.shop?.restaurant_name : '',
+                phone: shopId ? user?.shop?.phone : '',
+                gst: shopId ? user?.shop?.gst : '',
+                address: shopId ? user?.shop?.address : '',
+                zip_code: shopId ? user?.shop?.zip_code : '',
                 city: shopId ? user?.shop?.city : '',
                 state: shopId ? user?.shop?.state : '',
-                aboutShop: shopId ? user?.shop?.about_business : '',
-                openingDays: shopId ? (user?.shop?.single_shift ? "Single Shift" : "Double Shift") : '',
-                dineInService: shopId ? (user?.shop?.dine_in_service ? "yes" : "no") : '',
+                about_business: shopId ? user?.shop?.about_business : '',
+                single_shift: shopId ? (user?.shop?.single_shift ? "Single Shift" : "Double Shift") : '',
+                dine_in_service: shopId ? (user?.shop?.dine_in_service ? "yes" : "no") : '',
               }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
@@ -263,9 +274,9 @@ const CreateShopScreen = ({ route }: any) => {
                           fontSize: 16,
                         }}
                         placeholder="Shop Name"
-                        onChangeText={handleChange('businessName')}
-                        onBlur={handleBlur('businessName')}
-                        value={values.businessName}
+                        onChangeText={handleChange('business_name')}
+                        onBlur={handleBlur('business_name')}
+                        value={values.business_name}
                         accessible
                         accessibilityLabel="Business name input"
                       />
@@ -276,10 +287,10 @@ const CreateShopScreen = ({ route }: any) => {
                         style={{ position: 'absolute', left: 12, top: 12 }}
                       />
                     </View>
-                    {touched.businessName && errors.businessName && (
+                    {touched.business_name && errors.business_name && (
                       <Text
                         style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.businessName}
+                        {errors.business_name}
                       </Text>
                     )}
                   </View>
@@ -381,9 +392,9 @@ const CreateShopScreen = ({ route }: any) => {
                           fontSize: 16,
                         }}
                         placeholder="Enter phone number"
-                        onChangeText={handleChange('phoneNumber')}
-                        onBlur={handleBlur('phoneNumber')}
-                        value={values.phoneNumber}
+                        onChangeText={handleChange('phone')}
+                        onBlur={handleBlur('phone')}
+                        value={values.phone}
                         keyboardType="number-pad"
                         maxLength={10}
                         accessible
@@ -396,10 +407,10 @@ const CreateShopScreen = ({ route }: any) => {
                         style={{ position: 'absolute', left: 12, top: 12 }}
                       />
                     </View>
-                    {touched.phoneNumber && errors.phoneNumber && (
+                    {touched.phone && errors.phone && (
                       <Text
                         style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.phoneNumber}
+                        {errors.phone}
                       </Text>
                     )}
                   </View>
@@ -425,16 +436,16 @@ const CreateShopScreen = ({ route }: any) => {
                         fontSize: 16,
                       }}
                       placeholder="Enter GST ID"
-                      onChangeText={handleChange('gstId')}
-                      onBlur={handleBlur('gstId')}
-                      value={values.gstId}
+                      onChangeText={handleChange('gst')}
+                      onBlur={handleBlur('gst')}
+                      value={values.gst}
                       accessible
                       accessibilityLabel="GST ID input"
                     />
-                    {touched.gstId && errors.gstId && (
+                    {touched.gst && errors.gst && (
                       <Text
                         style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.gstId}
+                        {errors.gst}
                       </Text>
                     )}
                   </View>
@@ -539,16 +550,16 @@ const CreateShopScreen = ({ route }: any) => {
                         marginBottom: 12,
                       }}
                       placeholder="Enter your address"
-                      onChangeText={handleChange('addressLine1')}
-                      onBlur={handleBlur('addressLine1')}
-                      value={values.addressLine1}
+                      onChangeText={handleChange('address')}
+                      onBlur={handleBlur('address')}
+                      value={values.address}
                       accessible
-                      accessibilityLabel="Address Line 1 input"
+                      accessibilityLabel="Address input"
                     />
-                    {touched.addressLine1 && errors.addressLine1 && (
+                    {touched.address && errors.address && (
                       <Text
                         style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.addressLine1}
+                        {errors.address}
                       </Text>
                     )}
 
@@ -563,17 +574,17 @@ const CreateShopScreen = ({ route }: any) => {
                         marginBottom: 12,
                       }}
                       placeholder="Enter your zip code"
-                      onChangeText={handleChange('zipCode')}
-                      onBlur={handleBlur('zipCode')}
-                      value={values.zipCode}
+                      onChangeText={handleChange('zip_code')}
+                      onBlur={handleBlur('zip_code')}
+                      value={values.zip_code}
                       accessible
                       keyboardType="numeric"
                       accessibilityLabel="Zip Code"
                     />
-                    {touched.zipCode && errors.zipCode && (
+                    {touched.zip_code && errors.zip_code && (
                       <Text
                         style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.zipCode}
+                        {errors.zip_code}
                       </Text>
                     )}
                   </View>
@@ -601,17 +612,17 @@ const CreateShopScreen = ({ route }: any) => {
                         textAlignVertical: 'top',
                       }}
                       placeholder="Describe your shop"
-                      onChangeText={handleChange('aboutShop')}
-                      onBlur={handleBlur('aboutShop')}
-                      value={values.aboutShop}
+                      onChangeText={handleChange('about_business')}
+                      onBlur={handleBlur('about_business')}
+                      value={values.about_business}
                       multiline
                       accessible
                       accessibilityLabel="About shop textarea"
                     />
-                    {touched.aboutShop && errors.aboutShop && (
+                    {touched.about_business && errors.about_business && (
                       <Text
                         style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.aboutShop}
+                        {errors.about_business}
                       </Text>
                     )}
                   </View>
@@ -638,7 +649,7 @@ const CreateShopScreen = ({ route }: any) => {
                           flex: 1,
                           borderWidth: 1,
                           borderColor:
-                            values.openingDays === 'Single Shift'
+                            values.single_shift === 'Single Shift'
                               ? '#F97316'
                               : '#D1D5DB',
                           borderRadius: 8,
@@ -647,7 +658,7 @@ const CreateShopScreen = ({ route }: any) => {
                           alignItems: 'center',
                         }}
                         onPress={() =>
-                          handleChange('openingDays')('Single Shift')
+                          handleChange('single_shift')('Single Shift')
                         }
                         accessible
                         accessibilityLabel="Select Single Shift">
@@ -661,7 +672,7 @@ const CreateShopScreen = ({ route }: any) => {
                           flex: 1,
                           borderWidth: 1,
                           borderColor:
-                            values.openingDays === 'Double Shift'
+                            values.single_shift === 'Double Shift'
                               ? '#F97316'
                               : '#D1D5DB',
                           borderRadius: 8,
@@ -669,7 +680,7 @@ const CreateShopScreen = ({ route }: any) => {
                           alignItems: 'center',
                         }}
                         onPress={() =>
-                          handleChange('openingDays')('Double Shift')
+                          handleChange('single_shift')('Double Shift')
                         }
                         accessible
                         accessibilityLabel="Select Double Shift">
@@ -678,16 +689,16 @@ const CreateShopScreen = ({ route }: any) => {
                         </Text>
                       </TouchableOpacity>
                     </View>
-                    {touched.openingDays && errors.openingDays && (
+                    {touched.single_shift && errors.single_shift && (
                       <Text
                         style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.openingDays}
+                        {errors.single_shift}
                       </Text>
                     )}
                     {schedules.map((data: any, index: any) => (
                       <ShiftCard
                         key={data.day}
-                        shift={values.openingDays !== 'Single Shift' ? 2 : 1}
+                        shift={values.single_shift !== 'Single Shift' ? 2 : 1}
                         data={data}
                         onChange={handleShiftChange(index)}
                       />
@@ -716,7 +727,7 @@ const CreateShopScreen = ({ route }: any) => {
                         style={{
                           borderWidth: 1,
                           borderColor:
-                            values.dineInService === 'yes'
+                            values.dine_in_service === 'yes'
                               ? '#F97316'
                               : '#D1D5DB',
                           borderRadius: 8,
@@ -724,7 +735,7 @@ const CreateShopScreen = ({ route }: any) => {
                           paddingVertical: 5,
                           alignItems: 'center',
                         }}
-                        onPress={() => handleChange('dineInService')('yes')}
+                        onPress={() => handleChange('dine_in_service')('yes')}
                         accessible
                         accessibilityLabel="Yes Dine-in Service">
                         <Text style={{ fontSize: 14, color: '#374151' }}>
@@ -736,7 +747,7 @@ const CreateShopScreen = ({ route }: any) => {
                         style={{
                           borderWidth: 1,
                           borderColor:
-                            values.dineInService === 'no'
+                            values.dine_in_service === 'no'
                               ? '#F97316'
                               : '#D1D5DB',
                           borderRadius: 8,
@@ -745,16 +756,16 @@ const CreateShopScreen = ({ route }: any) => {
                           marginRight: 8,
                           alignItems: 'center',
                         }}
-                        onPress={() => handleChange('dineInService')('no')}
+                        onPress={() => handleChange('dine_in_service')('no')}
                         accessible
                         accessibilityLabel="No Dine-in Service">
                         <Text style={{ fontSize: 14, color: '#374151' }}>No</Text>
                       </TouchableOpacity>
                     </View>
-                    {touched.dineInService && errors.dineInService && (
+                    {touched.dine_in_service && errors.dine_in_service && (
                       <Text
                         style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.dineInService}
+                        {errors.dine_in_service}
                       </Text>
                     )}
                   </View>

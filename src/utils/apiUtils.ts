@@ -1,15 +1,13 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL, IMAGE_BASE_URL } from "@env"
-import { useSelector } from 'react-redux';
 
-// const { token } = useSelector((state: any) => state.auth);
 
 
 export const IMAGE_URL = IMAGE_BASE_URL;
 // Define API base URL
 export const BASE_URL =
-    API_BASE_URL || 'https://myphsioapp.volvrit.in/api/';
+    API_BASE_URL || 'https://wisbox.volvrit.in/api/v1';
 
 const api = axios.create({
     baseURL: BASE_URL,
@@ -21,7 +19,6 @@ api.interceptors.request.use(
     async config => {
         try {
             const token = await TokenStorage.getToken();
-            console.log(token)
             if (token) config.headers['Authorization'] = `Bearer ${token}`;
         } catch (error) {
             console.log('Error retrieving token from AsyncStorage:', error);
@@ -66,8 +63,6 @@ const request = async <T>(
         clearTimeout(timeoutId);
         return response;
     } catch (error: any) {
-        console.log(error.response)
-        console.log(error < "error request")
         clearTimeout(timeoutId);
         const response = error?.response?.data;
         throw response;
@@ -80,6 +75,7 @@ export const Fetch = async <T>(
     params?: Record<string, unknown>,
     timeout?: number,
 ): Promise<T> => {
+    console.log(url, params)
     try {
         const response = await request<T>({
             method: 'GET',
@@ -87,6 +83,7 @@ export const Fetch = async <T>(
             params,
             timeout,
         });
+        console.log(response.data)
         return response.data;
     } catch (error: unknown) {
         throw error;
@@ -110,7 +107,7 @@ export const Post = async <T>(
         console.log("response")
         return response.data;
     } catch (error: unknown) {
-        console.log(error.response, "ppst error")
+        console.log(error, "ppst error")
         throw error;
     }
 };

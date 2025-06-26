@@ -9,15 +9,15 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import React, {useState, useEffect, useCallback} from 'react';
-import {useFormik} from 'formik';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import {ToastAndroid} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { ToastAndroid } from 'react-native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import {launchImageLibrary} from 'react-native-image-picker';
-import {Fetch, Post, Put, Delete, IMAGE_URL} from '../../utils/apiUtils';
-import {loadingSpinner} from '../otherScreen/LoadingComponent';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { Fetch, Post, Put, Delete, IMAGE_URL } from '../../utils/apiUtils';
+import { loadingSpinner } from '../otherScreen/LoadingComponent';
 
 // Define types for better type safety
 interface Category {
@@ -30,8 +30,8 @@ interface Category {
 interface Product {
   id: string;
   item_name: string;
-  images: {url: string}[];
-  category: {name: string};
+  images: { url: string }[];
+  category: { name: string };
   price: number;
   stock_quantity: number;
   unit: string;
@@ -50,7 +50,7 @@ const CategorySchema = Yup.object().shape({
     .min(2, 'Too Short!')
     .max(50, 'Too Long!')
     .required('Category name is required'),
-  categoryImage: Yup.mixed().required('Image is required'), // Simplified to avoid Hermes issues
+  // categoryImage: Yup.mixed().required('Image is required'), // Simplified to avoid Hermes issues
 });
 
 // Function to fetch categories with retry logic
@@ -88,17 +88,17 @@ const fetchProductsByCategory = async (
   try {
     setLoading(true);
     const response: any = await Fetch(
-      `/user/menu-items?categoryId=${categoryId}`,
-      {},
+      `/user/menu-items`,
+      { category_id: categoryId },
       5000,
     );
-    if (!response.success) throw new Error('Failed to fetch products');
     console.log(
       'Fetched products for category',
       categoryId,
       ':',
       response.data,
     ); // Debug log
+    if (!response.success) throw new Error('Failed to fetch products');
     return response.data.menu_items;
   } catch (error: any) {
     console.error('fetchProductsByCategory error:', error.message); // Debug log
@@ -122,7 +122,7 @@ const toggleProductStatus = async (
     setLoading(true);
     const response: any = await Fetch(
       `/user/menu-items/${id}/active-inactive`,
-      {status: currentStatus ? 0 : 1},
+      { status: currentStatus ? 0 : 1 },
       5000,
     );
     if (!response.success) throw new Error('Failed to toggle status');
@@ -165,13 +165,15 @@ const deleteProduct = async (
 
 const ManageStockScreen = () => {
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(
     null,
   );
-  const [products, setProducts] = useState<{[key: string]: Product[]}>({});
+  const [products, setProducts] = useState<{ [key: string]: Product[] }>({});
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [productLoading, setProductLoading] = useState<{
     [key: string]: boolean;
@@ -189,17 +191,17 @@ const ManageStockScreen = () => {
       categoryName: editingCategory?.name || '',
       categoryImage: editingCategory?.image
         ? {
-            uri: `${IMAGE_URL}${editingCategory.image}`,
-            isServerImage: true,
-          }
+          uri: `${IMAGE_URL}${editingCategory.image}`,
+          isServerImage: true,
+        }
         : null,
       status: editingCategory ? !!editingCategory.status : true,
     },
     validationSchema: CategorySchema,
     enableReinitialize: true,
-    onSubmit: async (values: any, {resetForm}) => {
+    onSubmit: async (values: any, { resetForm }) => {
       try {
-        setIsLoading(true);
+        setIsSubmitting(true);
         const formData = new FormData();
         formData.append('name', values.categoryName);
         formData.append('status', values.status ? '1' : '0');
@@ -239,7 +241,7 @@ const ManageStockScreen = () => {
           ToastAndroid.SHORT,
         );
       } finally {
-        setIsLoading(false);
+        setIsSubmitting(false);
       }
     },
   });
@@ -253,7 +255,7 @@ const ManageStockScreen = () => {
   // Image selection
   const selectImage = useCallback(() => {
     launchImageLibrary(
-      {mediaType: 'photo', maxHeight: 200, maxWidth: 200, quality: 0.8},
+      { mediaType: 'photo', maxHeight: 200, maxWidth: 200, quality: 0.8 },
       response => {
         if (response.didCancel) {
           console.log('Image selection cancelled'); // Debug log
@@ -317,17 +319,22 @@ const ManageStockScreen = () => {
 
   // Polling for real-time updates
   useEffect(() => {
-    loadCategories();
+    if (isFocused) {
+      loadCategories();
+      loadProducts();
+    }
     // const interval = setInterval(() => {
     //   if (polling) loadCategories();
     // }, 30000);
     // return () => clearInterval(interval);
-  }, [loadCategories]);
+  }, [isFocused]);
 
-  // Fetch products when selectedCategory changes
   useEffect(() => {
-    loadProducts();
-  }, [selectedCategory, loadProducts]);
+    loadProducts()
+
+  }, [selectedCategory])
+
+
 
   // Handle category edit
   const handleEditCategory = useCallback((category: Category) => {
@@ -339,7 +346,7 @@ const ManageStockScreen = () => {
   // Handle category deletion
   const handleDeleteCategory = useCallback(
     (categoryId: string, categoryName: string) => {
-      setConfirmAction({type: 'category', id: categoryId, name: categoryName});
+      setConfirmAction({ type: 'category', id: categoryId, name: categoryName });
       setConfirmModalVisible(true);
       console.log('Initiating category deletion:', categoryName); // Debug log
     },
@@ -349,24 +356,24 @@ const ManageStockScreen = () => {
   // Handle product status toggle with optimistic update
   const handleToggleStatus = useCallback(
     async (productId: string, currentStatus: boolean) => {
-      const originalProducts = {...products};
+      const originalProducts = { ...products };
       setProducts((prev: any) => ({
         ...prev,
         [selectedCategory!.name]: prev[selectedCategory!.name].map(
           (item: Product) =>
             item.id === productId
-              ? {...item, status: currentStatus ? 0 : 1}
+              ? { ...item, status: currentStatus ? 0 : 1 }
               : item,
         ),
       }));
-      setProductLoading((prev: any) => ({...prev, [productId]: true}));
+      setProductLoading((prev: any) => ({ ...prev, [productId]: true }));
 
       try {
         await toggleProductStatus(
           productId,
           currentStatus,
           (loading: boolean) =>
-            setProductLoading((prev: any) => ({...prev, [productId]: loading})),
+            setProductLoading((prev: any) => ({ ...prev, [productId]: loading })),
         );
         ToastAndroid.show('Status updated successfully', ToastAndroid.SHORT);
       } catch (error: any) {
@@ -380,7 +387,7 @@ const ManageStockScreen = () => {
   // Handle product deletion
   const handleDeleteProduct = useCallback(
     async (productId: string, productName: string) => {
-      setConfirmAction({type: 'product', id: productId, name: productName});
+      setConfirmAction({ type: 'product', id: productId, name: productName });
       setConfirmModalVisible(true);
       console.log('Initiating product deletion:', productName); // Debug log
     },
@@ -419,8 +426,8 @@ const ManageStockScreen = () => {
         setIsLoading(false);
       }
     } else if (confirmAction.type === 'product') {
-      const originalProducts = {...products};
-      setProductLoading((prev: any) => ({...prev, [confirmAction.id]: true}));
+      const originalProducts = { ...products };
+      setProductLoading((prev: any) => ({ ...prev, [confirmAction.id]: true }));
       try {
         setProducts((prev: any) => ({
           ...prev,
@@ -453,7 +460,7 @@ const ManageStockScreen = () => {
     console.log('Delete action cancelled'); // Debug log
   }, []);
 
-  const renderCategoryItem = ({item}: {item: Category}) => (
+  const renderCategoryItem = ({ item }: { item: Category }) => (
     <View className="items-center p-1 bg-gray-100 m-2 rounded-xl">
       <TouchableOpacity
         onPress={() => setSelectedCategory(item)}
@@ -461,7 +468,7 @@ const ManageStockScreen = () => {
         {/* Image Wrapper with Overlay */}
         <View className="relative">
           <Image
-            source={{uri: `${IMAGE_URL}${item?.image}`}}
+            source={{ uri: `${IMAGE_URL}${item?.image}` }}
             resizeMode="stretch"
             className="h-32 w-32 rounded-xl mb-1"
           />
@@ -493,16 +500,16 @@ const ManageStockScreen = () => {
     </View>
   );
 
-  const renderProductItem = ({item}: {item: Product}) => (
+  const renderProductItem = ({ item }: { item: Product }) => (
     <View className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm">
       <TouchableOpacity
         className="w-2/5 mr-3 items-center"
         onPress={() =>
-          navigation.navigate('ProductDetailsScreen', {productId: item?.id})
+          navigation.navigate('ProductDetailsScreen', { productId: item?.id })
         }>
         <Image
-          source={{uri: `${IMAGE_URL}${item?.images[0]?.url}`}}
-          className="w-full h-28 rounded-2xl mb-2"
+          source={{ uri: `${IMAGE_URL}${item?.images[0]}` }}
+          className="w-full h-auto flex-1 rounded-2xl"
           resizeMode="cover"
         />
       </TouchableOpacity>
@@ -522,7 +529,7 @@ const ManageStockScreen = () => {
         <View className="flex-row items-center justify-between gap-2 mt-2">
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate('AddProductScreen', {productId: item.id})
+              navigation.navigate('AddProductScreen', { productId: item.id })
             }
             className="bg-primary-90 flex-row items-center gap-2 px-3 py-2 rounded-lg">
             <Icon name="edit" color="white" />
@@ -604,7 +611,7 @@ const ManageStockScreen = () => {
               value={formik.values.categoryName}
               onChangeText={formik.handleChange('categoryName')}
               onBlur={formik.handleBlur('categoryName')}
-              editable={!isLoading}
+              editable={!isSubmitting}
             />
             {formik.touched.categoryName && formik.errors.categoryName && (
               <Text className="text-red-500 text-sm mb-2">
@@ -623,14 +630,14 @@ const ManageStockScreen = () => {
             {formik.values.categoryImage?.uri && (
               <View className="mb-2 relative">
                 <Image
-                  source={{uri: formik.values.categoryImage.uri}}
+                  source={{ uri: formik.values.categoryImage.uri }}
                   className="h-44 rounded"
                   resizeMode="contain"
                 />
                 <TouchableOpacity
                   onPress={removeImage}
                   className="bg-red-500 p-1 absolute right-0 top-0 rounded-full"
-                  disabled={isLoading}>
+                  disabled={isSubmitting}>
                   <Icon name="close" size={15} color="white" />
                 </TouchableOpacity>
               </View>
@@ -647,21 +654,20 @@ const ManageStockScreen = () => {
               <Switch
                 value={formik.values.status}
                 onValueChange={value => formik.setFieldValue('status', value)}
-                disabled={isLoading}
+                disabled={isSubmitting}
               />
             </View>
             <TouchableOpacity
               onPress={() => formik.handleSubmit()}
-              className={`bg-primary-90 p-4 rounded-xl ${
-                isLoading ? 'opacity-50' : ''
-              }`}
-              disabled={isLoading}>
+              className={`bg-primary-90 p-4 rounded-xl ${isSubmitting ? 'opacity-50' : ''
+                }`}
+              disabled={isSubmitting}>
               <Text className="text-white text-center font-medium">
-                {isLoading
+                {isSubmitting
                   ? 'Saving...'
                   : editingCategory
-                  ? 'Update Category'
-                  : 'Add Category'}
+                    ? 'Update Category'
+                    : 'Add Category'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -702,9 +708,8 @@ const ManageStockScreen = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleConfirmDelete}
-                className={`flex-1 bg-red-500 p-4 rounded-xl ${
-                  isLoading ? 'opacity-50' : ''
-                }`}
+                className={`flex-1 bg-red-500 p-4 rounded-xl ${isLoading ? 'opacity-50' : ''
+                  }`}
                 disabled={isLoading}>
                 <Text className="text-white text-center font-medium">
                   Delete

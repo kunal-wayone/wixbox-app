@@ -12,7 +12,7 @@ import {
 import Icon from 'react-native-vector-icons/Entypo';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
-import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import { Delete, Fetch, IMAGE_URL } from '../../utils/apiUtils';
 
 interface Post {
   id: string;
@@ -70,8 +70,8 @@ const Post = () => {
 
     try {
       setDeletingPostId(selectedPostId);
-      const response: any = await Fetch(`/user/delete-post/${selectedPostId}`, { method: 'DELETE' });
-
+      console.log(selectedPostId)
+      const response: any = await Delete(`/user/posts/${selectedPostId}`, {}, undefined, 5000);
       if (!response.success) throw new Error(response.message);
       setPosts(prev => prev.filter(p => p.id !== selectedPostId));
       ToastAndroid.show('Post deleted successfully', ToastAndroid.SHORT);

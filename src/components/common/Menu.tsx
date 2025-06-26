@@ -44,6 +44,7 @@ const Menu = () => {
     }
   }, []);
 
+
   // Toggle product status
   const toggleProductStatus = useCallback(
     async (id: string, currentStatus: boolean) => {
@@ -97,7 +98,7 @@ const Menu = () => {
         {/* Left: Image + Switch */}
         <View className="w-2/5 mr-3 items-center">
           <Image
-            source={item?.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
+            source={item?.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
             className="w-full h-40 rounded-lg mb-2"
             resizeMode="cover"
           />

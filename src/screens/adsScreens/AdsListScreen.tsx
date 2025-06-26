@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -12,112 +12,134 @@ import {
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import Modal from 'react-native-modal'; // Import Modal
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { ImagePath } from '../../constants/ImagePath';
-import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import { Delete, Fetch, IMAGE_URL } from '../../utils/apiUtils';
 
 const AdsListScreen = () => {
     const navigation = useNavigation<any>();
     const isFocused = useIsFocused();
     const [search, setSearch] = useState('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [adsList, setAdsList] = useState<any[]>([]);
-    const [toggleLoadingIds, setToggleLoadingIds] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [adsList, setAdsList] = useState<any>([]);
+    const [toggleLoadingIds, setToggleLoadingIds] = useState<any>([]);
+    const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<any>(null); // Store action details
+    const [deleteLoading, setDeleteLoading] = useState(false); // Loading state for deletion
 
-    // Fetch menu items from server
+    // Fetch ads from server
     const fetchAds = useCallback(async () => {
         try {
             setIsLoading(true);
             const response: any = await Fetch(`/user/ads`, {}, 5000);
-            console.log(response)
             if (!response.success) throw new Error('Failed to fetch ads');
             setAdsList(response.data.ads || []);
         } catch (error: any) {
             console.error('fetchAds error:', error.message);
-            ToastAndroid.show(
-                error?.message || 'Failed to load ads.',
-                ToastAndroid.SHORT
-            );
+            ToastAndroid.show(error?.message || 'Failed to load ads.', ToastAndroid.SHORT);
         } finally {
             setIsLoading(false);
         }
     }, []);
 
     // Toggle ads status
-    const toggleAdsStatus = useCallback(
-        async (id: string, currentStatus: boolean) => {
-            try {
-                setToggleLoadingIds((prev) => [...prev, id]);
-                const response: any = await Fetch(
-                    `/user/ads/${id}/active-inactive`,
-                    { status: currentStatus ? 0 : 1 },
-                    5000
-                );
-                if (!response.success) throw new Error('Failed to toggle status');
+    const toggleAdsStatus = useCallback(async (id: any, currentStatus: any) => {
+        try {
+            setToggleLoadingIds((prev: any) => [...prev, id]);
+            const response: any = await Fetch(`/user/ads/${id}/active-inactive`, { status: currentStatus ? 0 : 1 }, 5000);
+            if (!response.success) throw new Error('Failed to toggle status');
+            setAdsList((prevAds: any) =>
+                prevAds.map((item: any) => (item.id === id ? { ...item, status: currentStatus ? 0 : 1 } : item))
+            );
+            ToastAndroid.show('Status updated successfully!', ToastAndroid.SHORT);
+            return response.data;
+        } catch (error: any) {
+            console.error('toggleAdsStatus error:', error.message);
+            ToastAndroid.show(error?.message || 'Failed to toggle status.', ToastAndroid.SHORT);
+            throw error;
+        } finally {
+            setToggleLoadingIds((prev: any) => prev.filter((itemId: any) => itemId !== id));
+        }
+    }, []);
 
-                // Update ads state optimistically
-                setAdsList((prevAds: any) =>
-                    prevAds.map((item: any) =>
-                        item.id === id ? { ...item, status: currentStatus ? 0 : 1 } : item)
-                );
+    // Delete ads
+    const deleteAds = async (id: any) => {
+        try {
+            setDeleteLoading(true);
+            const response: any = await Delete(`/user/ads/${id}`, {});
+            if (!response.success) throw new Error('Failed to delete ad');
+            setAdsList((prevAds: any) => prevAds.filter((item: any) => item.id !== id)); // Remove deleted ad
+            ToastAndroid.show('Ad deleted successfully!', ToastAndroid.SHORT);
+            return response.data;
+        } catch (error: any) {
+            console.error('deleteAds error:', error.message);
+            ToastAndroid.show(error?.message || 'Failed to delete ad.', ToastAndroid.SHORT);
+            throw error;
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
 
-                ToastAndroid.show('Status updated successfully!', ToastAndroid.SHORT);
-                return response.data;
-            } catch (error: any) {
-                console.error('toggleAdsStatus error:', error.message);
-                ToastAndroid.show(
-                    error?.message || 'Failed to toggle status.',
-                    ToastAndroid.SHORT
-                );
-                throw error;
-            } finally {
-                setToggleLoadingIds((prev) => prev.filter((itemId) => itemId !== id));
-            }
-        },
-        []
-    );
+    // Handle ads deletion
+    const handleDeleteAds = useCallback((adsId: any, adsName: any) => {
+        setConfirmAction({ type: 'ads', id: adsId, name: adsName });
+        setConfirmModalVisible(true);
+    }, []);
 
+    // Confirm deletion
+    const confirmDelete = useCallback(async () => {
+        if (confirmAction) {
+            await deleteAds(confirmAction.id);
+            setConfirmModalVisible(false);
+            setConfirmAction(null);
+        }
+    }, [confirmAction]);
 
     useEffect(() => {
         if (isFocused) {
             fetchAds();
         }
-    }, [isFocused]);
+    }, [isFocused, fetchAds]);
 
     // Memoized filtered ads
-    const filteredAds = React.useMemo(() => adsList.filter((item) =>
-        item?.product_name?.toLowerCase().includes(search?.toLowerCase())
-    ), [adsList, search]);
+    const filteredAds = React.useMemo(
+        () => adsList.filter((item: any) => item?.product_name?.toLowerCase().includes(search?.toLowerCase())),
+        [adsList, search]
+    );
 
     const renderItem = useCallback(
-        ({ item }: { item: any }) => (
+        ({ item }: any) => (
             <View key={item?.id} className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm">
                 {/* Left: Image + Switch */}
-                <TouchableOpacity onPress={() => navigation.navigate('AdsDetailScreen', { adsId: item?.id })} className="w-2/5 mr-3 items-center">
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('AdsDetailScreen', { adsId: item?.id })}
+                    className="w-2/5 mr-3 items-center"
+                >
                     <Image
                         source={item?.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
                         className="w-full h-40 rounded-lg mb-2"
                         resizeMode="cover"
                     />
-
                 </TouchableOpacity>
 
                 {/* Right: Content */}
                 <View className="flex-1">
-                    <View className="flex-row items-center justify-between  ">
-                        {item?.status && (
-                            <View className={`self-start px-2 py-1 rounded-md flex-row items-center gap-1`}>
-                                <View className={`w-2.5 h-2.5 rounded-full ${item?.status === 1 ? "bg-green-500" : "bg-red-500"} `} /> <Text className="text-gray-800 text-xs font-semibold">{item?.status === 1 ? "Active" : "Paused"}</Text>
-                            </View>
-                        )}
-                        <View className='w-1/2'>
+                    <View className="flex-row items-center justify-between">
+                        <View className={`self-start px-2 py-1 rounded-md flex-row items-center gap-1`}>
+                            <View className={`w-2.5 h-2.5 rounded-full ${item?.status ? 'bg-green-500' : 'bg-red-500'}`} />
+                            <Text className="text-gray-800 text-xs font-semibold">{item?.status ? 'Active' : 'Paused'}</Text>
+                        </View>
+                        <View className="w-1/2">
                             {toggleLoadingIds.includes(item.id) ? (
                                 <ActivityIndicator size="small" color="#007AFF" style={{ marginLeft: 8 }} />
-                            ) : (<Switch
-                                value={item?.status === "1" ? true : false}
-                                onValueChange={() => toggleAdsStatus(item.id, item.status === "1")}
-                                disabled={toggleLoadingIds.includes(item.id)}
-                            />)}
+                            ) : (
+                                <Switch
+                                    value={item?.status ? true : false}
+                                    onValueChange={() => toggleAdsStatus(item.id, item.status)}
+                                    disabled={toggleLoadingIds.includes(item.id)}
+                                />
+                            )}
                         </View>
                     </View>
 
@@ -127,36 +149,38 @@ const AdsListScreen = () => {
                             {item?.currency || '₹'}
                             {item?.discounted_price}/-
                         </Text>
-                        <Text className="text-xs line-through text-gray-500">₹{item?.original_price + "/-" || 'N/A'} •</Text>
+                        <Text className="text-xs line-through text-gray-500">₹{item?.original_price + '/-' || 'N/A'} •</Text>
                     </View>
-                    <Text className="text-sm  text-orange-500 mt-1">{item?.offer_tag || 'N/A'}</Text>
-                    {/* 
-                    <View className="flex-row items-center justify-between mt-1">
-                        <Text className="text-sm text-gray-600">Stock Count:</Text>
-                        <Text className="font-semibold">{item?.stock_quantity || '0'}</Text>
-                    </View> */}
-                    <TouchableOpacity
-                        onPress={() => navigation.navigate('CreateAdScreen', { adDetails: item })}
-                        className="mt-2 bg-primary-90 w-full px-3 py-2 rounded-lg"
-                    >
-                        <Text className="text-white text-center text-md font-medium">
-                            Edit ads Details
-                        </Text>
-                    </TouchableOpacity>
+                    <Text className="text-sm text-orange-500 mt-1">{item?.offer_tag || 'N/A'}</Text>
+                    <View className="flex-row justify-between mt-2">
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('CreateAdScreen', { adDetails: item })}
+                            className="bg-primary-90 w-1/2 mr-2 px-3 py-2 rounded-lg"
+                        >
+                            <Text className="text-white text-center text-md font-medium">Edit Ad</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => handleDeleteAds(item.id, item.product_name)}
+                            className="bg-red-500 w-1/2 px-3 py-2 rounded-lg"
+                        >
+                            <Text className="text-white text-center text-md font-medium">Delete</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
         ),
-        [toggleLoadingIds, toggleAdsStatus, navigation]
+        [toggleLoadingIds, toggleAdsStatus, navigation, handleDeleteAds]
     );
 
     return (
-        <View className="p-4 pb-20 bg-gray-50">
+        <View className="p-4 pb-20 h-full bg-gray-50">
             <View>
-                <Icon name="arrow-back" className='absolute' size={20} color="black" />
-                <Text className='text-2xl font-semibold text-center'>Created Ads List</Text>
+                <Icon name="arrow-back" className="absolute z-50" size={20} color="black" />
+                <Text className="text-2xl font-semibold text-center">Created Ads List</Text>
             </View>
+
             {/* Search & Add Button */}
-            <View className="flex-row items-center gap-3 mt-4  mb-4">
+            <View className="flex-row items-center gap-3 mt-4 mb-4">
                 <View className="flex-row items-center flex-1 bg-white px-3 py-0.5 border rounded-xl shadow-sm">
                     <AntDesign name="search1" color="#6B7280" size={20} />
                     <TextInput
@@ -174,6 +198,37 @@ const AdsListScreen = () => {
                     <Icon name="add" size={20} color="white" />
                 </TouchableOpacity>
             </View>
+
+            {/* Confirmation Modal */}
+            <Modal isVisible={confirmModalVisible} onBackdropPress={() => setConfirmModalVisible(false)}>
+                <View className="bg-white p-6 rounded-lg">
+                    <Text className="text-lg font-semibold mb-4">
+                        Are you sure you want to delete "{confirmAction?.name}"?
+                    </Text>
+                    <View className="flex-row justify-end gap-4">
+                        <TouchableOpacity
+                            onPress={() => {
+                                setConfirmModalVisible(false);
+                                setConfirmAction(null);
+                            }}
+                            className="px-4 py-2 bg-gray-200 rounded-lg"
+                        >
+                            <Text className="text-gray-800 font-medium">Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={confirmDelete}
+                            className="px-4 py-2 bg-red-500 rounded-lg"
+                            disabled={deleteLoading}
+                        >
+                            {deleteLoading ? (
+                                <ActivityIndicator size="small" color="white" />
+                            ) : (
+                                <Text className="text-white font-medium">Delete</Text>
+                            )}
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
             {/* Ads List */}
             {isLoading ? (

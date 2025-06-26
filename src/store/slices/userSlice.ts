@@ -35,9 +35,9 @@ export const fetchUser = createAsyncThunk(
         } catch (error: any) {
             console.log(error)
             let errorMessage = 'Failed to fetch user data';
-            TokenStorage.removeToken();
-            TokenStorage.removeUser();
-            TokenStorage.removeRole();
+            // TokenStorage.removeToken();
+            // TokenStorage.removeUser();
+            // TokenStorage.removeRole();
             return rejectWithValue(errorMessage);
         }
     }

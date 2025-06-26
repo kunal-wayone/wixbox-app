@@ -78,6 +78,10 @@ const LoginScreen = () => {
   const { error, loading: isSubmitting } = useSelector(
     (state: RootState) => state.auth,
   );
+  const [apiErrors, setApiErrors] = useState<any>({
+    email: '',
+    password: '',
+  });
   const { data: user } = useSelector((state: RootState) => state.user);
 
   const handleLogin = async (
@@ -116,6 +120,10 @@ const LoginScreen = () => {
       }
     } catch (err: any) {
       console.log(err);
+      setApiErrors({
+        email: err?.errors?.email,
+        password: err?.errors?.password,
+      });
       ToastAndroid.show(
         error || 'Something went wrong. Please try again.',
         ToastAndroid.SHORT,
@@ -196,6 +204,11 @@ const LoginScreen = () => {
                       {errors.email}
                     </Text>
                   )}
+                  {apiErrors.email && (
+                    <Text className="text-red-500 text-xs mt-1">
+                      {apiErrors.email}
+                    </Text>
+                  )}
                 </View>
 
                 <View className="mb-3">
@@ -228,6 +241,11 @@ const LoginScreen = () => {
                   {touched.password && errors.password && (
                     <Text className="text-red-500 text-xs mt-1">
                       {errors.password}
+                    </Text>
+                  )}
+                  {apiErrors.password && (
+                    <Text className="text-red-500 text-xs mt-1">
+                      {apiErrors.password}
                     </Text>
                   )}
                 </View>

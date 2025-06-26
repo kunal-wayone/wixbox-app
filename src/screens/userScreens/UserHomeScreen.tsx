@@ -12,9 +12,9 @@ import {
   TouchableWithoutFeedback,
   ToastAndroid,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import {ImagePath} from '../../constants/ImagePath';
-import {useNavigation} from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { ImagePath } from '../../constants/ImagePath';
+import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Banner from '../../components/common/Banner';
 import CategorySection from '../../components/CategorySection';
@@ -22,7 +22,10 @@ import ProductSlider from '../../components/ProductSlider';
 import FreshStoreSection from '../../components/FreshStoreSection';
 import PopularAreaSection from '../../components/PopularAreaSection';
 import VisitNearByStores from '../../components/VisitNearByStores';
-import {TokenStorage} from '../../utils/apiUtils';
+import { TokenStorage } from '../../utils/apiUtils';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+
 
 const UserHomeScreen = () => {
   const navigation = useNavigation<any>();
@@ -55,47 +58,51 @@ const UserHomeScreen = () => {
   ]);
   const [userData, setUserData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { status: userStatus, data: user }: any = useSelector(
+    (state: RootState) => state.user,
+  );
 
   // Fetch user data on component mount
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setIsLoading(true);
-        const user = await TokenStorage.getUserData();
-        if (user) {
-          setUserData(user);
-        } else {
-          ToastAndroid.show('Failed to load user data', ToastAndroid.SHORT);
-        }
-      } catch (error) {
-        ToastAndroid.show('Error loading user data', ToastAndroid.SHORT);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       setIsLoading(true);
+  //       const user = await TokenStorage.getUserData();
+  //       if (user) {
+  //         setUserData(user);
+  //       } else {
+  //         ToastAndroid.show('Failed to load user data', ToastAndroid.SHORT);
+  //       }
+  //     } catch (error) {
+  //       ToastAndroid.show('Error loading user data', ToastAndroid.SHORT);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchUserData();
-  }, []);
+  //   fetchUserData();
+  // }, []);
 
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
-      navigation.navigate('SearchScreen', {query: searchQuery});
+      navigation.navigate('SearchScreen', { query: searchQuery });
+      setSearchQuery('')
     }
   };
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor: '#fff'}}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1}}>
+        style={{ flex: 1 }}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <ScrollView contentContainerStyle={{padding: 16}}>
+          <ScrollView contentContainerStyle={{ padding: 16 }}>
             <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-4">
+              <View className="flex-row items-center gap-4 w-11/12 overflow-hidden ">
                 <Image
                   source={ImagePath.profile1}
                   className="w-14 h-14 rounded-full "
                 />
-                <Text>{userData?.name ||"Jaydev Vihar"}, Bhuvaneshwar</Text>
+                <Text>{user?.name || "Jaydev Vihar"}, {user?.user_addresses[0]?.city + ", " + user?.user_addresses[0]?.state || "Bhuvaneshwar"}</Text>
               </View>
               <TouchableOpacity
                 onPress={() => navigation.navigate('NotificationScreen')}
@@ -118,7 +125,7 @@ const UserHomeScreen = () => {
                     className="ml-2"
                   />
                   <TextInput
-                    className=" text-lg"
+                    className=" text-lg w-full "
                     placeholder="Search Food, Restaurants, Dishes"
                     value={searchQuery}
                     onChangeText={setSearchQuery}

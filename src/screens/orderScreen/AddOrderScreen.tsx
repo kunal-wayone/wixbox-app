@@ -19,12 +19,7 @@ import { ImagePath } from '../../constants/ImagePath';
 import { RootState } from '../../store/store';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 
-const mockProducts = [
-  { id: '1', name: 'Product 1', price: 19.99, image: ImagePath.item2 },
-  { id: '2', name: 'Product 2', price: 29.99, image: ImagePath.item2 },
-  { id: '3', name: 'Product 3', price: 39.99, image: ImagePath.item3 },
-  { id: '4', name: 'Product 4', price: 49.99, image: ImagePath.item3 },
-];
+
 
 const AddOrderScreen = () => {
   const navigation = useNavigation<any>();
@@ -71,11 +66,11 @@ const AddOrderScreen = () => {
   const handleAddToCart = (product: any) => {
     dispatch(
       addToCart({
-        id: product.id,
-        item_name: product.item_name,
-        price: product.price,
+        id: product?.id,
+        name: product?.item_name,
+        price: product?.price,
         quantity: 1,
-        image: product.image,
+        image: product?.images[0],
       })
     );
   };
@@ -103,13 +98,13 @@ const AddOrderScreen = () => {
       onPress={() => handleAddToCart(item)}>
       <View style={{ height: 140, width: '100%', marginBottom: 10 }}>
         <Image
-          source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
+          source={item.images.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
           style={{ width: '100%', height: '100%', borderRadius: 12 }}
           resizeMode="stretch"
         />
       </View>
       <Text style={{ fontSize: 14, color: '#374151', textAlign: 'center' }}>
-        {item.item_name}
+        {item?.item_name}
       </Text>
     </TouchableOpacity>
   );
@@ -124,13 +119,13 @@ const AddOrderScreen = () => {
         padding: 12,
       }}>
       <Image
-        source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
+        source={item.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
         style={{ width: 80, height: 80, borderRadius: 10, marginRight: 12 }}
         resizeMode="cover"
       />
       <View style={{ flex: 1 }}>
         <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 4 }}>
-          {item?.item_name}
+          {item?.name}
         </Text>
         <Text style={{ color: '#6B7280', marginBottom: 4 }}>
           ₹{item?.price}
@@ -172,7 +167,7 @@ const AddOrderScreen = () => {
           alignItems: 'center',
           paddingBottom: 8,
         }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
+        <TouchableOpacity className='z-50' onPress={() => navigation.goBack()} style={{ padding: 8 }}>
           <Ionicons name="arrow-back" size={24} color="#374151" />
         </TouchableOpacity>
       </View>

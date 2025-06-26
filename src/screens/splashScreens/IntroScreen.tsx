@@ -7,13 +7,13 @@ import {
   Animated,
   Easing,
 } from 'react-native';
-import React, {useRef, useEffect, useState, useCallback} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
-import {ImagePath} from '../../constants/ImagePath';
+import { ImagePath } from '../../constants/ImagePath';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const {width, height} = Dimensions.get('screen');
+const { width, height } = Dimensions.get('screen');
 
 const splash1 = ImagePath.splash1;
 const splash2 = ImagePath.splash2;
@@ -60,21 +60,6 @@ const shi = [
   },
 ];
 
-// Preload images
-const preloadImages = [
-  splash1,
-  splash2,
-  splash3,
-  splash4,
-  splash5,
-  spTop1,
-  spTop2,
-  spTop3,
-  spTop4,
-  spTop5,
-];
-
-// Define rotation angles and positions for each index
 const rotationAngles = ['65deg', '10deg', '5deg', '20deg', '-5deg'];
 const translateXPositions = [
   -width - 70,
@@ -110,7 +95,6 @@ const IntroScreen = () => {
   const rotationAnimTop = useRef(new Animated.Value(0)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
 
-  // Pulse animation for the button
   const startButtonPulse = useCallback(() => {
     Animated.loop(
       Animated.sequence([
@@ -130,7 +114,6 @@ const IntroScreen = () => {
     ).start();
   }, [buttonScale]);
 
-  // Continuous subtle rotation for top image
   const startTopImageRotation = useCallback(() => {
     rotationAnimTop.setValue(0);
     Animated.loop(
@@ -143,83 +126,73 @@ const IntroScreen = () => {
     ).start();
   }, [rotationAnimTop]);
 
-  // Preload images
   useEffect(() => {
-    let loadedCount = 0;
-    preloadImages.forEach(image => {
-      Image.prefetch(Image.resolveAssetSource(image).uri)
-        .then(() => {
-          loadedCount += 1;
-          if (loadedCount === preloadImages.length) {
-            setIsImagesLoaded(true);
-            // Initial animations with stagger
-            Animated.sequence([
-              Animated.parallel([
-                Animated.timing(fadeAnimMain, {
-                  toValue: 1,
-                  duration: 600,
-                  easing: Easing.out(Easing.elastic(1)),
-                  useNativeDriver: true,
-                }),
-                Animated.timing(slideAnimMain, {
-                  toValue: 0,
-                  duration: 600,
-                  easing: Easing.out(Easing.elastic(1)),
-                  useNativeDriver: true,
-                }),
-              ]),
-              Animated.parallel([
-                Animated.timing(fadeAnimTop, {
-                  toValue: 1,
-                  duration: 600,
-                  easing: Easing.out(Easing.cubic),
-                  useNativeDriver: true,
-                }),
-                Animated.spring(scaleAnimTop, {
-                  toValue: 1,
-                  friction: 5,
-                  tension: 40,
-                  useNativeDriver: true,
-                }),
-                Animated.timing(translateXAnimTop, {
-                  toValue: translateXPositions[0],
-                  duration: 600,
-                  easing: Easing.out(Easing.cubic),
-                  useNativeDriver: true,
-                }),
-                Animated.timing(translateYAnimTop, {
-                  toValue: translateYPositions[0],
-                  duration: 600,
-                  easing: Easing.out(Easing.cubic),
-                  useNativeDriver: true,
-                }),
-              ]),
-              Animated.parallel([
-                Animated.timing(fadeAnimText, {
-                  toValue: 1,
-                  duration: 600,
-                  easing: Easing.out(Easing.bounce),
-                  useNativeDriver: true,
-                }),
-                Animated.spring(slideAnimText, {
-                  toValue: 0,
-                  friction: 6,
-                  tension: 50,
-                  useNativeDriver: true,
-                }),
-              ]),
-            ]).start(() => {
-              startButtonPulse();
-              startTopImageRotation();
-            });
-          }
-        })
-        .catch(err => console.warn('Image prefetch failed:', err));
+    // Assume local assets are bundled and available
+    setIsImagesLoaded(true);
+
+    // Start initial animations
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(fadeAnimMain, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.elastic(1)),
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnimMain, {
+          toValue: 0,
+          duration: 600,
+          easing: Easing.out(Easing.elastic(1)),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(fadeAnimTop, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnimTop, {
+          toValue: 1,
+          friction: 5,
+          tension: 40,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateXAnimTop, {
+          toValue: translateXPositions[0],
+          duration: 600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateYAnimTop, {
+          toValue: translateYPositions[0],
+          duration: 600,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        Animated.timing(fadeAnimText, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.bounce),
+          useNativeDriver: true,
+        }),
+        Animated.spring(slideAnimText, {
+          toValue: 0,
+          friction: 6,
+          tension: 50,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start(() => {
+      startButtonPulse();
+      startTopImageRotation();
     });
   }, [startButtonPulse, startTopImageRotation]);
 
   const handleNext = useCallback(() => {
-    // Fade out and slide out with stagger
     Animated.sequence([
       Animated.parallel([
         Animated.timing(fadeAnimMain, {
@@ -282,7 +255,6 @@ const IntroScreen = () => {
           handleDenyAndContinue();
         } else {
           setIndex(nextIndex);
-          // Reset animations
           fadeAnimMain.setValue(0);
           slideAnimMain.setValue(width / 2);
           fadeAnimTop.setValue(0);
@@ -292,7 +264,6 @@ const IntroScreen = () => {
           fadeAnimText.setValue(0);
           slideAnimText.setValue(100);
           rotationAnimTop.setValue(0);
-          // Fade in and slide in with stagger
           Animated.sequence([
             Animated.parallel([
               Animated.timing(fadeAnimMain, {
@@ -358,8 +329,14 @@ const IntroScreen = () => {
   }, [index, navigation, startButtonPulse, startTopImageRotation]);
 
   const handleDenyAndContinue = async () => {
-    await AsyncStorage.setItem('isIntroViewed', 'true');
-    navigation.replace('AccountTypeScreen');
+    try {
+      await AsyncStorage.setItem('isIntroViewed', 'true');
+      console.log("intro done")
+      navigation.replace('AccountTypeScreen');
+    } catch (error) {
+      console.warn('AsyncStorage error:', error);
+      navigation.replace('AccountTypeScreen');
+    }
   };
 
   const handleSkip = useCallback(() => {
@@ -376,7 +353,6 @@ const IntroScreen = () => {
 
   return (
     <View className="w-full h-full bg-white p-4">
-      {/* Top Image */}
       <Animated.Image
         source={ImagePath.sp}
         resizeMode="contain"
@@ -386,7 +362,7 @@ const IntroScreen = () => {
           width: width * 1.2,
           height: height * 0.9,
           transform: [
-            {scale: scaleAnimTop},
+            { scale: scaleAnimTop },
             {
               rotate: rotationAnimTop.interpolate({
                 inputRange: [0, 1],
@@ -396,13 +372,12 @@ const IntroScreen = () => {
                 ],
               }),
             },
-            {translateX: translateXAnimTop},
-            {translateY: translateYAnimTop},
+            { translateX: translateXAnimTop },
+            { translateY: translateYAnimTop },
           ],
         }}
       />
 
-      {/* Skip Button */}
       <TouchableOpacity
         className="absolute z-50 top-8 right-10"
         onPress={handleSkip}>
@@ -411,7 +386,6 @@ const IntroScreen = () => {
         </Text>
       </TouchableOpacity>
 
-      {/* Main Image */}
       <View className="w-full h-80 mt-40 mx-auto">
         <Animated.Image
           source={shi[index]?.splash}
@@ -419,18 +393,17 @@ const IntroScreen = () => {
           className="w-full h-full"
           style={{
             opacity: fadeAnimMain,
-            transform: [{translateX: slideAnimMain}],
+            transform: [{ translateX: slideAnimMain }],
           }}
         />
       </View>
 
-      {/* Title and Button */}
       <View className="p-4 pt-16">
         <Animated.Text
           className="text-2xl text-center font-poppins font-semibold w-3/5 mx-auto text-gray-800"
           style={{
             opacity: fadeAnimText,
-            transform: [{translateY: slideAnimText}],
+            transform: [{ translateY: slideAnimText }],
           }}>
           {shi[index]?.title}
         </Animated.Text>
@@ -438,7 +411,7 @@ const IntroScreen = () => {
         <TouchableOpacity
           className="bg-black w-16 h-16 rounded-full p-4 mt-10 flex justify-center items-center mx-auto"
           onPress={handleNext}>
-          <Animated.View style={{transform: [{scale: buttonScale}]}}>
+          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
             <Feather name="fast-forward" color="#fff" size={30} />
           </Animated.View>
         </TouchableOpacity>

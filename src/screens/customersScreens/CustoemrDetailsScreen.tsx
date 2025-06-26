@@ -1,12 +1,14 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, Image, ScrollView} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {ImagePath} from '../../constants/ImagePath';
+import { ImagePath } from '../../constants/ImagePath';
+import { IMAGE_URL } from '../../utils/apiUtils';
 
 const CustomerDetailsScreen = () => {
-  const navigation = useNavigation();
-
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const orderDetails = route.params?.orderDetails || null;
   // Sample customer data
   const customer = {
     name: 'John Doe',
@@ -46,39 +48,46 @@ const CustomerDetailsScreen = () => {
       {/* Profile Section */}
       <View className="flex-row items-center mb-6">
         <Image
-          source={customer.profileImage}
+          source={orderDetails?.image ? { uri: IMAGE_URL + orderDetails?.image } : ImagePath?.profile1}
           className="w-20 h-20 rounded-full mr-4"
         />
-        <Text className="text-xl font-bold">{customer.name}</Text>
+        <Text className="text-xl font-bold">{orderDetails?.name}</Text>
       </View>
 
       {/* Ordered Items Title */}
       <Text className="text-lg font-semibold mb-3">Ordered Items</Text>
 
       {/* Ordered Items List */}
-      {customer.items.map(item => (
-        <View key={item.id} className="flex-row items-center mb-4">
+      {orderDetails?.order?.map((item: any) => (
+        <View key={item?.id} className="flex-row items-center mb-4">
           <Image
-            source={item.image}
+            source={item?.image ? { uri: IMAGE_URL + item?.image } : ImagePath.item1}
             className="w-16 h-16 rounded-lg mr-3"
             resizeMode="cover"
           />
           <View className="flex-1">
-            <Text className="text-base font-medium">{item.name}</Text>
-            <Text className="text-sm text-gray-600">{item.quantity}</Text>
+            <Text className="text-base font-medium mb-2">{item?.name}</Text>
+            <View className='flex-row items-center  gap-4'>
+
+              <Text className="text-sm text-gray-600">Qnt: {item?.quantity}</Text>
+              <Text className="text-sm text-gray-600">₹ {item?.price}/-</Text>
+              <Text className="text-sm text-gray-600">Sub Total: ₹ {item?.sub_total}/-</Text>
+
+            </View>
+
           </View>
         </View>
       ))}
 
       {/* Arrival Info */}
       <Text className="text-base font-semibold mt-4">Arrived at</Text>
-      <Text className="text-sm text-gray-700 mb-4">{customer.arrivedAt}</Text>
+      <Text className="text-sm text-gray-700 mb-4">{orderDetails?.arrived_at}</Text>
 
       {/* Total Amount */}
       <View className='flex-row items-center justify-between mb-6 p-4 bg-primary-10 rounded-xl'>
         <Text className="text-base font-semibold">Total Amount</Text>
         <Text className="text-lg font-bold text-green-600">
-          {customer.totalAmount}/-
+          {orderDetails?.total_amount}/-
         </Text>
       </View>
 
@@ -86,9 +95,9 @@ const CustomerDetailsScreen = () => {
       <TouchableOpacity
         className="bg-primary-80 py-3 rounded-lg items-center"
         onPress={() => {
-          console.log('Add Order pressed');
+          navigation.navigate('AddCustomerFormScreen', { orderDetails })
         }}>
-        <Text className="text-white font-bold text-base">Add Order</Text>
+        <Text className="text-white font-bold text-base">Add New Order</Text>
       </TouchableOpacity>
     </ScrollView>
   );

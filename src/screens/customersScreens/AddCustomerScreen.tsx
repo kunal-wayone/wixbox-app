@@ -44,10 +44,10 @@ const AddCustomerScreen = () => {
   const fetchAds = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response: any = await Fetch(`/user/ads`, {}, 5000);
+      const response: any = await Fetch(`/user/vendor/get-order`, {}, 5000);
       console.log(response)
       if (!response.success) throw new Error('Failed to fetch ads');
-      setOrdersList(response.data.ads || []);
+      setOrdersList(response.data || []);
     } catch (error: any) {
       console.error('fetchAds error:', error.message);
       ToastAndroid.show(
@@ -68,28 +68,28 @@ const AddCustomerScreen = () => {
 
   // Memoized filtered ads
   const filteredOrders = React.useMemo(() => ordersList.filter((item: any) =>
-    item?.order?.toLowerCase().includes(searchQuery?.toLowerCase())
-  ), [ordersList,]);
+    item?.name?.toLowerCase().includes(searchQuery?.toLowerCase())
+  ), [ordersList, searchQuery]);
   // Render each customer card
   const renderCustomerCard = ({ item }: any) => (
     <View
       className={`bg-primary-20 border border-primary-20 rounded-xl p-4 mb-4 shadow-sm`}>
       <View className={`flex-row mb-4`}>
         <Image
-          source={item.image}
+          source={item.image ? { uri: item?.image } : ImagePath?.profile1}
           resizeMode="contain"
           className={`w-20 h-20 rounded-full mr-3`}
         />
         <View className={`flex-1 justify-center`}>
-          <Text className={`text-base font-bold mb-2`}>{item.name}</Text>
+          <Text className={`text-base font-bold mb-2`}>{item?.name}</Text>
           <View className="flex-row items-center gap-1">
             <Text
               className={`text-xs text-gray-600 bg-white px-2 p-0.5 rounded`}>
-              Ordered: {item.orderedItems} items
+              Ordered: {item?.order?.length || 0} items
             </Text>
             <Text
               className={`text-xs text-gray-600 bg-white px-2 p-0.5 rounded`}>
-              Arrived at: {item.arrivedAt}
+              Arrived at: {item?.arrived_at}
             </Text>
           </View>
         </View>
@@ -97,7 +97,7 @@ const AddCustomerScreen = () => {
       <TouchableOpacity
         className={`bg-primary-80 py-2.5 rounded-lg items-center`}
         onPress={() => {
-          navigation.navigate('CustomerDetailsScreen');
+          navigation.navigate('CustomerDetailsScreen', { orderDetails: item });
           console.log(`View details for ${item.name}`);
         }}>
         <Text className={`text-white text-sm font-bold`}>View Details</Text>
@@ -108,7 +108,7 @@ const AddCustomerScreen = () => {
   return (
     <View className={`flex-1 bg-white p-4`}>
       {/* Header with Back Button */}
-      <View className={`flex-row items-center absolute left-2 top-2`}>
+      <View className={`flex-row items-center z-50 absolute left-2 top-2`}>
         <TouchableOpacity onPress={() => navigation.goBack()} className={`p-2`}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
@@ -154,9 +154,9 @@ const AddCustomerScreen = () => {
         </View>
       ) : (
         <FlatList
-          data={mockCustomers}
+          data={filteredOrders}
           renderItem={renderCustomerCard}
-          keyExtractor={item => item.id}
+          keyExtractor={(item: any) => item.id}
           // contentContainerStyle=}
           showsVerticalScrollIndicator={false}
         />)}

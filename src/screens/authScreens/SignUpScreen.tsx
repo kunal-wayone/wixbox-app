@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -16,17 +16,18 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import {Formik} from 'formik';
+import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
 import CheckBox from '@react-native-community/checkbox';
-import {ImagePath} from '../../constants/ImagePath';
-import {useNavigation} from '@react-navigation/native';
+import { ImagePath } from '../../constants/ImagePath';
+import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Post, TokenStorage} from '../../utils/apiUtils';
-import {useDispatch} from 'react-redux';
-import {signup} from '../../store/slices/authSlice';
-const {width, height} = Dimensions.get('screen');
+import { Post, TokenStorage } from '../../utils/apiUtils';
+import { useDispatch } from 'react-redux';
+import { signup } from '../../store/slices/authSlice';
+import { fetchUser } from '../../store/slices/userSlice';
+const { width, height } = Dimensions.get('screen');
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
@@ -44,10 +45,10 @@ const validationSchema = Yup.object().shape({
     .required('Confirm Password is required'),
 });
 
-const SignUpScreen = ({route}: any) => {
+const SignUpScreen = ({ route }: any) => {
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<any>();
-  const {accountType} = route.params;
+  const { accountType } = route.params;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [apiErrors, setApiErrors] = useState<any>({
@@ -137,7 +138,7 @@ const SignUpScreen = ({route}: any) => {
   //   }
   // };
 
-  const handleSignUp = async (values: any, {setSubmitting, resetForm}: any) => {
+  const handleSignUp = async (values: any, { setSubmitting, resetForm }: any) => {
     setIsSubmitting(true);
 
     if (!isCheck) {
@@ -164,11 +165,14 @@ const SignUpScreen = ({route}: any) => {
 
       const response: any = await dispatch(signup(payload)).unwrap();
       console.log('Signup Response:', response);
-      const {success, user} = response;
+      const { success, user } = response;
 
       if (success) {
         throw new Error(response.message || 'Registration failed');
       }
+
+      await dispatch(fetchUser()).unwrap();
+
 
       console.log('User:', user);
 
@@ -201,7 +205,7 @@ const SignUpScreen = ({route}: any) => {
         navigation.navigate('CreateShopScreen');
       }
     } catch (error: any) {
-      console.log('Signup Error:', JSON.stringify(error, null, 2));
+      console.log('Signup Error:', error, null, 2);
       const errorData = error?.errors || {};
       setApiErrors({
         name: errorData.name?.[0] || '',
@@ -221,7 +225,7 @@ const SignUpScreen = ({route}: any) => {
   };
   return (
     <KeyboardAvoidingView
-      style={{flex: 1}}
+      style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
       <ScrollView
@@ -246,11 +250,11 @@ const SignUpScreen = ({route}: any) => {
               }>
               <LinearGradient
                 colors={['#EE6447', '#7248B3']}
-                start={{x: 0, y: 0}}
-                end={{x: 1, y: 0}}>
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}>
                 <Text
                   className="text-center text-3xl font-bold font-poppins"
-                  style={{opacity: 0}}>
+                  style={{ opacity: 0 }}>
                   Create an Account
                 </Text>
               </LinearGradient>
@@ -407,7 +411,7 @@ const SignUpScreen = ({route}: any) => {
                         handleChange('agreeTerms');
                         console.log(va, isCheck, values.agreeTerms);
                       }}
-                      tintColors={{true: '#7248B3', false: '#666'}}
+                      tintColors={{ true: '#7248B3', false: '#666' }}
                     />
                     <Text className="ml-2 text-sm text-gray-600">
                       Agree to all terms & conditions
@@ -425,8 +429,8 @@ const SignUpScreen = ({route}: any) => {
                     className="mt-4">
                     <LinearGradient
                       colors={['#EE6447', '#7248B3']}
-                      start={{x: 0, y: 0}}
-                      end={{x: 1, y: 0}}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
                       style={{
                         padding: 16,
                         borderRadius: 10,

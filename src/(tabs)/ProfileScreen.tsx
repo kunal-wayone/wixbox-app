@@ -10,9 +10,10 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { ImagePath } from '../constants/ImagePath';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { TokenStorage } from '../utils/apiUtils';
 import { logout } from '../store/slices/authSlice';
+import { RootState } from '../store/store';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<any>();
@@ -20,6 +21,10 @@ const ProfileScreen = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalAction, setModalAction] = useState('');
   const [userData, setUserData] = useState<any>(null);
+  const { status: userStatus, data: user }: any = useSelector(
+    (state: RootState) => state.user,
+  );
+
 
   const tabs = [
     {
@@ -27,17 +32,7 @@ const ProfileScreen = () => {
       icon: 'person-outline',
       link: 'EditProfileScreen',
     },
-    {
-      name: 'Edit Shop Details',
-      icon: 'storefront-outline',
-      link: 'CreateShopScreen',
-    },
     { name: 'Manage Stock', icon: 'cube-outline', link: 'ManageStockScreen' },
-    {
-      name: 'Edit Products',
-      icon: 'pricetags-outline',
-      link: 'AddProductScreen',
-    },
     { name: 'Manage Ads', icon: 'cube-outline', link: 'AdsListScreen' },
     { name: 'Manage Orders', icon: 'people-outline', link: 'AddCustomerScreen' },
   ];
@@ -120,15 +115,15 @@ const ProfileScreen = () => {
 
         {/* Name and Email */}
         <Text className="text-xl font-bold text-center mt-4">
-          {userData?.name || 'John Doe'}
+          {user?.name || 'John Doe'}
         </Text>
         <Text className="text-base text-center text-gray-600">
-          {userData?.email || 'john.doe@example.com'}
+          {user?.email || 'john.doe@example.com'}
         </Text>
 
         {/* Tabs */}
         <View className="mt-6">
-          {userData?.role === 'vendor'
+          {user?.role === 'vendor'
             ? tabs?.map((tab, index) => (
               <TouchableOpacity
                 key={index}

@@ -81,7 +81,7 @@ const HomeScreen = () => {
   const tabBarRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [toggleLoadingIds, setToggleLoadingIds] = useState<any>();
-  const [storeStatus, setStoreStatus] = useState(user?.shop?.status === "1" ? true : false)
+  const [storeStatus, setStoreStatus] = useState(user?.shop?.status === 1 ? true : false)
   const [tabBarOffset, setTabBarOffset] = useState<any>(0);
   const [userData, setUserData] = useState<any>(null);
 
@@ -136,7 +136,7 @@ const HomeScreen = () => {
               Address
             </Text>
             <Text className="font-poppins text-gray-600 mb-4">
-              {user?.shop?.address + ", " + user?.shop?.city + ", " + user?.shop?.state + ", " + "(" + user?.shop?.zip_code || "Store No - 002, Belagere Rd, Near Hilife Pearl Shell, Varthur,Bangalore"}
+              {user?.shop?.address + ", " + user?.shop?.city + ", " + user?.shop?.state + ", " + "(" + user?.shop?.zip_code + ")" || "Store No - 002, Belagere Rd, Near Hilife Pearl Shell, Varthur,Bangalore"}
             </Text>
           </View>
         );
@@ -160,6 +160,7 @@ const HomeScreen = () => {
   // Toggle ads status
   const toggleStoreStatus = useCallback(
     async (id: string, currentStatus: boolean) => {
+      console.log(id)
       try {
         setToggleLoadingIds(true);
         const response: any = await Fetch(
@@ -167,6 +168,7 @@ const HomeScreen = () => {
           { status: currentStatus ? 0 : 1 },
           5000
         );
+        console.log(response)
         if (!response.success) throw new Error('Failed to toggle status');
 
         // Update ads state optimistically
@@ -193,7 +195,7 @@ const HomeScreen = () => {
     if (isFocused) {
       getUserData();
     }
-  }, [isFocused,storeStatus]);
+  }, [isFocused, storeStatus]);
 
   if (!user) {
     return <ActivityIndicator size={42} className='m-auto' color={"#B68AD4"} />;
@@ -239,7 +241,7 @@ const HomeScreen = () => {
             profileImageUrl={ImagePath.profile1}
             name={user?.name || "John Doe"}
             iconImageUrl={ImagePath.crown}
-            status={user?.shop?.status === "0" ? "Offline" : "Online"}
+            status={storeStatus ? "Online" : "Offline"}
             rating={4}
             layout="row"
             onProfilePress={() =>
@@ -247,7 +249,7 @@ const HomeScreen = () => {
             }
           />
 
-          {user?.shop?.status != "0" && (
+          {storeStatus && (
             <>
               <View className="flex-row items-center justify-between gap-4">
                 <TouchableOpacity className="flex-row items-center gap-3">
