@@ -84,7 +84,7 @@ const SearchScreen = () => {
           value={searchQuery}
           onChangeText={setSearchQuery}
           returnKeyType="search"
-          onSubmitEditing={() => handleSearch("prodcut")}
+          onSubmitEditing={() => handleSearch("product")}
         />
       </View>
 
@@ -190,7 +190,8 @@ const SearchScreen = () => {
               data={dishes}
               keyExtractor={(item: any) => item?.id}
               renderItem={({ item }: any) => (
-                <TouchableOpacity onPress={() => navigation.navigate("ShopDetailsScreen")}>
+                <TouchableOpacity onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item?.id })}
+                >
                   <View className="flex-row gap-4 bg-primary-10 rounded-xl p-4 mb-4">
                     {/* Image */}
                     <Image
@@ -281,7 +282,7 @@ const SearchScreen = () => {
               contentContainerStyle={{ paddingBottom: 20 }}
             />))}
       </View>
-    </View>
+    </View >
   );
 };
 

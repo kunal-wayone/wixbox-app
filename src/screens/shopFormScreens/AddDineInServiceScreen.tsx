@@ -30,6 +30,7 @@ const { width, height } = Dimensions.get('screen');
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
   table_number: Yup.string().required('Table number is required'),
+  seats: Yup.string().required('Seats is required'),
   price: Yup.number()
     .typeError('Price must be a number')
     .required('Table price is required')
@@ -53,6 +54,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
       type: type,
       price: values.price,
       premium: premium ? 1 : 0,
+      seats: values?.seats || 0
     };
     setTables([...tables, newTable]);
     resetForm();
@@ -177,6 +179,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
                   floor: '',
                   table_number: '',
                   price: '',
+                  seats: '',
                 }}
                 validationSchema={validationSchema}
                 onSubmit={handleAddTable}>
@@ -247,6 +250,21 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       {touched.table_number && errors.table_number && (
                         <Text style={styles.errorText}>
                           {errors.table_number}
+                        </Text>
+                      )}
+                    </View>
+                    <View className="bg-gray-100" style={{ marginBottom: 12 }}>
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter no of seats"
+                        onChangeText={handleChange('seats')}
+                        onBlur={handleBlur('seats')}
+                        value={values.seats}
+                        keyboardType="number-pad"
+                      />
+                      {touched.seats && errors.seats && (
+                        <Text style={styles.errorText}>
+                          {errors.seats}
                         </Text>
                       )}
                     </View>

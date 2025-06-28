@@ -46,7 +46,7 @@ const ProductSlider = () => {
   //   }, []);
 
   return (
-    <View>
+    <View className='mb-4'>
       {/* Section Header */}
       <View className="mb-3">
         <Text className="text-lg font-semibold text-gray-900">

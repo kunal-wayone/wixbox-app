@@ -9,12 +9,12 @@ import {
   ScrollView,
   ToastAndroid,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import IonIcons from 'react-native-vector-icons/Ionicons';
-import {ImagePath} from '../../constants/ImagePath';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { ImagePath } from '../../constants/ImagePath';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {Fetch, IMAGE_URL} from '../../utils/apiUtils';
+import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import LoadingComponent from '../otherScreen/LoadingComponent';
 import ImageSliderWithBookmark from '../../components/common/ImageSliderWithBookmark';
 
@@ -35,7 +35,7 @@ const ProductDetailsScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showFull, setShowFull] = useState(false);
   const [showReviewFull, setShowReviewFull] = useState<{
-    [key: string]: {show: boolean};
+    [key: string]: { show: boolean };
   }>({});
 
   const description =
@@ -50,6 +50,7 @@ const ProductDetailsScreen = () => {
     if (!id) {
       ToastAndroid.show('Product id not available', ToastAndroid.SHORT);
     }
+    console.log(id, "dfdsf");
 
     if (id) {
       setIsLoading(true);
@@ -62,7 +63,6 @@ const ProductDetailsScreen = () => {
         if (!response.success) {
           throw new Error('Failed to fetch product');
         }
-        console.log(response);
         const data = response?.data?.menu_item; // Fixed typo here
         const images = response?.data?.menu_item?.images || [];
         setItemDetails(data);
@@ -75,6 +75,7 @@ const ProductDetailsScreen = () => {
           })),
         );
       } catch (error) {
+        console.log(error)
         ToastAndroid.show(
           'Failed to fetch product details',
           ToastAndroid.SHORT,
@@ -210,14 +211,12 @@ const ProductDetailsScreen = () => {
             {['S', 'M', 'XL'].map(size => (
               <TouchableOpacity
                 key={size}
-                className={`px-3 py-2 rounded mr-2 ${
-                  selectedSize === size ? 'bg-green-500' : 'bg-gray-200'
-                }`}
+                className={`px-3 py-2 rounded mr-2 ${selectedSize === size ? 'bg-green-500' : 'bg-gray-200'
+                  }`}
                 onPress={() => handleSizeSelect(size)}>
                 <Text
-                  className={`${
-                    selectedSize === size ? 'text-white' : 'text-gray-800'
-                  }`}>
+                  className={`${selectedSize === size ? 'text-white' : 'text-gray-800'
+                    }`}>
                   {size}
                 </Text>
               </TouchableOpacity>
@@ -246,7 +245,7 @@ const ProductDetailsScreen = () => {
             <Text className="text-gray-700">
               {itemDetails?.unit
                 ? itemDetails.unit.charAt(0).toUpperCase() +
-                  itemDetails.unit.slice(1).toLowerCase()
+                itemDetails.unit.slice(1).toLowerCase()
                 : '1 Pizza (Serves 2-3)'}
             </Text>
           </View>
@@ -278,7 +277,7 @@ const ProductDetailsScreen = () => {
                 onPress={() => {
                   setShowReviewFull(prev => ({
                     ...prev,
-                    [item?.id]: {show: !prev[item?.id]?.show},
+                    [item?.id]: { show: !prev[item?.id]?.show },
                   }));
                 }}
                 className="mb-4 p-6 border border-gray-200 rounded-xl">
@@ -351,7 +350,7 @@ const ProductDetailsScreen = () => {
             <FlatList
               data={reviews}
               keyExtractor={item => item.id}
-              renderItem={({item}) => (
+              renderItem={({ item }) => (
                 <View className="mb-4 p-4 bg-gray-50 rounded-lg">
                   <View className="flex-row items-center mb-2">
                     {/* <Image

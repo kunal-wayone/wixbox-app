@@ -96,14 +96,20 @@ const SplashScreen = () => {
           navigation.navigate('HomeScreen', {
             screen: 'Market',
           });
+          return
         } else {
           if (user?.shopcreated) {
             navigation.navigate('HomeScreen', {
               screen: 'Home',
             });
-          } else {
+            return
+          } else if (user?.shopcreated) {
             navigation.navigate('CreateShopScreen');
             console.log("shor creaetd")
+            return
+          } else {
+            navigation.replace('LoginScreen');
+            return;
           }
         }
       } else {

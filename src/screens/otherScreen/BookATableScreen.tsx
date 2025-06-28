@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,17 +10,20 @@ import {
   FlatList,
   Dimensions,
   Switch,
+  ToastAndroid,
 } from 'react-native';
-import {ImagePath} from '../../constants/ImagePath';
+import { ImagePath } from '../../constants/ImagePath';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import Modal from 'react-native-modal';
-import {TextInput} from 'react-native-gesture-handler';
+import { TextInput } from 'react-native-gesture-handler';
+import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import RenderTableItem from '../../components/common/RenderTableItem';
 
 // Assuming Dimensions is used for full-width modal
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const BookATableScreen = () => {
   const navigation = useNavigation<any>();
@@ -38,153 +41,122 @@ const BookATableScreen = () => {
   // Sample table data for different floors
   const tableData: any = {
     'Ground Floor': [
-      {id: '1', tableNumber: 'T1', seats: 2, isPremium: true, isBooked: false},
-      {id: '2', tableNumber: 'T2', seats: 4, isPremium: false, isBooked: true},
-      {id: '3', tableNumber: 'T3', seats: 2, isPremium: false, isBooked: false},
-      {id: '4', tableNumber: 'T4', seats: 4, isPremium: true, isBooked: false},
+      { id: '1', table_number: 'T1', seats: 2, premium: true, isBooked: false },
+      { id: '2', table_number: 'T2', seats: 4, premium: false, isBooked: true },
+      { id: '3', table_number: 'T3', seats: 2, premium: false, isBooked: false },
+      { id: '4', table_number: 'T4', seats: 4, premium: true, isBooked: false },
     ],
     '1st Floor': [
-      {id: '5', tableNumber: 'T5', seats: 2, isPremium: false, isBooked: false},
-      {id: '5', tableNumber: 'T5', seats: 3, isPremium: false, isBooked: false},
-      {id: '6', tableNumber: 'T6', seats: 6, isPremium: true, isBooked: true},
-      {id: '7', tableNumber: 'T7', seats: 4, isPremium: false, isBooked: false},
+      { id: '5', table_number: 'T5', seats: 2, premium: false, isBooked: false },
+      { id: '5', table_number: 'T5', seats: 3, premium: false, isBooked: false },
+      { id: '6', table_number: 'T6', seats: 6, premium: true, isBooked: true },
+      { id: '7', table_number: 'T7', seats: 4, premium: false, isBooked: false },
     ],
     '2nd Floor': [
-      {id: '8', tableNumber: 'T8', seats: 6, isPremium: true, isBooked: false},
-      {id: '9', tableNumber: 'T9', seats: 2, isPremium: false, isBooked: false},
+      { id: '8', table_number: 'T8', seats: 6, premium: true, isBooked: false },
+      { id: '9', table_number: 'T9', seats: 2, premium: false, isBooked: false },
     ],
     '3nd Floor': [
-      {id: '8', tableNumber: 'T8', seats: 6, isPremium: true, isBooked: false},
-      {id: '9', tableNumber: 'T9', seats: 2, isPremium: false, isBooked: false},
+      { id: '8', table_number: 'T8', seats: 6, premium: true, isBooked: false },
+      { id: '9', table_number: 'T9', seats: 2, premium: false, isBooked: false },
     ],
     '4nd Floor': [
-      {id: '8', tableNumber: 'T8', seats: 8, isPremium: true, isBooked: false},
-      {id: '9', tableNumber: 'T9', seats: 2, isPremium: false, isBooked: false},
+      { id: '8', table_number: 'T8', seats: 8, premium: true, isBooked: false },
+      { id: '9', table_number: 'T9', seats: 2, premium: false, isBooked: false },
     ],
   };
 
-  const floors = Object.keys(tableData);
+  const floors = Object.keys(selectedFloor);
 
-  const dummyData = [
-    {
-      image: ImagePath.restaurant1,
-      name: 'Salted Fries',
-      category: 'Chinese Food',
-      distance: '1.2 Miles Away',
-      table: '20 Table Available',
-      resturentName: 'Coffee House Restaurant',
-      rating: '4.5',
-      fav: false,
-    },
-    {
-      image: ImagePath.restaurant2 ?? ImagePath.restaurant1,
-      name: 'Veg Noodles',
-      category: 'Chinese Food',
-      distance: '2.0 Miles Away',
-      table: '20 Table Available',
-      resturentName: 'Spicy Bowl',
-      rating: '4.2',
-      fav: true,
-    },
-  ];
 
-  const fetchData = async () => {
+
+  const getUniqueFloors = (tables: any[] = []) => {
+    const seen = new Set();
+    return tables.filter((item) => {
+      if (seen.has(item.floor)) return false;
+      seen.add(item.floor);
+      return true;
+    });
+  };
+
+
+  const fetchStores = async () => {
+
+    setLoading(true);
     try {
-      const response = await fetch(
-        'https://jsonplaceholder.typicode.com/posts',
+      const response: any = await Fetch(
+        `/user/recent-added-shop?limit=${5}`,
+        undefined,
+        5000,
       );
-      if (!response.ok) throw new Error('Failed to fetch data');
-      const json = await response.json();
-      const transformed = dummyData;
-      setData(transformed);
-    } catch (err: any) {
-      console.error('Error fetching data:', err.message);
-      setError('Could not load high demand items. Showing local data.');
-      setData(dummyData);
+      if (!response.success) {
+        throw new Error('Failed to fetch shops');
+      }
+      const data = response?.data; // Fixed typo here
+      setData(data);
+      // Convert API images to match the format expected by the UI
+
+    } catch (error) {
+      console.log(error)
+      ToastAndroid.show(
+        'Failed to fetch shops details',
+        ToastAndroid.SHORT,
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchStores();
   }, []);
 
-  const renderTableItem = ({item}: {item: any}) => {
-    const seats = item.seats;
+  const renderTableItem = ({ item }: { item: any }) => {
+    const seats = item?.seats || 2;
 
-    // Dimensions and styling
+    // Fixed dimensions
     let tableWidth = 100;
     let tableHeight = 100;
     let borderRadius = 12;
 
-    if (seats === 2) {
-      tableWidth = 80;
-      tableHeight = 60;
-      borderRadius = 8;
-    } else if (seats === 3) {
-      tableWidth = 80;
-      tableHeight = 60;
-      borderRadius = 40;
-    } else if (seats === 4) {
-      tableWidth = 90;
-      tableHeight = 60;
-      borderRadius = 12;
-    } else if (seats === 6) {
-      tableWidth = 140;
-      tableHeight = 60;
+    if (seats <= 8) {
+      // Square table
+      tableWidth = 75;
+      tableHeight = 80;
       borderRadius = 12;
     } else {
-      tableWidth = Math.max(80, seats * 15);
-      tableHeight = 60;
-      borderRadius = 12;
+      // Rectangular table
+      tableWidth = 155;
+      tableHeight = 80;
+      borderRadius = 16;
     }
 
+    // Seat Distribution Based on Rule
     const getSeatDistribution = (count: number) => {
-      switch (count) {
-        case 2:
-          return [
-            {side: 'left', count: 1},
-            {side: 'right', count: 1},
-          ];
-        case 3:
-          return [
-            {side: 'top', count: 1},
-            {side: 'right', count: 1},
-            {side: 'bottom', count: 1},
-          ];
-        case 4:
-          return [
-            {side: 'top', count: 1},
-            {side: 'right', count: 1},
-            {side: 'bottom', count: 1},
-            {side: 'left', count: 1},
-          ];
-        case 6:
-          return [
-            {side: 'top', count: 3},
-            {side: 'bottom', count: 3},
-          ];
-        default:
-          const base = Math.floor(count / 4);
-          const remainder = count % 4;
-          return [
-            {side: 'top', count: base + (remainder > 0 ? 1 : 0)},
-            {side: 'right', count: base + (remainder > 1 ? 1 : 0)},
-            {side: 'bottom', count: base + (remainder > 2 ? 1 : 0)},
-            {side: 'left', count: base},
-          ];
+      if (count <= 8) {
+        return [
+          { side: 'top', count: 1 },
+          { side: 'right', count: 1 },
+          { side: 'bottom', count: 1 },
+          { side: 'left', count: 1 },
+        ];
+      } else {
+        return [
+          { side: 'top', count: 3 },
+          { side: 'right', count: 1 },
+          { side: 'bottom', count: 3 },
+          { side: 'left', count: 1 },
+        ];
       }
     };
 
     const seatDistribution = getSeatDistribution(seats);
-    const seatSize = 25;
+    const seatSize = 28;
     const seatThickness = 6;
-    const chairOffset = 0; // distance from table
 
     const getLineColor = () => {
-      if (item.isBooked) return '#00C01A80';
-      if (item.isPremium) return '#B68AD480'; // primary-40 equivalent
+      if (item?.isBooked) return '#00C01A80';
+      if (item?.premium === 1) return '#B68AD480'; // primary-40
       return 'gray';
     };
 
@@ -194,7 +166,7 @@ const BookATableScreen = () => {
       const lines = [];
       const color = getLineColor();
       const isHorizontal = side === 'top' || side === 'bottom';
-      const offset = 5; // 🔧 adjusted for better visual spacing
+      const offset = 5;
       const spacing = isHorizontal ? tableWidth : tableHeight;
 
       for (let i = 0; i < count; i++) {
@@ -211,12 +183,12 @@ const BookATableScreen = () => {
           style.width = seatSize;
           style.height = seatThickness;
           style.left = center - seatSize / 2;
-          style[side] = -5;
+          style[side] = 1;
         } else {
           style.width = seatThickness;
           style.height = seatSize;
           style.top = center - seatSize / 2;
-          style[side] = -2;
+          style[side] = -1;
         }
 
         lines.push(<View key={`${side}-seat-${i}`} style={style} />);
@@ -227,31 +199,26 @@ const BookATableScreen = () => {
 
     return (
       <TouchableOpacity
-        className="flex-1 m-2 items-center justify-center"
+        className={`flex-1 m-2 items-center justify-center ${seats > 8 ? "col-span-2" : ""} `}
         onPress={() => {
-          if (!item.isBooked) {
+          if (!item?.isBooked) {
             Alert.alert(
               'Book Table',
-              `Book ${item.tableNumber} with ${item.seats} seats?`,
+              `Book ${item?.table_number} with ${item?.seats} seats?`,
               [
-                {text: 'Cancel', style: 'cancel'},
+                { text: 'Cancel', style: 'cancel' },
                 {
                   text: 'Confirm',
                   onPress: () => {
-                    const updatedTables = {...tableData};
-                    updatedTables[selectedFloor] = updatedTables[
-                      selectedFloor
-                    ].map((t: any) =>
-                      t.id === item.id ? {...t, isBooked: true} : t,
+                    const updatedTables = { ...tableData };
+                    updatedTables[selectedFloor] = updatedTables[selectedFloor].map((t: any) =>
+                      t.id === item?.id ? { ...t, isBooked: true } : t
                     );
                     setIsModalVisible(false);
-                    Alert.alert(
-                      'Success',
-                      `${item.tableNumber} booked successfully!`,
-                    );
+                    Alert.alert('Success', `${item?.table_number} booked successfully!`);
                   },
                 },
-              ],
+              ]
             );
           }
         }}>
@@ -264,42 +231,31 @@ const BookATableScreen = () => {
             alignItems: 'center',
           }}>
           <View
-            className={`w-10/12 h-14 rounded-xl flex-row justify-center items-center ${
-              item.isBooked
-                ? 'bg-green-500'
-                : item.isPremium
-                ? 'bg-primary-40'
-                : 'bg-gray-200'
-            }`}>
+            className={`w-10/12 h-16 rounded-xl flex-row justify-center items-center ${item?.isBooked ? 'bg-green-500' : item?.premium === 1 ? 'bg-primary-40' : 'bg-gray-200'
+              }`}>
             <Text className="text-black text-sm font-semibold">
-              {item.tableNumber} ({item.seats})
+              {item?.table_number} ({item?.seats})
             </Text>
           </View>
 
-          {/* Render chairs */}
-          {seatDistribution.map(({side, count}) =>
-            renderChairLines(side, count),
-          )}
+          {/* Chairs around the table */}
+          {seatDistribution.map(({ side, count }) => renderChairLines(side, count))}
         </View>
       </TouchableOpacity>
     );
   };
 
-  const renderFloorTab = (floor: string) => (
+  const renderFloorTab = (item: any) => (
     <TouchableOpacity
-      key={floor}
-      className={`py-2 px-4 mr-2 h-10 rounded-lg ${
-        selectedFloor === floor ? 'bg-primary-80' : 'bg-gray-200'
-      }`}
-      onPress={() => setSelectedFloor(floor)}>
-      <Text
-        className={`font-poppins-regular ${
-          selectedFloor === floor ? 'text-white' : 'text-black'
-        }`}>
-        {floor}
+      key={item?.floor}
+      className={`py-2 px-4 mr-2 h-10 rounded-lg ${selectedFloor === item?.floor ? 'bg-primary-80' : 'bg-gray-200'}`}
+      onPress={() => setSelectedFloor(item?.floor)}>
+      <Text className={`font-poppins-regular ${selectedFloor === item?.floor ? 'text-white' : 'text-black'}`}>
+        {item?.floor}
       </Text>
     </TouchableOpacity>
   );
+
 
   return (
     <View className="flex-1 bg-white">
@@ -313,7 +269,7 @@ const BookATableScreen = () => {
       {/* Header Background */}
       <Image
         source={ImagePath?.bell}
-        className="w-44 h-44 absolute top-[-9%] left-[-7%] z-1 rounded-xl"
+        className="w-44 h-44 absolute top-[-5%] left-[-7%] z-10 rounded-xl"
         resizeMode="contain"
         tintColor="#FFFFFF33"
       />
@@ -336,7 +292,7 @@ const BookATableScreen = () => {
 
       {/* Content */}
       <ScrollView
-        contentContainerStyle={{padding: 16}}
+        contentContainerStyle={{ padding: 16 }}
         showsVerticalScrollIndicator={false}>
         {loading && <ActivityIndicator size="large" color="#0000ff" />}
         {error && (
@@ -348,7 +304,7 @@ const BookATableScreen = () => {
             key={i}
             className="flex-row gap-4 bg-primary-10 rounded-xl p-6 mb-4">
             <Text className="absolute top-2 right-12 font-poppins-bold">
-              <AntDesign name="star" size={19} color="#FFC727" /> {d?.rating}
+              <AntDesign name="star" size={19} color="#FFC727" /> {d?.average_rating || 0}
             </Text>
             <TouchableOpacity className="absolute top-2 right-5">
               <MaterialIcons
@@ -358,18 +314,18 @@ const BookATableScreen = () => {
               />
             </TouchableOpacity>
             <Image
-              source={d?.image}
+              source={d?.restaurant_images ? { uri: IMAGE_URL + d?.restaurant_images } : ImagePath.restaurant1}
               className="w-24 h-32 rounded-xl"
-              resizeMode="stretch"
+              resizeMode="cover"
             />
             <View className="flex-1">
-              <Text className="text-xl font-poppins-bold">{d?.name}</Text>
+              <Text className="text-xl font-poppins-bold ">{d?.restaurant_name}</Text>
               <View className="flex-row items-center gap-4 mb-2">
                 <Text className="font-poppins-regular text-gray-500">
-                  {d?.category}
+                  {d?.category || "NA"}
                 </Text>
                 <Text className="font-poppins-regular text-gray-500">
-                  {d?.distance}
+                  {d?.distance || "NA"} KM
                 </Text>
               </View>
               <View className="flex-row items-center gap-1 mb-2">
@@ -379,7 +335,7 @@ const BookATableScreen = () => {
                   tintColor="#B68AD4"
                   resizeMode="contain"
                 />
-                <Text className="mb-1 font-poppins-regular">{d?.table}</Text>
+                <Text className="mb-1 font-poppins-regular">{d?.table || 0} Table Available</Text>
               </View>
               <TouchableOpacity
                 className="p-2 bg-white w-2/3 rounded-md"
@@ -398,7 +354,7 @@ const BookATableScreen = () => {
       <Modal
         isVisible={isModalVisible}
         onBackdropPress={() => setIsModalVisible(false)}
-        style={{justifyContent: 'flex-end', margin: 0}}>
+        style={{ justifyContent: 'flex-end', margin: 0 }}>
         <View
           className="bg-white rounded-t-3xl pt-6 pb-4"
           style={{
@@ -413,27 +369,34 @@ const BookATableScreen = () => {
           {/* Title */}
           <Text className="text-lg font-bold mb-3 px-4">Select a Table</Text>
           {/* Floor Tabs */}
+          {/* Floor Tabs */}
           <View>
             <FlatList
-              data={floors}
+              data={getUniqueFloors(selectedRestaurant?.tables)}
               horizontal
               keyExtractor={(item, index) => index.toString()}
-              renderItem={({item}) => renderFloorTab(item)}
+              renderItem={({ item }) => renderFloorTab(item)}
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{paddingHorizontal: 16}}
-              style={{marginBottom: 16}}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+              style={{ marginBottom: 16 }}
             />
           </View>
 
+
           {/* Table Layout */}
           <FlatList
-            data={tableData[selectedFloor]}
+            data={selectedRestaurant?.tables?.filter(
+              (t: any) => t.floor === selectedFloor
+            )}
             renderItem={renderTableItem}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item?.id}
             numColumns={2}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={{paddingHorizontal: 16, paddingBottom: 16}}
+            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
           />
+
+
+
 
           <TouchableOpacity
             onPress={() => setIsModalTableReserveVisible(true)}
@@ -449,7 +412,7 @@ const BookATableScreen = () => {
       <Modal
         isVisible={isModalTableReserveVisible}
         onBackdropPress={() => setIsModalTableReserveVisible(false)}
-        style={{justifyContent: 'center'}}>
+        style={{ justifyContent: 'center' }}>
         <View
           className="bg-white rounded-t-3xl pt-6 pb-4"
           style={{
@@ -537,7 +500,7 @@ const BookATableScreen = () => {
       <Modal
         isVisible={isPaymentModal}
         onBackdropPress={() => setIsPaymentModal(false)}
-        style={{justifyContent: 'flex-end', margin: 0}}>
+        style={{ justifyContent: 'flex-end', margin: 0 }}>
         <View
           className="bg-white rounded-t-[2rem] pt-6 pb-4"
           style={{
@@ -563,11 +526,10 @@ const BookATableScreen = () => {
                 <Text className="text-gray-600">₹100.00</Text>
               </View>
               <View
-                className={`w-5 h-5 rounded-full border-2 ${
-                  selectedOption === 'half'
-                    ? 'border-primary-100'
-                    : 'border-gray-400'
-                } items-center justify-center`}>
+                className={`w-5 h-5 rounded-full border-2 ${selectedOption === 'half'
+                  ? 'border-primary-100'
+                  : 'border-gray-400'
+                  } items-center justify-center`}>
                 {selectedOption === 'half' && (
                   <View className="w-2.5 h-2.5 bg-primary-100 rounded-full" />
                 )}
@@ -583,11 +545,10 @@ const BookATableScreen = () => {
                 <Text className="text-gray-600">₹200.00</Text>
               </View>
               <View
-                className={`w-5 h-5 rounded-full border-2 ${
-                  selectedOption === 'full'
-                    ? 'border-blue-500'
-                    : 'border-gray-400'
-                } items-center justify-center`}>
+                className={`w-5 h-5 rounded-full border-2 ${selectedOption === 'full'
+                  ? 'border-blue-500'
+                  : 'border-gray-400'
+                  } items-center justify-center`}>
                 {selectedOption === 'full' && (
                   <View className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
                 )}

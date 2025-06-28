@@ -52,7 +52,7 @@ const CategorySection = () => {
 //   }, []);
 
   return (
-    <View className="pt-6">
+    <View className="pt-6 mb-4">
       {/* Header */}
       <View className="flex-row justify-between items-start mb-3">
         <View>

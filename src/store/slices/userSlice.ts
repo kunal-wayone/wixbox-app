@@ -1,12 +1,22 @@
-// src/store/slices/userSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Fetch, TokenStorage } from '../../utils/apiUtils';
 
+// 1. Extend User interface
 interface User {
     id: string;
     name: string;
     email: string;
     phone?: string;
+
+    // Location fields
+    latitude?: number;
+    longitude?: number;
+    city?: string;
+    state?: string;
+    country?: string;
+    pincode?: string;
+    landmark?: string;
+    locality?: string;
 }
 
 interface UserState {
@@ -23,27 +33,66 @@ const initialState: UserState = {
     isAuthenticated: false,
 };
 
-// Fetch current user
+// 2. Fetch current user
 export const fetchUser = createAsyncThunk(
     'user/fetchUser',
     async (_, { rejectWithValue }) => {
         try {
-
             const response: any = await Fetch<{ data: User }>('/user/profile', undefined, 5000);
-            await TokenStorage.setUserData(response?.data)
+            await TokenStorage.setUserData(response?.data);
             return response.data;
         } catch (error: any) {
-            console.log(error)
-            let errorMessage = 'Failed to fetch user data';
-            // TokenStorage.removeToken();
-            // TokenStorage.removeUser();
-            // TokenStorage.removeRole();
-            return rejectWithValue(errorMessage);
+            console.log(error);
+            return rejectWithValue('Failed to fetch user data');
         }
     }
 );
 
-// Logout (aligned with authSlice)
+// 3. Update user location
+export const updateUserLocation = createAsyncThunk(
+    'user/updateUserLocation',
+    async (
+        location: {
+            latitude: number;
+            longitude: number;
+            city: string;
+            state: string;
+            country: string;
+            pincode: string;
+            landmark: string;
+            locality: string;
+        },
+        { rejectWithValue }
+    ) => {
+        try {
+            /**
+             * Example usage:
+             * location = {
+             *   latitude: 19.076,
+             *   longitude: 72.8777,
+             *   city: "Mumbai",
+             *   state: "Maharashtra",
+             *   country: "India",
+             *   pincode: "400001",
+             *   landmark: "Gateway of India",
+             *   locality: "Colaba"
+             * }
+             */
+            const response: any = await Fetch('/user/update-profile', location, 5000);
+            const updatedUser = {
+                ...response.data,
+                ...location,
+            };
+            await TokenStorage.setUserData(updatedUser);
+            return updatedUser;
+        } catch (error: any) {
+            console.error('Location update failed', error);
+            return rejectWithValue('Failed to update user location');
+        }
+    }
+);
+
+// 4. Logout
 export const logoutUser = createAsyncThunk(
     'user/logout',
     async (_, { rejectWithValue }) => {
@@ -77,6 +126,7 @@ const userSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // Fetch User
             .addCase(fetchUser.pending, (state) => {
                 state.status = 'loading';
                 state.error = null;
@@ -93,6 +143,8 @@ const userSlice = createSlice({
                 state.isAuthenticated = false;
                 state.error = action.payload as string;
             })
+
+            // Logout
             .addCase(logoutUser.fulfilled, (state) => {
                 state.data = null;
                 state.status = 'idle';
@@ -102,9 +154,20 @@ const userSlice = createSlice({
             .addCase(logoutUser.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.payload as string;
+            })
+
+            // Update Location
+            .addCase(updateUserLocation.fulfilled, (state, action: PayloadAction<User>) => {
+                if (state.data) {
+                    state.data = { ...state.data, ...action.payload };
+                }
+            })
+            .addCase(updateUserLocation.rejected, (state, action) => {
+                state.error = action.payload as string;
             });
     },
 });
 
+// 5. Exports
 export const { clearError, resetUserState, updateUserData } = userSlice.actions;
 export default userSlice.reducer;

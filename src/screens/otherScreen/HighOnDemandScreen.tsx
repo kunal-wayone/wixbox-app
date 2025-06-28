@@ -1,152 +1,192 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
+  FlatList,
+  ToastAndroid,
+  RefreshControl,
 } from 'react-native';
-import {ImagePath} from '../../constants/ImagePath';
+import { ImagePath } from '../../constants/ImagePath';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
+
+const PER_PAGE = 5;
+
+const SkeletonCard = () => (
+  <View className="flex-row gap-4 bg-gray-200 rounded-xl p-4 mx-4 my-2 animate-pulse">
+    <View className="w-24 h-28 bg-gray-300 rounded-xl" />
+    <View className="flex-1 justify-between py-1">
+      <View className="h-4 bg-gray-300 w-2/3 mb-2 rounded" />
+      <View className="h-3 bg-gray-300 w-1/2 mb-2 rounded" />
+      <View className="h-3 bg-gray-300 w-3/5 mb-2 rounded" />
+      <View className="h-3 bg-gray-300 w-2/4 mb-2 rounded" />
+    </View>
+  </View>
+);
 
 const HighOnDemandScreen = () => {
   const navigation = useNavigation<any>();
 
   const [data, setData] = useState<any[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const dummyData = [
-    {
-      image: ImagePath.item1,
-      name: 'Salted Fries',
-      category: 'Chinese Food',
-      distance: '1.2 Miles Away',
-      price: '400',
-      resturentName: 'Coffee House Restaurant',
-      rating: '4.5',
-      fav: false,
-    },
-    {
-      image: ImagePath.item2 ?? ImagePath.item1,
-      name: 'Veg Noodles',
-      category: 'Chinese Food',
-      distance: '2.0 Miles Away',
-      price: '350',
-      resturentName: 'Spicy Bowl',
-      rating: '4.2',
-      fav: true,
-    },
-  ];
+  const fetchItems = async (pageNumber = 1, isInitial = false) => {
+    if (loadingMore && !isInitial) return;
 
-  const fetchData = async () => {
+    if (isInitial) setInitialLoading(true);
+    else setLoadingMore(true);
+
     try {
-      // Dummy API URL - replace with your own endpoint
-      const response = await fetch(
-        'https://jsonplaceholder.typicode.com/posts',
-      );
-      if (!response.ok) throw new Error('Failed to fetch data');
+      const response: any = await Fetch(`/user/high-demand?limit=${PER_PAGE}&page=${pageNumber}`);
+      if (!response.success) throw new Error('Failed to fetch');
 
-      // Simulating transformation of fetched data
-      const json = await response.json();
-      const transformed = dummyData; // Replace this with actual transformation if needed
+      const items = response?.data?.data ?? [];
+      const pagination = response?.data?.pagination;
+      const isLastPage = pagination?.current_page >= pagination?.last_page;
 
-      setData(transformed);
-    } catch (err: any) {
-      console.error('Error fetching data:', err.message);
-      setError('Could not load high demand items. Showing local data.');
-      setData(dummyData);
+      setData(prev => (isInitial ? items : [...prev, ...items]));
+      setPage(pageNumber + 1);
+      setHasMore(!isLastPage);
+    } catch (err) {
+      ToastAndroid.show('Failed to fetch items', ToastAndroid.SHORT);
     } finally {
-      setLoading(false);
+      isInitial ? setInitialLoading(false) : setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchItems(1, true);
   }, []);
 
-  return (
-    <View className="flex-1 bg-white">
-      {/* Back Button */}
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setPage(1);
+    setHasMore(true);
+    await fetchItems(1, true);
+    setRefreshing(false);
+  };
+
+  const renderItem = ({ item }: { item: any }) => (
+    <View className="flex-row gap-4 bg-primary-10 rounded-xl p-4 mx-4 my-2">
+      <Text className="absolute top-2 right-12">
+        <AntDesign name="star" size={19} color={'#FFC727'} /> {item?.average_rating}
+      </Text>
+      <TouchableOpacity className="absolute top-2 right-5">
+        <MaterialIcons
+          name={item?.fav ? 'favorite' : 'favorite-outline'}
+          size={19}
+          color={item?.fav ? 'red' : 'black'}
+        />
+      </TouchableOpacity>
+      <Image
+        source={item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
+        className="w-24 h-28 rounded-xl"
+        resizeMode="cover"
+      />
+      <View style={{ flex: 1 }}>
+        <Text className="text-xl font-bold">{item?.item_name}</Text>
+        <View className="flex-row items-center gap-4 mb-2">
+          <Text className="text-gray-500">{item?.category?.name}</Text>
+          <Text className="text-gray-500">{item?.distance || 'NA'} KM</Text>
+        </View>
+        <Text className="mb-1">₹{item?.price}/-</Text>
+        <Text>{item?.restaurant_name || 'NA'}</Text>
+      </View>
+    </View>
+  );
+
+  const Header = () => (
+    <View className='mb-4'>
       <TouchableOpacity
         onPress={() => navigation.goBack()}
-        className="absolute top-5 left-5 z-10">
+        className="absolute top-5 left-5 z-10"
+      >
         <Ionicons name="arrow-back" color={'#fff'} size={24} />
       </TouchableOpacity>
 
-      {/* Header Background */}
       <Image
         source={ImagePath?.fire2}
-        className="w-44 h-44 absolute top-[-20%] left-[-10%] z-[1] rounded-xl"
+        className="w-44 h-44 absolute top-[-10%] left-[-10%] z-[1] rounded-xl"
         resizeMode="contain"
         tintColor={'#FFFFFF33'}
       />
 
-      {/* Header */}
       <View className="bg-primary-80 px-4 py-14 justify-end h-56 rounded-b-[2.5rem] ">
-        <Text className="text-white mb-1 font-poppins font-bold text-2xl">
+        <Text className="text-white mb-1 font-bold text-2xl">
           High On Demand
         </Text>
         <Text className="text-white">
-          Lorem ipsum dolor sit amet, consectetur
+          Discover what everyone is ordering the most
         </Text>
         <Image
           source={ImagePath.fire2}
-          className="w-24 h-24 absolute right-5 bottom-5 rounded-xl"
+          className="w-24 h-24 absolute right-5 bottom-5"
           resizeMode="contain"
           tintColor={'white'}
         />
       </View>
+    </View>
+  );
 
-      {/* Content */}
-      <ScrollView
-        contentContainerStyle={{padding: 16}}
-        showsVerticalScrollIndicator={false}>
-        {loading && <ActivityIndicator size="large" color="#0000ff" />}
-        {error && (
-          <Text className="text-red-600 mb-4 text-center">{error}</Text>
-        )}
+  const renderFooter = () => {
+    if (loadingMore) {
+      return (
+        <>
+          <SkeletonCard />
+          <SkeletonCard />
+        </>
+      );
+    }
 
-        {data.map((d, i) => (
-          <View
-            key={i}
-            className="flex-row gap-4 bg-primary-10 rounded-xl p-6 mb-4">
-            <Text className="absolute top-2 right-12 font-poppins font-bold">
-              <AntDesign name="star" size={19} color={'#FFC727'} /> {d?.rating}
-            </Text>
-            <TouchableOpacity className="absolute top-2 right-5">
-              <MaterialIcons
-                name={d.fav ? 'favorite' : 'favorite-outline'}
-                size={19}
-                color={d.fav ? 'red' : 'black'}
-              />
-            </TouchableOpacity>
-            <Image
-              source={d?.image}
-              className="w-24 h-24 rounded-xl"
-              resizeMode="stretch"
-            />
-            <View style={{flex: 1}}>
-              <Text className="text-xl font-poppins font-bold">{d?.name}</Text>
-              <View className="flex-row items-center gap-4 mb-2">
-                <Text className="font-poppins text-gray-500">
-                  {d?.category}
-                </Text>
-                <Text className="font-poppins text-gray-500">
-                  {d?.distance}
-                </Text>
-              </View>
-              <Text className="font-bold mb-1">₹{d?.price}/-</Text>
-              <Text className="font-poppins font-bold">{d?.resturentName}</Text>
-            </View>
-          </View>
-        ))}
-      </ScrollView>
+    if (!hasMore && data.length > 0) {
+      return (
+        <Text className="text-center text-gray-400 py-4">
+          No more data found.
+        </Text>
+      );
+    }
+
+    if (hasMore && data.length > 0) {
+      return (
+        <TouchableOpacity
+          onPress={() => fetchItems(page)}
+          className="my-4 py-3 bg-primary-80 w-1/3 m-auto rounded-xl"
+        >
+          <Text className="text-center text-white font-semibold">
+            Load More
+          </Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <View className="flex-1 bg-white">
+      <FlatList
+        data={initialLoading ? Array(3).fill(0) : data}
+        keyExtractor={(item, index) =>
+          initialLoading ? index.toString() : item.id.toString()
+        }
+        renderItem={initialLoading ? () => <SkeletonCard /> : renderItem}
+        ListHeaderComponent={Header}
+        ListFooterComponent={renderFooter}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        contentContainerStyle={{ paddingBottom: 80 }}
+        showsVerticalScrollIndicator={false}
+      />
     </View>
   );
 };

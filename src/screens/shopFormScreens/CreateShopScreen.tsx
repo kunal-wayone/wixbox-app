@@ -3,6 +3,8 @@ import {
   View, Text, Dimensions, Image, TouchableOpacity,
   TextInput, ScrollView, KeyboardAvoidingView, Platform,
   ToastAndroid, Modal, FlatList, StyleSheet,
+  PermissionsAndroid, Alert,
+  ActivityIndicator
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import LinearGradient from 'react-native-linear-gradient';
@@ -21,6 +23,8 @@ import { convertShiftData, revertShiftData } from '../../utils/tools/shiftConver
 import { ImagePath } from '../../constants/ImagePath';
 import { states } from '../../utils/data/constant';
 import ShiftCard from '../../components/common/ShiftCard';
+import Geolocation from 'react-native-geolocation-service';
+import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
 
 const { width } = Dimensions.get('screen');
 const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -46,6 +50,8 @@ const CreateShopScreen = ({ route }: any) => {
   const [loading, setLoading] = useState<any>(false);
   const [images, setImages] = useState<any>([]);
   const [viewImageModal, setViewImageModal] = useState<any>(null);
+  const [locationData, setLocationData] = useState<any>(null)
+  const [isLocation, setIsLocation] = useState(false);
   const [schedules, setSchedules] = useState<any>(daysOfWeek.map(day => ({
     day, status: false, shift1: { from: '', to: '' }, shift2: { from: '', to: '' }, state: 'active'
   })));
@@ -53,6 +59,19 @@ const CreateShopScreen = ({ route }: any) => {
   const [apiErrors, setApiErrors] = useState({
     bussenessname: ''
   })
+
+
+  const getLiveLocation = async () => {
+    try {
+      setIsLocation(true); // Start loading
+      await getCurrentLocationWithAddress(setLocationData, dispatch);
+    } catch (error) {
+      console.error("Failed to get location:", error);
+      // Optionally show an alert or toast
+    } finally {
+      setIsLocation(false); // Stop loading
+    }
+  };
 
   useEffect(() => { if (shopId) dispatch(fetchUser()); }, [shopId]);
 
@@ -115,6 +134,8 @@ const CreateShopScreen = ({ route }: any) => {
       formData.append('zip_code', values.zip_code);
       formData.append('city', values.city);
       formData.append('state', values.state);
+      formData.append('longitude', shopId ? user?.shop?.longitude : locationData?.longitude);
+      formData.append('latitude', shopId ? user?.shop?.latitude : locationData?.latitude);
       formData.append('about_business', values.about_business);
       formData.append('single_shift', values.single_shift === 'Single Shift' ? 1 : 0);
       formData.append('dine_in_service', values.dine_in_service === 'yes' ? 1 : 0);
@@ -134,7 +155,7 @@ const CreateShopScreen = ({ route }: any) => {
         });
         // }
       });
-
+      console.log(formData)
       const response: any = await Post('/user/shop', formData, 5000);
       if (!response.success) throw new Error(response.message || 'Failed to save shop.');
 
@@ -169,11 +190,20 @@ const CreateShopScreen = ({ route }: any) => {
     }
   };
 
-  const handlePinLocation = () => ToastAndroid.show('Pinning not implemented yet.', ToastAndroid.SHORT);
+
+
+
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      {isLocation && (
+        <View className='w-screen h-screen bg-black/50 absolute left-0 top-0 z-[100000] '>
+          <ActivityIndicator className='m-auto' color={"#B68AD4"} size={"large"} />
+        </View>
+      )}
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+
+
         <Image
           source={ImagePath.signBg}
           style={{
@@ -229,10 +259,10 @@ const CreateShopScreen = ({ route }: any) => {
                 business_name: shopId ? user?.shop?.restaurant_name : '',
                 phone: shopId ? user?.shop?.phone : '',
                 gst: shopId ? user?.shop?.gst : '',
-                address: shopId ? user?.shop?.address : '',
-                zip_code: shopId ? user?.shop?.zip_code : '',
-                city: shopId ? user?.shop?.city : '',
-                state: shopId ? user?.shop?.state : '',
+                address: shopId ? user?.shop?.address : (locationData && locationData?.address?.landmark + ", " + locationData?.address?.locality) || '',
+                zip_code: shopId ? user?.shop?.zip_code : locationData?.address?.pincode || '',
+                city: shopId ? user?.shop?.city : locationData?.address?.city || '',
+                state: shopId ? user?.shop?.state : locationData?.address?.state || '',
                 about_business: shopId ? user?.shop?.about_business : '',
                 single_shift: shopId ? (user?.shop?.single_shift ? "Single Shift" : "Double Shift") : '',
                 dine_in_service: shopId ? (user?.shop?.dine_in_service ? "yes" : "no") : '',
@@ -462,7 +492,7 @@ const CreateShopScreen = ({ route }: any) => {
                       Address
                     </Text>
                     <TouchableOpacity
-                      onPress={handlePinLocation}
+                      onPress={getLiveLocation}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
