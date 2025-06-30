@@ -7,7 +7,7 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
 
 const GetLocationButton = ({ setLocation }: any) => {
@@ -15,11 +15,15 @@ const GetLocationButton = ({ setLocation }: any) => {
     const [isLocationLoading, setIsLocationLoading] = useState(false);
     const [locationData, setLocationData] = useState<any>(null)
     const dispatch = useDispatch();
+    const { status: userStatus, data: user }: any = useSelector(
+        (state: any) => state.user,
+    );
+
 
     const getLiveLocation = async () => {
         try {
             setIsLocationLoading(true);
-            await getCurrentLocationWithAddress(setLocation || setLocationData, dispatch);
+            await getCurrentLocationWithAddress(setLocation || setLocationData, dispatch, user);
         } catch (error) {
             console.error('Failed to get location:', error);
         } finally {

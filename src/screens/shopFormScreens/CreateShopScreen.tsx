@@ -64,7 +64,7 @@ const CreateShopScreen = ({ route }: any) => {
   const getLiveLocation = async () => {
     try {
       setIsLocation(true); // Start loading
-      await getCurrentLocationWithAddress(setLocationData, dispatch);
+      await getCurrentLocationWithAddress(setLocationData, dispatch, user);
     } catch (error) {
       console.error("Failed to get location:", error);
       // Optionally show an alert or toast

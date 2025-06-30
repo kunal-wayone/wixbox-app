@@ -14,6 +14,9 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchWishlist, removeWishlistItem, addWishlistItem } from '../../store/slices/wishlistSlice';
+import { AppDispatch, RootState } from '../../store/store';
 
 const PER_PAGE = 5;
 
@@ -31,6 +34,8 @@ const SkeletonCard = () => (
 
 const HighOnDemandScreen = () => {
   const navigation = useNavigation<any>();
+  const dispatch = useDispatch<AppDispatch>();
+  const { items: wishlistItems, status } = useSelector((state: RootState) => state.wishlist);
 
   const [data, setData] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -53,7 +58,13 @@ const HighOnDemandScreen = () => {
       const pagination = response?.data?.pagination;
       const isLastPage = pagination?.current_page >= pagination?.last_page;
 
-      setData(prev => (isInitial ? items : [...prev, ...items]));
+      // Update items with wishlist status
+      const updatedItems = items.map((item: any) => ({
+        ...item,
+        fav: wishlistItems.some(wishlistItem => wishlistItem.menu_item_id === item.id.toString()),
+      }));
+
+      setData(prev => (isInitial ? updatedItems : [...prev, ...updatedItems]));
       setPage(pageNumber + 1);
       setHasMore(!isLastPage);
     } catch (err) {
@@ -64,15 +75,36 @@ const HighOnDemandScreen = () => {
   };
 
   useEffect(() => {
+    dispatch(fetchWishlist());
     fetchItems(1, true);
-  }, []);
+  }, [dispatch]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     setPage(1);
     setHasMore(true);
-    await fetchItems(1, true);
+    await Promise.all([dispatch(fetchWishlist()), fetchItems(1, true)]);
     setRefreshing(false);
+  };
+
+  const handleWishlistToggle = async (item: any) => {
+    try {
+      if (item.fav) {
+        await dispatch(removeWishlistItem({ menu_item_id: item.id.toString() })).unwrap();
+        ToastAndroid.show('Removed from wishlist', ToastAndroid.SHORT);
+      } else {
+        await dispatch(addWishlistItem({ menu_item_id: item.id.toString() })).unwrap();
+        ToastAndroid.show('Added to wishlist', ToastAndroid.SHORT);
+      }
+      // Update local data to reflect wishlist change
+      setData(prev =>
+        prev.map(d =>
+          d.id === item.id ? { ...d, fav: !d.fav } : d
+        )
+      );
+    } catch (error) {
+      ToastAndroid.show('Failed to update wishlist', ToastAndroid.SHORT);
+    }
   };
 
   const renderItem = ({ item }: { item: any }) => (
@@ -80,7 +112,11 @@ const HighOnDemandScreen = () => {
       <Text className="absolute top-2 right-12">
         <AntDesign name="star" size={19} color={'#FFC727'} /> {item?.average_rating}
       </Text>
-      <TouchableOpacity className="absolute top-2 right-5">
+      <TouchableOpacity
+        className="absolute top-2 right-5"
+        onPress={() => handleWishlistToggle(item)}
+        disabled={status === 'loading'}
+      >
         <MaterialIcons
           name={item?.fav ? 'favorite' : 'favorite-outline'}
           size={19}

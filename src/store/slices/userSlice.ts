@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { Fetch, TokenStorage } from '../../utils/apiUtils';
+import { Fetch, Post, TokenStorage } from '../../utils/apiUtils';
 
 // 1. Extend User interface
 interface User {
@@ -53,14 +53,10 @@ export const updateUserLocation = createAsyncThunk(
     'user/updateUserLocation',
     async (
         location: {
-            latitude: number;
-            longitude: number;
-            city: string;
-            state: string;
-            country: string;
-            pincode: string;
-            landmark: string;
-            locality: string;
+            address: {
+                latitude: number;
+                longitude: number;
+            }
         },
         { rejectWithValue }
     ) => {
@@ -78,11 +74,13 @@ export const updateUserLocation = createAsyncThunk(
              *   locality: "Colaba"
              * }
              */
-            const response: any = await Fetch('/user/update-profile', location, 5000);
+            console.log(location)
+            const response: any = await Post('/user/update-profile', location, 5000);
             const updatedUser = {
                 ...response.data,
                 ...location,
             };
+            console.log(response)
             await TokenStorage.setUserData(updatedUser);
             return updatedUser;
         } catch (error: any) {

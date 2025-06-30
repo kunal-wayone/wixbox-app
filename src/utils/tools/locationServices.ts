@@ -11,68 +11,86 @@ import {
     RESULTS,
 } from 'react-native-permissions';
 import Geocoder from 'react-native-geocoding';
-import { MAPS_API_KEY } from "@env";
+import { MAPS_API_KEY } from '@env';
 import { updateUserLocation } from '../../store/slices/userSlice';
-
 
 // Initialize Geocoder
 Geocoder.init(MAPS_API_KEY);
 
+// ✅ Request Permission
 async function requestLocationPermission() {
-    if (Platform.OS === 'android') {
-        const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-            {
-                title: 'Location Precious Permission Required',
-                message: 'We need your precise location to continue.',
-                buttonPositive: 'OK',
-            }
-        );
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-    } else {
-        const result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
-        return result === RESULTS.GRANTED;
+    try {
+        if (Platform.OS === 'android') {
+            const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+                {
+                    title: 'Location Permission Required',
+                    message: 'We need your precise location to continue.',
+                    buttonPositive: 'OK',
+                    buttonNegative: 'Cancel',
+                }
+            );
+            return granted === PermissionsAndroid.RESULTS.GRANTED;
+        } else {
+            const result = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+            return result === RESULTS.GRANTED;
+        }
+    } catch (error) {
+        console.error('Permission Request Error:', error);
+        return false;
     }
 }
 
+// ✅ Check if location services are enabled
 function checkIfLocationEnabled() {
     return new Promise((resolve, reject) => {
         Geolocation.getCurrentPosition(
             () => resolve(true),
             (error) => {
-                if (error.code === 2) resolve(false);
+                console.log('checkIfLocationEnabled error:', error);
+                if (error.code === 2) resolve(false); // Location services disabled
                 else reject(error);
             },
             {
                 enableHighAccuracy: true,
-                timeout: 5000,
+                timeout: 30000,
                 maximumAge: 10000,
+                distanceFilter: 0,
             }
         );
     });
 }
 
+// ✅ Show alert to enable location
 function promptEnableLocationServices() {
-    Alert.alert(
-        'Location Services Disabled',
-        'Please enable GPS/location from settings to continue.',
-        [
-            {
-                text: 'Go to Settings',
-                onPress: () => {
-                    Platform.OS === 'ios'
-                        ? Linking.openURL('App-Prefs:Privacy&path=LOCATION')
-                        : Linking.openSettings();
+    return new Promise((resolve) => {
+        Alert.alert(
+            'Location Services Disabled',
+            'Please enable GPS/location from settings to continue.',
+            [
+                {
+                    text: 'Go to Settings',
+                    onPress: () => {
+                        Platform.OS === 'ios'
+                            ? Linking.openURL('App-Prefs:Privacy&path=LOCATION')
+                            : Linking.openSettings();
+                        resolve(false);
+                    },
                 },
-            },
-            { text: 'Cancel', style: 'cancel' },
-        ]
-    );
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                    onPress: () => resolve(false),
+                },
+            ]
+        );
+    });
 }
 
-function extractLocationDetails(components: any) {
-    const getComponent = (types: any) =>
-        components.find((c: any) => types.every((t: any) => c.types.includes(t)))?.long_name || '';
+// ✅ Extract city, state, etc. from Geocoder result
+function extractLocationDetails(components: any[]) {
+    const getComponent = (types: string[]) =>
+        components?.find((c: any) => types.every((t) => c.types.includes(t)))?.long_name || '';
 
     return {
         city: getComponent(['locality']) || getComponent(['administrative_area_level_2']),
@@ -88,16 +106,28 @@ function extractLocationDetails(components: any) {
 }
 
 // ✅ MAIN FUNCTION
-export async function getCurrentLocationWithAddress(setLocation: any, dispatch: any) {
+export async function getCurrentLocationWithAddress(
+    setLocation: (location: any) => void,
+    dispatch: any,
+    user: any // Add user as a parameter
+) {
+    // Check permissions first
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
-        Alert.alert('Permission Denied', 'Location permission is required.');
+        Alert.alert('Permission Denied', 'Location permission is required to proceed.');
         return;
     }
 
-    const isLocationEnabled = await checkIfLocationEnabled();
-    if (!isLocationEnabled) {
-        promptEnableLocationServices();
+    // Check if location services are enabled
+    try {
+        const isLocationEnabled = await checkIfLocationEnabled();
+        if (!isLocationEnabled) {
+            await promptEnableLocationServices();
+            return;
+        }
+    } catch (error) {
+        console.error('Location Enable Check Error:', error);
+        Alert.alert('Error', 'Unable to verify location services.');
         return;
     }
 
@@ -108,27 +138,39 @@ export async function getCurrentLocationWithAddress(setLocation: any, dispatch: 
 
             try {
                 const geoResponse = await Geocoder.from(latitude, longitude);
-                const addressComponents = geoResponse.results[0].address_components;
+                if (!geoResponse.results?.[0]?.address_components) {
+                    throw new Error('No address components found');
+                }
 
+                const addressComponents = geoResponse.results[0].address_components;
                 const locationDetails = extractLocationDetails(addressComponents);
                 console.log('✅ Location Details:', locationDetails);
 
-                const fullLocation = {
-                    latitude,
-                    longitude,
-                    ...locationDetails
+                const { landmark, locality, ...rest } = locationDetails;
+
+                const address = {
+                    address: [landmark, locality].filter(Boolean).join(', '),
+                    ...rest,
                 };
 
-                // ✅ Set in UI or local state
+                const fullLocation = {
+                    address: [{
+                        type: user?.role === 'user' ? 'Home' : 'Shop',
+                        latitude,
+                        longitude,
+                        ...address,
+                    }],
+                };
+
+                // Update local state
                 setLocation({
                     longitude,
                     latitude,
-                    address: locationDetails
+                    address: locationDetails,
                 });
 
-                // ✅ Dispatch update to backend
+                // Update Redux store
                 dispatch(updateUserLocation(fullLocation));
-
             } catch (error) {
                 console.error('❌ Geocoding Error:', error);
                 Alert.alert('Error', 'Unable to retrieve address from location.');
@@ -136,12 +178,34 @@ export async function getCurrentLocationWithAddress(setLocation: any, dispatch: 
         },
         (error) => {
             console.error('❌ Location Error:', error);
-            Alert.alert('Error', 'Could not fetch your location. Please try again.');
+            handleLocationError(error);
         },
         {
             enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 5000,
+            timeout: 30000,
+            maximumAge: 10000,
+            distanceFilter: 0,
         }
     );
+}
+
+// ✅ Handle location-related errors
+function handleLocationError(error: any) {
+    switch (error.code) {
+        case 1:
+            Alert.alert('Permission Denied', 'Please allow location access in settings.');
+            break;
+        case 2:
+            Alert.alert('Location Unavailable', 'Please ensure location services are enabled.');
+            break;
+        case 3:
+            Alert.alert(
+                'Location Timeout',
+                'Location request timed out. Try again in an open area or enable High Accuracy mode.'
+            );
+            break;
+        default:
+            Alert.alert('Error', 'Could not fetch your location. Please try again.');
+            break;
+    }
 }

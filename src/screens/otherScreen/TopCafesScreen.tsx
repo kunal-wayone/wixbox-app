@@ -3,18 +3,21 @@ import {
   View,
   Text,
   Image,
+  ImageBackground,
   TouchableOpacity,
   FlatList,
-  ImageBackground,
   ToastAndroid,
   RefreshControl,
 } from 'react-native';
 import { ImagePath } from '../../constants/ImagePath';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { useNavigation } from '@react-navigation/native';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
-
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchWishlist, removeWishlistShop, addWishlistShop } from '../../store/slices/wishlistSlice';
+import { AppDispatch, RootState } from '../../store/store';
 const PER_PAGE = 4;
 
 const SkeletonCard = () => (
@@ -39,6 +42,8 @@ const SkeletonCard = () => (
 
 const TopCafesScreen = () => {
   const navigation = useNavigation<any>();
+  const dispatch = useDispatch<AppDispatch>();
+  const { shops: wishlistShops, status } = useSelector((state: RootState) => state.wishlist);
 
   const [data, setData] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -60,7 +65,13 @@ const TopCafesScreen = () => {
       const newShops = response?.data?.top_shops || [];
       const pagination = response?.data?.pagination;
 
-      setData(prev => (isInitial ? newShops : [...prev, ...newShops]));
+      // Update shops with wishlist status
+      const updatedShops = newShops.map((shop: any) => ({
+        ...shop,
+        fav: wishlistShops.some(wishlistShop => wishlistShop.shop_id === shop.id.toString()),
+      }));
+
+      setData(prev => (isInitial ? updatedShops : [...prev, ...updatedShops]));
       setHasMore(pagination?.current_page < pagination?.last_page);
       setPage(pagination?.current_page + 1);
     } catch (error) {
@@ -71,55 +82,57 @@ const TopCafesScreen = () => {
   };
 
   useEffect(() => {
+    dispatch(fetchWishlist());
     fetchStores(1, true);
-  }, []);
+  }, [dispatch]);
 
   const onRefresh = async () => {
     setRefreshing(true);
     setPage(1);
     setHasMore(true);
-    await fetchStores(1, true);
+    await Promise.all([dispatch(fetchWishlist()), fetchStores(1, true)]);
     setRefreshing(false);
   };
 
-  const renderFooter = () => {
-    if (loadMoreLoading) {
-      return (
-        <>
-          <SkeletonCard />
-          <SkeletonCard />
-        </>
+  const handleWishlistToggle = async (shop: any) => {
+    try {
+      if (shop.fav) {
+        await dispatch(removeWishlistShop({ shop_id: shop.id.toString() })).unwrap();
+        ToastAndroid.show('Removed from wishlist', ToastAndroid.SHORT);
+      } else {
+        await dispatch(addWishlistShop({ shop_id: shop.id.toString() })).unwrap();
+        ToastAndroid.show('Added to wishlist', ToastAndroid.SHORT);
+      }
+      // Update local data to reflect wishlist change
+      setData(prev =>
+        prev.map(d =>
+          d.id === shop.id ? { ...d, fav: !d.fav } : d
+        )
       );
+    } catch (error) {
+      ToastAndroid.show('Failed to update wishlist', ToastAndroid.SHORT);
     }
-
-    if (!hasMore && data.length > 0) {
-      return (
-        <Text className="text-center text-gray-400 py-4">No more data found.</Text>
-      );
-    }
-
-    if (hasMore && data.length > 0) {
-      return (
-        <TouchableOpacity
-          onPress={() => fetchStores(page)}
-          className="mx-4 my-4 py-3 bg-primary-80 rounded-xl"
-        >
-          <Text className="text-center text-white font-semibold">Load More</Text>
-        </TouchableOpacity>
-      );
-    }
-
-    return null;
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity className="w-full mx-auto px-4 py-2" onPress={() => navigation.navigate('ShopDetailsScreen')}>
-      <View className="rounded-xl overflow-hidden">
+    <View className="w-full mx-auto px-4 py-2">
+      <View className="rounded-xl overflow-hidden relative">
         <ImageBackground
-          source={item?.restaurant_images?.length ? { uri: IMAGE_URL + item?.restaurant_images[0] } : ImagePath.restaurant1}
+          source={item?.restaurant_images?.length ? { uri: IMAGE_URL + item.restaurant_images[0] } : ImagePath.restaurant1}
           className="h-72 w-full justify-end relative"
           imageStyle={{ borderRadius: 16 }}
         >
+          <TouchableOpacity
+            className="absolute top-2 right-2 z-10"
+            onPress={() => handleWishlistToggle(item)}
+            disabled={status === 'loading'}
+          >
+            <MaterialIcons
+              name={item?.fav ? 'favorite' : 'favorite-outline'}
+              size={24}
+              color={item?.fav ? 'red' : 'white'}
+            />
+          </TouchableOpacity>
           <View className="absolute inset-0 bg-black" style={{ opacity: 0.5 }} />
           <View className="bg-white p-3 w-11/12 mx-auto rounded-xl bottom-4">
             <View className="flex-row justify-between items-center">
@@ -155,7 +168,7 @@ const TopCafesScreen = () => {
           </View>
         </ImageBackground>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   const Header = () => (
@@ -183,6 +196,36 @@ const TopCafesScreen = () => {
       </View>
     </View>
   );
+
+  const renderFooter = () => {
+    if (loadMoreLoading) {
+      return (
+        <>
+          <SkeletonCard />
+          <SkeletonCard />
+        </>
+      );
+    }
+
+    if (!hasMore && data.length > 0) {
+      return (
+        <Text className="text-center text-gray-400 py-4">No more data found.</Text>
+      );
+    }
+
+    if (hasMore && data.length > 0) {
+      return (
+        <TouchableOpacity
+          onPress={() => fetchStores(page)}
+          className="mx-4 my-4 py-3 bg-primary-80 rounded-xl"
+        >
+          <Text className="text-center text-white font-semibold">Load More</Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return null;
+  };
 
   return (
     <View className="flex-1 bg-white">
