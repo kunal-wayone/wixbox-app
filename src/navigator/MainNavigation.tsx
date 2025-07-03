@@ -38,6 +38,9 @@ import PostDetailScreen from '../screens/postScreens/PostDetailScreen';
 import AdsListScreen from '../screens/adsScreens/AdsListScreen';
 import AdsDetailScreen from '../screens/adsScreens/AdsDetailScreen';
 import TopCafesScreen from '../screens/otherScreen/TopCafesScreen';
+import TableBookingFormScreen from '../screens/otherScreen/TableBookingFormScreen';
+import BookedTablesScreen from '../screens/otherScreen/BookedTablesScreen';
+import MenuItemListScreen from '../screens/stockScreens/MenuItemListScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -84,6 +87,13 @@ const MainNavigation = () => {
       <Stack.Screen name="PostDetailScreen" component={PostDetailScreen} />
       <Stack.Screen name="AdsListScreen" component={AdsListScreen} />
       <Stack.Screen name="AdsDetailScreen" component={AdsDetailScreen} />
+      <Stack.Screen name="TableBookingFormScreen" component={TableBookingFormScreen} />
+      <Stack.Screen name="BookedTablesScreen" component={BookedTablesScreen} />
+      <Stack.Screen name="MenuItemListScreen" component={MenuItemListScreen} />
+
+
+
+
 
 
 

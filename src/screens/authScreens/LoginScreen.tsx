@@ -120,12 +120,13 @@ const LoginScreen = () => {
       }
     } catch (err: any) {
       console.log(err);
+
       setApiErrors({
         email: err?.errors?.email,
         password: err?.errors?.password,
       });
       ToastAndroid.show(
-        error || 'Something went wrong. Please try again.',
+        err?.errors?.errors || 'Something went wrong. Please try again.',
         ToastAndroid.SHORT,
       );
     }

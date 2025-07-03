@@ -50,9 +50,9 @@ const ProfileScreen = () => {
     },
     { name: 'Order History', icon: 'grid-outline', link: '' },
     {
-      name: 'Edit Table',
+      name: 'Booked Table',
       icon: 'restaurant-outline',
-      link: 'AddProductScreen',
+      link: 'BookedTablesScreen',
     },
     // {name: 'Added Customer', icon: 'people-outline', link: 'AddCustomerScreen'},
   ];

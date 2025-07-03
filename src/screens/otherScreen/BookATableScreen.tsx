@@ -394,7 +394,7 @@ const BookATableScreen = () => {
                 </View>
                 <View className="flex-row items-center gap-1 mb-2">
                   <Text className="mb-1 font-poppins-regular">
-                    {shop.tables?.filter((t: any) => !t.is_booked !== "1").length || 0} Table Available
+                    {shop.tables?.filter((t: any) => !t?.is_booked !== "1").length || 0} Table Available
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -519,11 +519,11 @@ const BookATableScreen = () => {
             <Text className="text-base">Send me a pickup reminder notification</Text>
           </View>
           <TouchableOpacity
-            onPress={() => setIsPaymentModal(true)}
+            onPress={() => navigation.navigate("TableBookingFormScreen", { shop_id: selectedRestaurant?.id, table_info: [selectTable] })}
             className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto mt-5"
           >
             <Text className="text-center text-white font-poppins font-semibold">
-              Pay ₹150.00 & Reserve Now
+              Pay ₹ {selectTable?.price}/- & Reserve Now
             </Text>
           </TouchableOpacity>
         </View>

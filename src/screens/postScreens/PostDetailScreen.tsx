@@ -80,7 +80,7 @@ const PostDetailScreen = () => {
     <ScrollView className="flex-1 bg-white">
       {/* Header with back button */}
       <View className="flex-row items-center px-4 py-3 mb-2  border-gray-200">
-        <TouchableOpacity className='absolute left-5 top-5' onPress={() => navigation.goBack()}>
+        <TouchableOpacity className='absolute z-50 left-5 top-5' onPress={() => navigation.goBack()}>
           <Icon name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <Text className="text-xl py-4 font-semibold text-center w-full ">Post Details</Text>

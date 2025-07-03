@@ -4,6 +4,8 @@ import authReducer from './slices/authSlice';
 import userReducer from './slices/userSlice';
 import cartReducer from './slices/cartSlice';
 import wishListReduser from './slices/wishlistSlice';
+import orederReduser from './slices/orderSlice';
+
 
 
 
@@ -12,7 +14,8 @@ export const store = configureStore({
     auth: authReducer,
     user: userReducer,
     cart: cartReducer,
-    wishlist: wishListReduser
+    wishlist: wishListReduser,
+    order: orederReduser
   },
 });
 

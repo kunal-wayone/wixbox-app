@@ -398,7 +398,7 @@ const PostScreen = () => {
                       marginBottom: 4,
                     }}
                   >
-                    Excerpt
+                    Short Description
                   </Text>
                   <TextInput
                     style={{
@@ -411,7 +411,7 @@ const PostScreen = () => {
                       minHeight: 100,
                       textAlignVertical: 'top',
                     }}
-                    placeholder="Enter post excerpt"
+                    placeholder="Enter post short description"
                     onChangeText={handleChange('excerpt')}
                     onBlur={handleBlur('excerpt')}
                     value={values.excerpt}

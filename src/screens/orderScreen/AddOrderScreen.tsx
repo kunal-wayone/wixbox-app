@@ -10,7 +10,7 @@ import {
   ToastAndroid,
   ActivityIndicator,
 } from 'react-native';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Modal from 'react-native-modal';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,48 +19,61 @@ import { ImagePath } from '../../constants/ImagePath';
 import { RootState } from '../../store/store';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 
-
-
 const AddOrderScreen = () => {
   const navigation = useNavigation<any>();
   const dispatch = useDispatch();
+  const route = useRoute<any>();
+  const shopId = route.params?.shopId || null;
   const isFocused = useIsFocused();
   const cartItems = useSelector((state: RootState) => state.cart.items);
-  const [Products, setProducts] = useState<any>([])
-  const [isLoading, setIsLoading] = useState(false)
-
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartVisible, setIsCartVisible] = useState(false);
 
+  const fetchProducts = useCallback(async (pageNum: number, append = false) => {
+    if (!hasMore && append) return;
+    const endpoint: any = shopId ? `/user/shop-menu-items?shop_id=${shopId}&page=${page}` : `/user/menu-items?page=${pageNum}`
 
-  const fetchProducts = useCallback(async () => {
     try {
-      setIsLoading(true);
-      const response: any = await Fetch(`/user/menu-items`, {}, 5000);
-      console.log(response)
+      setIsLoading(!append);
+      setIsLoadingMore(append);
+      const response: any = await Fetch(`${endpoint}`, {}, 5000);
       if (!response.success) throw new Error('Failed to fetch products');
-      setProducts(response.data.menu_items || []);
+
+      const newProducts = shopId ? response.menu_items : response.data.menu_items || [];
+      setProducts(prev => (append ? [...prev, ...newProducts] : newProducts));
+      setHasMore(newProducts.length > 0); // Assume no more products if empty
     } catch (error: any) {
       console.error('fetchProducts error:', error.message);
-      ToastAndroid.show(
-        error?.message || 'Failed to load products.',
-        ToastAndroid.SHORT
-      );
+      ToastAndroid.show(error?.message || 'Failed to load products.', ToastAndroid.SHORT);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  }, []);
-
+  }, [hasMore]);
 
   useEffect(() => {
     if (isFocused) {
-      fetchProducts();
+      setPage(1);
+      setHasMore(true);
+      fetchProducts(1);
     }
-  }, [isFocused]);
+  }, [isFocused, fetchProducts]);
 
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchProducts(nextPage, true);
+    }
+  };
 
-  const filteredProducts = Products.filter((product: any) =>
-    product.item_name.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredProducts = products.filter((product: any) =>
+    product.item_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleAddToCart = (product: any) => {
@@ -119,7 +132,7 @@ const AddOrderScreen = () => {
         padding: 12,
       }}>
       <Image
-        source={item.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
+        source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
         style={{ width: 80, height: 80, borderRadius: 10, marginRight: 12 }}
         resizeMode="cover"
       />
@@ -154,8 +167,17 @@ const AddOrderScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </View >
+    </View>
   );
+
+  const renderFooter = () => {
+    if (!isLoadingMore) return null;
+    return (
+      <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff', padding: 16 }}>
@@ -249,6 +271,9 @@ const AddOrderScreen = () => {
           numColumns={2}
           contentContainerStyle={{ paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
         />
       )}
       {/* Cart Modal */}
@@ -271,6 +296,9 @@ const AddOrderScreen = () => {
             keyExtractor={item => item.id}
             showsVerticalScrollIndicator={false}
           />
+          <TouchableOpacity className='bg-primary-90 p-4 rounded-xl' onPress={() => navigation.goBack()}>
+            <Text className='text-center text-white'>Place Order</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>

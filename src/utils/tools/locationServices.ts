@@ -52,7 +52,7 @@ function checkIfLocationEnabled() {
                 else reject(error);
             },
             {
-                enableHighAccuracy: true,
+                enableHighAccuracy: false,
                 timeout: 30000,
                 maximumAge: 10000,
                 distanceFilter: 0,
@@ -107,87 +107,99 @@ function extractLocationDetails(components: any[]) {
 
 // ✅ MAIN FUNCTION
 export async function getCurrentLocationWithAddress(
-    setLocation: (location: any) => void,
+    set: (location: any) => void,
     dispatch: any,
-    user: any // Add user as a parameter
-) {
-    // Check permissions first
+    user: any
+): Promise<any | null> {
     const hasPermission = await requestLocationPermission();
     if (!hasPermission) {
         Alert.alert('Permission Denied', 'Location permission is required to proceed.');
-        return;
+        return null;
     }
 
-    // Check if location services are enabled
     try {
         const isLocationEnabled = await checkIfLocationEnabled();
         if (!isLocationEnabled) {
             await promptEnableLocationServices();
-            return;
+            return null;
         }
     } catch (error) {
         console.error('Location Enable Check Error:', error);
         Alert.alert('Error', 'Unable to verify location services.');
-        return;
+        return null;
     }
 
-    Geolocation.getCurrentPosition(
-        async (position) => {
-            const { latitude, longitude } = position.coords;
-            console.log('📍 Coordinates:', latitude, longitude);
+    return new Promise((resolve, reject) => {
+        Geolocation.getCurrentPosition(
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                console.log('📍 Coordinates:', latitude, longitude);
 
-            try {
-                const geoResponse = await Geocoder.from(latitude, longitude);
-                if (!geoResponse.results?.[0]?.address_components) {
-                    throw new Error('No address components found');
-                }
+                try {
+                    const geoResponse = await Geocoder.from(latitude, longitude);
+                    if (!geoResponse.results?.[0]?.address_components) {
+                        throw new Error('No address components found');
+                    }
 
-                const addressComponents = geoResponse.results[0].address_components;
-                const locationDetails = extractLocationDetails(addressComponents);
-                console.log('✅ Location Details:', locationDetails);
+                    const addressComponents = geoResponse.results[0].address_components;
+                    const locationDetails = extractLocationDetails(addressComponents);
+                    console.log('✅ Location Details:', locationDetails);
 
-                const { landmark, locality, ...rest } = locationDetails;
+                    const { landmark, locality, ...rest } = locationDetails;
 
-                const address = {
-                    address: [landmark, locality].filter(Boolean).join(', '),
-                    ...rest,
-                };
+                    const address = {
+                        address: [landmark, locality].filter(Boolean).join(', '),
+                        ...rest,
+                    };
 
-                const fullLocation = {
-                    address: [{
-                        type: user?.role === 'user' ? 'Home' : 'Shop',
+                    const fullLocation: any = {
+                        address: [
+                            {
+                                type: user?.role === 'user' ? 'Home' : 'Shop',
+                                latitude,
+                                longitude,
+                                ...address,
+                            },
+                        ],
+                    };
+
+                    // Update local state
+                    set({
                         latitude,
                         longitude,
-                        ...address,
-                    }],
-                };
+                        address: locationDetails,
+                    });
 
-                // Update local state
-                setLocation({
-                    longitude,
-                    latitude,
-                    address: locationDetails,
-                });
+                    // Update Redux store
+                    dispatch(updateUserLocation(fullLocation));
 
-                // Update Redux store
-                dispatch(updateUserLocation(fullLocation));
-            } catch (error) {
-                console.error('❌ Geocoding Error:', error);
-                Alert.alert('Error', 'Unable to retrieve address from location.');
+                    // ✅ Return the resolved address
+                    resolve({
+                        latitude,
+                        longitude,
+                        address: locationDetails,
+                    });
+                } catch (error) {
+                    console.error('❌ Geocoding Error:', error);
+                    Alert.alert('Error', 'Unable to retrieve address from location.');
+                    reject(null);
+                }
+            },
+            (error) => {
+                console.error('❌ Location Error:', error);
+                handleLocationError(error);
+                reject(null);
+            },
+            {
+                enableHighAccuracy: false,
+                timeout: 30000,
+                maximumAge: 10000,
+                distanceFilter: 0,
             }
-        },
-        (error) => {
-            console.error('❌ Location Error:', error);
-            handleLocationError(error);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 30000,
-            maximumAge: 10000,
-            distanceFilter: 0,
-        }
-    );
+        );
+    });
 }
+
 
 // ✅ Handle location-related errors
 function handleLocationError(error: any) {

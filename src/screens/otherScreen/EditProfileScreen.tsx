@@ -77,7 +77,7 @@ const EditProfileScreen = () => {
             ...address[0],
             type: user.role === 'user' ? 'Home' : user.role === 'vendor' ? 'Shop' : address[0].type,
           }];
-          console.log({ ...user, address: updatedAddress }  ,"gfyhudsnmif");
+          console.log({ ...user, address: updatedAddress }, "gfyhudsnmif");
           setUserData({ ...user, address: updatedAddress });
         } else {
           ToastAndroid.show('Failed to load user data', ToastAndroid.SHORT);
@@ -262,14 +262,12 @@ const EditProfileScreen = () => {
                   <DateTimePicker
                     value={
                       values.dateOfBirth
-                        ? new Date(
-                          values.dateOfBirth.split('/').reverse().join('-')
-                        )
-                        : new Date()
+                        ? new Date(values.dateOfBirth.split('/').reverse().join('-'))
+                        : new Date(new Date().setFullYear(new Date().getFullYear() - 18))
                     }
                     mode="date"
                     display={Platform.OS === 'ios' ? 'inline' : 'default'}
-                    maximumDate={new Date()} // Prevent future dates
+                    maximumDate={new Date(new Date().setFullYear(new Date().getFullYear() - 18))} // Must be at least 18 years old
                     onChange={(event, selectedDate) => {
                       setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
                       if (selectedDate) {
@@ -277,6 +275,7 @@ const EditProfileScreen = () => {
                       }
                     }}
                   />
+
                 )}
                 {touched.dateOfBirth && errors.dateOfBirth && (
                   <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.dateOfBirth}</Text>

@@ -100,11 +100,11 @@ const Review = () => {
           {user?.shop?.restaurant_name || "Burger One (Cafe & Bakery)"}{' '}
         </Text>
         <View className="flex-row items-center px-2 py-1 rounded-md">
-          {[1, 2, 3, 4, 5].map(() => (
-            <AntDesign name="star" color="#FBBF24" size={16} />
+          {[1, 2, 3, 4, 5].map((_, index) => (
+            <AntDesign key={index} name="star" color="#FBBF24" size={16} />
           ))}
           <Text className="ml-1 text-base text-gray-800 font-medium">
-            {averageRating}
+            {user?.shop?.average_rating || 0}
           </Text>
         </View>
       </View>

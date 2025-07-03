@@ -3,7 +3,6 @@ import {
   View, Text, Dimensions, Image, TouchableOpacity,
   TextInput, ScrollView, KeyboardAvoidingView, Platform,
   ToastAndroid, Modal, FlatList, StyleSheet,
-  PermissionsAndroid, Alert,
   ActivityIndicator
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
@@ -14,16 +13,15 @@ import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
 import IconM from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'react-native-image-picker';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchUser } from '../../store/slices/userSlice';
-import { TokenStorage, Post, IMAGE_URL } from '../../utils/apiUtils';
+import { TokenStorage, Post, IMAGE_URL, Fetch } from '../../utils/apiUtils';
 import { convertShiftData, revertShiftData } from '../../utils/tools/shiftConverter';
 import { ImagePath } from '../../constants/ImagePath';
 import { states } from '../../utils/data/constant';
 import ShiftCard from '../../components/common/ShiftCard';
-import Geolocation from 'react-native-geolocation-service';
 import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
 
 const { width } = Dimensions.get('screen');
@@ -31,8 +29,8 @@ const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const validationSchema = Yup.object().shape({
   business_name: Yup.string().required('Business name is required'),
+  shop_category: Yup.string().required('Shop category is required'),
   phone: Yup.string().matches(/^[0-9]{10}$/, 'Must be a valid 10-digit phone number').required(),
-  // gst: Yup.string().required('GST ID is required'),
   address: Yup.string().required('Address is required'),
   zip_code: Yup.string().required('Zip Code is required'),
   city: Yup.string().required('City is required'),
@@ -45,35 +43,83 @@ const validationSchema = Yup.object().shape({
 const CreateShopScreen = ({ route }: any) => {
   const dispatch = useDispatch<any>();
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
   const { data: user } = useSelector((state: any) => state.user);
   const shopId = route?.params?.shopId ?? null;
   const [loading, setLoading] = useState<any>(false);
   const [images, setImages] = useState<any>([]);
   const [viewImageModal, setViewImageModal] = useState<any>(null);
-  const [locationData, setLocationData] = useState<any>(null)
+  const [locationData, setLocationData] = useState<any>(null);
   const [isLocation, setIsLocation] = useState(false);
+  const [categories, setCategories] = useState([]);
   const [schedules, setSchedules] = useState<any>(daysOfWeek.map(day => ({
     day, status: false, shift1: { from: '', to: '' }, shift2: { from: '', to: '' }, state: 'active'
   })));
   const [paymentMethods, setPaymentMethods] = useState<any>({ cash: false, card: false, upi: false });
-  const [apiErrors, setApiErrors] = useState({
-    bussenessname: ''
-  })
+  const [apiErrors, setApiErrors] = useState("");
+
+  const fetchCategories = async () => {
+    setLoading(true)
+    try {
+      const response: any = await Fetch(
+        `/user/admin-category?per_page=1000&page=1`,
+        {},
+        5000
+      );
+      console.log(response)
+      if (!response?.success) {
+        console.error('Fetch categories error:', response?.message);
+        throw new Error(response?.message || 'Failed to fetch categories');
+      }
+
+      setCategories(response?.data || []);
+    } catch (error: any) {
+      console.log(error)
+      console.error('Unexpected error while fetching categories:', error);
+      // Optionally show an alert or toast
+    } finally {
+      setLoading(false)
+    }
+  };
 
 
-  const getLiveLocation = async () => {
+  const getLiveLocation = async (setFieldValue: any) => {
     try {
       setIsLocation(true); // Start loading
-      await getCurrentLocationWithAddress(setLocationData, dispatch, user);
-    } catch (error) {
+      const location = await getCurrentLocationWithAddress(setLocationData, dispatch, user);
+      console.log(locationData, location)
+      if (location?.address) {
+        // Update Formik fields
+        const address = `${location.address.landmark}, ${location.address.locality}`;
+        setFieldValue('address', address);
+        setFieldValue('zip_code', location.address.pincode || '');
+        setFieldValue('city', location.address.city || '');
+        setFieldValue('state', location.address.state || '');
+        // setLocationData(location);
+
+        // Log to verify updates
+        console.log('Updated Formik values:', {
+          address,
+          zip_code: location.address.pincode,
+          city: location.address.city,
+          state: location.address.state,
+        });
+      } else {
+        console.warn('No address data found in location:', location);
+        ToastAndroid.show('No address data available', ToastAndroid.SHORT);
+      }
+    } catch (error: any) {
+      setApiErrors(error)
       console.error("Failed to get location:", error);
-      // Optionally show an alert or toast
+      ToastAndroid.show('Failed to fetch location', ToastAndroid.SHORT);
     } finally {
       setIsLocation(false); // Stop loading
     }
   };
 
-  useEffect(() => { if (shopId) dispatch(fetchUser()); }, [shopId]);
+  useEffect(() => {
+    if (shopId) dispatch(fetchUser());
+  }, [shopId]);
 
   useEffect(() => {
     if (!shopId || !user?.shop) return;
@@ -84,7 +130,7 @@ const CreateShopScreen = ({ route }: any) => {
     setImages(remoteImgs);
 
     if (user.shop.shift_details) {
-      setSchedules(revertShiftData(JSON.parse(user.shop.shift_details)));
+      setSchedules(revertShiftData(user?.shop?.shift_details && JSON.parse(user?.shop?.shift_details)));
     }
 
     setPaymentMethods({
@@ -114,7 +160,7 @@ const CreateShopScreen = ({ route }: any) => {
         id: `local_${Date.now()}`,
         uri: asset.uri,
         fileName: asset.fileName ?? `photo_${Date.now()}.jpg`,
-        type: asset.type ?? 'image/jpeg',
+        type: asset?.type ?? 'image/jpeg',
         remote: false,
       }]);
     }
@@ -128,6 +174,7 @@ const CreateShopScreen = ({ route }: any) => {
       const formData = new FormData();
 
       formData.append('business_name', values.business_name);
+      formData.append('shop_category', values.shop_category);
       formData.append('phone', values.phone);
       formData.append('gst', values.gst);
       formData.append('address', values.address);
@@ -146,16 +193,12 @@ const CreateShopScreen = ({ route }: any) => {
 
       if (shopId) formData.append('_method', 'PUT');
       images.forEach((img: any, index: any) => {
-        console.log(images)
-        // if (!img.remote) {
         formData.append('business_image[]', {
           uri: Platform.OS === 'ios' ? img.uri.replace('file://', '') : img.uri,
           name: img.fileName || `photo_${index}.jpg`,
-          type: img.type || 'image/jpeg',
+          type: img?.type || 'image/jpeg',
         });
-        // }
       });
-      console.log(formData)
       const response: any = await Post('/user/shop', formData, 5000);
       if (!response.success) throw new Error(response.message || 'Failed to save shop.');
 
@@ -171,8 +214,7 @@ const CreateShopScreen = ({ route }: any) => {
       if (values?.dine_in_service === "yes") {
         shopId ?
           navigation.navigate('AddDineInServiceScreen', { shopId }) : navigation.navigate("AddDineInServiceScreen")
-      }
-      else {
+      } else {
         navigation.navigate("HomeScreen")
       }
     } catch (error: any) {
@@ -184,14 +226,16 @@ const CreateShopScreen = ({ route }: any) => {
         }
         setErrors(formattedErrors);
       }
-
     } finally {
       setSubmitting(false);
     }
   };
 
-
-
+  useEffect(() => {
+    if (isFocused) {
+      fetchCategories();
+    }
+  }, [isFocused]);
 
 
   return (
@@ -202,8 +246,6 @@ const CreateShopScreen = ({ route }: any) => {
         </View>
       )}
       <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-
-
         <Image
           source={ImagePath.signBg}
           style={{
@@ -252,24 +294,28 @@ const CreateShopScreen = ({ route }: any) => {
           </Text>
 
           {loading ? (
-            <Text>Loading shop data...</Text>
+            <View>
+              <Text className='text-center'>Loading shop data...</Text>
+              <ActivityIndicator size={"large"} color={"#B68AD4"} />
+            </View>
           ) : (
             <Formik
               initialValues={{
                 business_name: shopId ? user?.shop?.restaurant_name : '',
+                shop_category: shopId ? user?.shop?.shop_category : '',
                 phone: shopId ? user?.shop?.phone : '',
                 gst: shopId ? user?.shop?.gst : '',
-                address: shopId ? user?.shop?.address : (locationData && locationData?.address?.landmark + ", " + locationData?.address?.locality) || '',
-                zip_code: shopId ? user?.shop?.zip_code : locationData?.address?.pincode || '',
-                city: shopId ? user?.shop?.city : locationData?.address?.city || '',
-                state: shopId ? user?.shop?.state : locationData?.address?.state || '',
+                address: shopId ? user?.shop?.address : '',
+                zip_code: shopId ? user?.shop?.zip_code : '',
+                city: shopId ? user?.shop?.city : '',
+                state: shopId ? user?.shop?.state : '',
                 about_business: shopId ? user?.shop?.about_business : '',
                 single_shift: shopId ? (user?.shop?.single_shift ? "Single Shift" : "Double Shift") : '',
                 dine_in_service: shopId ? (user?.shop?.dine_in_service ? "yes" : "no") : '',
               }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
-              enableReinitialize // Allow form to reinitialize with fetched data
+              enableReinitialize
             >
               {({
                 handleChange,
@@ -279,6 +325,7 @@ const CreateShopScreen = ({ route }: any) => {
                 errors,
                 touched,
                 isSubmitting,
+                setFieldValue,
               }: any) => (
                 <View style={{ marginTop: 16 }}>
                   {/* Business Name */}
@@ -325,6 +372,35 @@ const CreateShopScreen = ({ route }: any) => {
                     )}
                   </View>
 
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#D1D5DB',
+                      backgroundColor: '#F3F4F6',
+                      borderRadius: 8,
+                      paddingHorizontal: 10,
+                      marginBottom: 8,
+                    }}>
+
+                    <Picker
+                      selectedValue={values.shop_category}
+                      onValueChange={(value) => setFieldValue("shop_category", value)}
+                      onBlur={handleBlur('shop_category')}
+                      style={{ fontSize: 16, height: 50 }}
+                    >
+                      <Picker.Item label="Select shop category" value="" />
+                      {categories?.map((cat: any, index: any) => (
+                        <Picker.Item key={cat?.id ?? index} label={cat?.name ?? 'Unnamed'} value={cat?.id ?? ''} />
+                      ))}
+                    </Picker>
+                  </View>
+                  {touched.shop_category && errors.shop_category && (
+                    <Text
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                      {errors.shop_category}
+                    </Text>
+                  )}
+
                   {/* Store Image Upload */}
                   <View style={{ marginBottom: 12 }}>
                     <Text
@@ -364,7 +440,7 @@ const CreateShopScreen = ({ route }: any) => {
                       <FlatList
                         horizontal
                         data={images}
-                        keyExtractor={(item, index) => index?.toString()}
+                        keyExtractor={(item, index) => index.toString()}
                         renderItem={({ item }) => (
                           <View
                             style={{
@@ -492,7 +568,7 @@ const CreateShopScreen = ({ route }: any) => {
                       Address
                     </Text>
                     <TouchableOpacity
-                      onPress={getLiveLocation}
+                      onPress={() => getLiveLocation(setFieldValue)}
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -512,10 +588,14 @@ const CreateShopScreen = ({ route }: any) => {
                         Pin your location
                       </Text>
                     </TouchableOpacity>
-                    <View
-                      style={{
-                        marginVertical: 8,
-                      }}>
+                    {apiErrors && (
+                      <Text
+                        className='text-center'
+                        style={{ color: '#EF4444', fontSize: 12, }}>
+                        {"Please enable location services, Try agian"}
+                      </Text>
+                    )}
+                    <View style={{ marginVertical: 8 }}>
                       <TextInput
                         style={{
                           borderWidth: 1,
@@ -550,11 +630,8 @@ const CreateShopScreen = ({ route }: any) => {
                       }}>
                       <Picker
                         selectedValue={values.state}
-                        onValueChange={handleChange('state')}
-                        style={{
-                          fontSize: 16,
-                          height: 50,
-                        }}
+                        onValueChange={(value) => setFieldValue('state', value)}
+                        style={{ fontSize: 16, height: 50 }}
                         accessible
                         accessibilityLabel="Select state">
                         <Picker.Item label="Select State" value="" />
@@ -592,7 +669,6 @@ const CreateShopScreen = ({ route }: any) => {
                         {errors.address}
                       </Text>
                     )}
-
                     <TextInput
                       style={{
                         borderWidth: 1,
@@ -607,8 +683,8 @@ const CreateShopScreen = ({ route }: any) => {
                       onChangeText={handleChange('zip_code')}
                       onBlur={handleBlur('zip_code')}
                       value={values.zip_code}
-                      accessible
                       keyboardType="numeric"
+                      accessible
                       accessibilityLabel="Zip Code"
                     />
                     {touched.zip_code && errors.zip_code && (
@@ -678,18 +754,13 @@ const CreateShopScreen = ({ route }: any) => {
                         style={{
                           flex: 1,
                           borderWidth: 1,
-                          borderColor:
-                            values.single_shift === 'Single Shift'
-                              ? '#F97316'
-                              : '#D1D5DB',
+                          borderColor: values.single_shift === 'Single Shift' ? '#F97316' : '#D1D5DB',
                           borderRadius: 8,
                           padding: 12,
                           marginRight: 8,
                           alignItems: 'center',
                         }}
-                        onPress={() =>
-                          handleChange('single_shift')('Single Shift')
-                        }
+                        onPress={() => handleChange('single_shift')('Single Shift')}
                         accessible
                         accessibilityLabel="Select Single Shift">
                         <Text style={{ fontSize: 14, color: '#374151' }}>
@@ -701,17 +772,12 @@ const CreateShopScreen = ({ route }: any) => {
                         style={{
                           flex: 1,
                           borderWidth: 1,
-                          borderColor:
-                            values.single_shift === 'Double Shift'
-                              ? '#F97316'
-                              : '#D1D5DB',
+                          borderColor: values.single_shift === 'Double Shift' ? '#F97316' : '#D1D5DB',
                           borderRadius: 8,
                           padding: 12,
                           alignItems: 'center',
                         }}
-                        onPress={() =>
-                          handleChange('single_shift')('Double Shift')
-                        }
+                        onPress={() => handleChange('single_shift')('Double Shift')}
                         accessible
                         accessibilityLabel="Select Double Shift">
                         <Text style={{ fontSize: 14, color: '#374151' }}>
@@ -750,16 +816,13 @@ const CreateShopScreen = ({ route }: any) => {
                       style={{
                         flexDirection: 'row',
                         justifyContent: 'flex-start',
-                        gap: 5,
+                        gap: 5
                       }}>
                       <TouchableOpacity
                         className="bg-gray-100"
                         style={{
                           borderWidth: 1,
-                          borderColor:
-                            values.dine_in_service === 'yes'
-                              ? '#F97316'
-                              : '#D1D5DB',
+                          borderColor: values.dine_in_service === 'yes' ? '#F97316' : '#D1D5DB',
                           borderRadius: 8,
                           paddingHorizontal: 12,
                           paddingVertical: 5,
@@ -776,10 +839,7 @@ const CreateShopScreen = ({ route }: any) => {
                         className="bg-gray-100"
                         style={{
                           borderWidth: 1,
-                          borderColor:
-                            values.dine_in_service === 'no'
-                              ? '#F97316'
-                              : '#D1D5DB',
+                          borderColor: values.dine_in_service === 'no' ? '#F97316' : '#D1D5DB',
                           borderRadius: 8,
                           paddingHorizontal: 12,
                           paddingVertical: 5,
@@ -800,6 +860,7 @@ const CreateShopScreen = ({ route }: any) => {
                     )}
                   </View>
 
+                  {/* Payment Methods */}
                   <Text
                     style={{
                       fontSize: 14,
@@ -811,84 +872,48 @@ const CreateShopScreen = ({ route }: any) => {
                   </Text>
                   <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
                     <TouchableOpacity
-                      onPress={() =>
-                        setPaymentMethods({
-                          ...paymentMethods,
-                          cash: !paymentMethods.cash,
-                        })
-                      }
+                      onPress={() => setPaymentMethods({ ...paymentMethods, cash: !paymentMethods.cash })}
                       style={styles.checkboxContainer}>
                       <View
-                        style={[
-                          styles.checkbox,
-                          paymentMethods.cash && styles.checkboxSelected,
-                        ]}>
-                        {paymentMethods.cash && (
-                          <IconM name="check" size={13} color="#fff" />
-                        )}
+                        style={[styles.checkbox, paymentMethods.cash && styles.checkboxSelected]}>
+                        {paymentMethods.cash && <IconM name="check" size={13} color="#fff" />}
                       </View>
                       <Text style={styles.checkboxText}>Cash</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      onPress={() =>
-                        setPaymentMethods({
-                          ...paymentMethods,
-                          card: !paymentMethods.card,
-                        })
-                      }
+                      onPress={() => setPaymentMethods({ ...paymentMethods, card: !paymentMethods.card })}
                       style={styles.checkboxContainer}>
                       <View
-                        style={[
-                          styles.checkbox,
-                          paymentMethods.card && styles.checkboxSelected,
-                        ]}>
-                        {paymentMethods.card && (
-                          <IconM name="check" size={13} color="#fff" />
-                        )}
+                        style={[styles.checkbox, paymentMethods.card && styles.checkboxSelected]}>
+                        {paymentMethods.card && <IconM name="check" size={13} color="#fff" />}
                       </View>
                       <Text style={styles.checkboxText}>Card</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                      onPress={() =>
-                        setPaymentMethods({ ...paymentMethods, upi: !paymentMethods.upi })
-                      }
+                      onPress={() => setPaymentMethods({ ...paymentMethods, upi: !paymentMethods.upi })}
                       style={styles.checkboxContainer}>
                       <View
-                        style={[
-                          styles.checkbox,
-                          paymentMethods.upi && styles.checkboxSelected,
-                        ]}>
-                        {paymentMethods.upi && (
-                          <IconM name="check" size={13} color="#fff" />
-                        )}
+                        style={[styles.checkbox, paymentMethods.upi && styles.checkboxSelected]}>
+                        {paymentMethods.upi && <IconM name="check" size={13} color="#fff" />}
                       </View>
                       <Text style={styles.checkboxText}>UPI</Text>
                     </TouchableOpacity>
                   </View>
 
+                  {/* Submit Button */}
                   <TouchableOpacity
                     onPress={() => handleSubmit()}
                     disabled={isSubmitting}
                     style={{ marginTop: 16 }}
                     accessible
-                    accessibilityLabel={
-                      shopId ? 'Update shop button' : 'Create shop button'
-                    }>
+                    accessibilityLabel={shopId ? 'Update shop button' : 'Create shop button'}>
                     <LinearGradient
                       colors={['#EE6447', '#7248B3']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
-                      style={{
-                        padding: 16,
-                        borderRadius: 10,
-                        alignItems: 'center',
-                      }}>
+                      style={{ padding: 16, borderRadius: 10, alignItems: 'center' }}>
                       <Text
-                        style={{
-                          color: '#fff',
-                          fontSize: 16,
-                          fontWeight: 'bold',
-                        }}>
+                        style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
                         {isSubmitting
                           ? shopId
                             ? 'Updating...'
@@ -907,46 +932,48 @@ const CreateShopScreen = ({ route }: any) => {
       </ScrollView>
 
       {/* Image View Modal */}
-      {viewImageModal && (
-        <Modal
-          visible={!!viewImageModal}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setViewImageModal(null)}>
-          <View
-            style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            }}>
+      {
+        viewImageModal && (
+          <Modal
+            visible={!!viewImageModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setViewImageModal(null)}>
             <View
               style={{
-                backgroundColor: '#fff',
-                borderRadius: 8,
-                padding: 16,
+                flex: 1,
+                justifyContent: 'center',
                 alignItems: 'center',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
               }}>
-              <Image
-                source={{ uri: viewImageModal }}
+              <View
                 style={{
-                  width: width * 0.8,
-                  height: width * 0.8,
+                  backgroundColor: '#fff',
                   borderRadius: 8,
-                }}
-              />
-              <TouchableOpacity
-                style={{ position: 'absolute', top: 8, right: 8 }}
-                onPress={() => setViewImageModal(null)}
-                accessible
-                accessibilityLabel="Close image modal">
-                <Icon name="close-circle" size={24} color="#EF4444" />
-              </TouchableOpacity>
+                  padding: 16,
+                  alignItems: 'center',
+                }}>
+                <Image
+                  source={{ uri: viewImageModal }}
+                  style={{
+                    width: width * 0.8,
+                    height: width * 0.8,
+                    borderRadius: 8,
+                  }}
+                />
+                <TouchableOpacity
+                  style={{ position: 'absolute', top: 8, right: 8 }}
+                  onPress={() => setViewImageModal(null)}
+                  accessible
+                  accessibilityLabel="Close image modal">
+                  <Icon name="close-circle" size={24} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </Modal>
-      )}
-    </KeyboardAvoidingView>
+          </Modal>
+        )
+      }
+    </KeyboardAvoidingView >
   );
 };
 
@@ -975,25 +1002,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#374151',
   },
-  addButton: {
-    backgroundColor: '#fff',
-    borderRadius: 50,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
-  addTableButton: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-  },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#374151',
-  },
-})
+});

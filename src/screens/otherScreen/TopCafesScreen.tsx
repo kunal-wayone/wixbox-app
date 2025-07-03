@@ -66,12 +66,12 @@ const TopCafesScreen = () => {
       const pagination = response?.data?.pagination;
 
       // Update shops with wishlist status
-      const updatedShops = newShops.map((shop: any) => ({
-        ...shop,
-        fav: wishlistShops.some(wishlistShop => wishlistShop.shop_id === shop.id.toString()),
-      }));
+      // const updatedShops = newShops.map((shop: any) => ({
+      //   ...shop,
+      //   is_wishlisted: wishlistShops.some(wishlistShop => wishlistShop.shop_id === shop.id.toString()),
+      // }));
 
-      setData(prev => (isInitial ? updatedShops : [...prev, ...updatedShops]));
+      setData(prev => (isInitial ? newShops : [...prev, ...newShops]));
       setHasMore(pagination?.current_page < pagination?.last_page);
       setPage(pagination?.current_page + 1);
     } catch (error) {
@@ -96,7 +96,7 @@ const TopCafesScreen = () => {
 
   const handleWishlistToggle = async (shop: any) => {
     try {
-      if (shop.fav) {
+      if (shop.is_wishlisted) {
         await dispatch(removeWishlistShop({ shop_id: shop.id.toString() })).unwrap();
         ToastAndroid.show('Removed from wishlist', ToastAndroid.SHORT);
       } else {
@@ -106,7 +106,7 @@ const TopCafesScreen = () => {
       // Update local data to reflect wishlist change
       setData(prev =>
         prev.map(d =>
-          d.id === shop.id ? { ...d, fav: !d.fav } : d
+          d.id === shop.id ? { ...d, is_wishlisted: !d.is_wishlisted } : d
         )
       );
     } catch (error) {
@@ -115,7 +115,9 @@ const TopCafesScreen = () => {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <View className="w-full mx-auto px-4 py-2">
+    <TouchableOpacity
+      onPress={() => navigation.navigate("ShopDetailsScreen", { shop_info: item })}
+      className="w-full mx-auto px-4 py-2">
       <View className="rounded-xl overflow-hidden relative">
         <ImageBackground
           source={item?.restaurant_images?.length ? { uri: IMAGE_URL + item.restaurant_images[0] } : ImagePath.restaurant1}
@@ -128,12 +130,12 @@ const TopCafesScreen = () => {
             disabled={status === 'loading'}
           >
             <MaterialIcons
-              name={item?.fav ? 'favorite' : 'favorite-outline'}
+              name={item?.is_wishlisted ? 'favorite' : 'favorite-outline'}
               size={24}
-              color={item?.fav ? 'red' : 'white'}
+              color={item?.is_wishlisted ? 'red' : 'white'}
             />
           </TouchableOpacity>
-          <View className="absolute inset-0 bg-black" style={{ opacity: 0.5 }} />
+          <View className="absolute inset-0 bg-black" style={{ opacity: 0.3 }} />
           <View className="bg-white p-3 w-11/12 mx-auto rounded-xl bottom-4">
             <View className="flex-row justify-between items-center">
               <View>
@@ -150,25 +152,25 @@ const TopCafesScreen = () => {
               </View>
               <View className="flex-row items-center bg-gray-200 rounded-md p-1 space-x-1">
                 <Icon name="location" size={14} color="#000" />
-                <Text className="text-xs text-gray-900">{item.city}</Text>
+                <Text className="text-xs text-gray-900">{item.distance_km || "NA"} Km</Text>
               </View>
             </View>
             <View className="h-px bg-gray-300 my-1" />
             <View className="flex-row items-center justify-between bg-white rounded-lg p-2">
               <View className="flex-row items-center space-x-1">
                 <Icon name="time" size={14} color="#6B7280" />
-                <Text className="text-xs text-gray-500">10 min</Text>
+                <Text className="text-xs text-gray-500">{item?.travel_time_mins || "NA"} min</Text>
               </View>
               <View className="h-4 w-px bg-gray-300" />
               <View className="flex-row items-center space-x-1">
                 <Icon name="star" size={14} color="#6B7280" />
-                <Text className="text-xs text-gray-500">4.5</Text>
+                <Text className="text-xs text-gray-500"> {item?.average_rating || 0}</Text>
               </View>
             </View>
           </View>
         </ImageBackground>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const Header = () => (

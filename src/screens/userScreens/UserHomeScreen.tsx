@@ -137,6 +137,17 @@ const UserHomeScreen = () => {
             ))}
         </View>
       </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+        <View style={{ marginLeft: 16, flex: 1 }}>
+          <View style={{ width: 150, height: 20, borderRadius: 4 }} />
+          <View style={{ width: 100, height: 16, borderRadius: 4, marginTop: 8 }} />
+        </View>
+        <View style={{ width: 28, height: 28, borderRadius: 14 }} />
+      </View>
+      <View style={{ paddingHorizontal: 16 }}>
+        <View style={{ width: '100%', height: 40, borderRadius: 12, marginVertical: 16 }} />
+        <View style={{ width: '100%', height: 150, borderRadius: 12 }} />
+      </View>
     </SkeletonPlaceholder>
   );
 
@@ -212,18 +223,19 @@ const UserHomeScreen = () => {
                   Discover nearby picks tailored for you
                 </Text>
               </View>
-              <View className="flex-row items-center justify-between m-auto">
+              <View className="flex-row items-center justify-between gap-1 m-auto">
                 {feature.map((cat: any) => (
                   <TouchableOpacity
                     key={cat.id}
                     onPress={() => navigation.navigate(cat?.link)}
-                    className="flex-col justify-center items-center bg-primary-10 rounded-xl mx-2 w-20 h-24">
+                    style={{ width: "24%" }}
+                    className="flex-col justify-center items-center bg-primary-10 rounded-xl h-24">
                     <Image
                       source={cat.image}
                       className="w-8 h-8 mb-2"
                       resizeMode="contain"
                     />
-                    <Text className="text-xs font-poppins font-bold px-2 text-center text-gray-700">
+                    <Text className="text-xs font-poppins font-semibold px-2 text-center text-gray-700">
                       {cat.name}
                     </Text>
                   </TouchableOpacity>
@@ -232,11 +244,11 @@ const UserHomeScreen = () => {
             </View>
             <FreshStoreSection />
             <PopularAreaSection />
-            <VisitNearByStores />
+            {/* <VisitNearByStores /> */}
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-          <GetLocationButton />
+      <GetLocationButton />
     </SafeAreaView>
   );
 };

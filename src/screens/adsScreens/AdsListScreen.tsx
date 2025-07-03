@@ -175,7 +175,9 @@ const AdsListScreen = () => {
     return (
         <View className="p-4 pb-20 h-full bg-gray-50">
             <View>
-                <Icon name="arrow-back" className="absolute z-50" size={20} color="black" />
+                <TouchableOpacity onPress={() => navigation.goBack()} className='absolute z-50' >
+                    <Icon name="arrow-back" className="" size={20} color="black" />
+                </TouchableOpacity>
                 <Text className="text-2xl font-semibold text-center">Created Ads List</Text>
             </View>
 

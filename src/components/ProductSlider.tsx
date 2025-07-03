@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchWishlist, removeWishlistItem, addWishlistItem, removeWishlistShop, addWishlistShop } from '../store/slices/wishlistSlice';
 import { AppDispatch, RootState } from '../store/store';
 import { Fetch, IMAGE_URL } from '../utils/apiUtils';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.7; // 1 full + 1/2 card peek
@@ -43,6 +44,7 @@ const SkeletonCard = () => (
 );
 
 const ProductSlider = () => {
+  const navigation = useNavigation<any>();
   const dispatch = useDispatch<AppDispatch>();
   const { items: wishlistItems, status } = useSelector((state: RootState) => state.wishlist);
 
@@ -60,19 +62,20 @@ const ProductSlider = () => {
     else setLoadMoreLoading(true);
 
     try {
-      const response: any = await Fetch(`/user/top-shops?per_page=${PER_PAGE}&page=${pageNumber}`, {}, 5000);
+      const response: any = await Fetch(`/user/shops-nearby?per_page=${PER_PAGE}&page=${pageNumber}`, {}, 5000);
+      console.log(response)
       if (!response.success) throw new Error('Failed to fetch products');
 
-      const newProducts = response?.data?.top_shops || [];
+      const newProducts = response?.data?.nearby_shops || [];
       const pagination = response?.data?.pagination;
 
       // Update products with wishlist status
-      const updatedProducts = newProducts.map((product: any) => ({
-        ...product,
-        fav: wishlistItems.some(wishlistItem => wishlistItem.menu_item_id === product.id.toString()),
-      }));
+      // const updatedProducts = newProducts.map((product: any) => ({
+      //   ...product,
+      //   is_wishlisted: wishlistItems.some(wishlistItem => wishlistItem.menu_item_id === product.id.toString()),
+      // }));
 
-      setData(prev => (isInitial ? updatedProducts : [...prev, ...updatedProducts]));
+      setData(prev => (isInitial ? newProducts : [...prev, ...newProducts]));
       setHasMore(pagination?.current_page < pagination?.last_page);
       setPage(pagination?.current_page + 1);
     } catch (error) {
@@ -97,7 +100,7 @@ const ProductSlider = () => {
 
   const handleWishlistToggle = async (product: any) => {
     try {
-      if (product.fav) {
+      if (product?.is_wishlisted) {
         await dispatch(removeWishlistShop({ shop_id: product.id.toString() })).unwrap();
         ToastAndroid.show('Removed from wishlist', ToastAndroid.SHORT);
       } else {
@@ -107,7 +110,7 @@ const ProductSlider = () => {
       // Update local data to reflect wishlist change
       setData(prev =>
         prev.map(d =>
-          d.id === product.id ? { ...d, fav: !d.fav } : d
+          d.id === product.id ? { ...d, is_wishlisted: !d.is_wishlisted } : d
         )
       );
     } catch (error) {
@@ -125,61 +128,65 @@ const ProductSlider = () => {
     }
   };
 
-  const renderItem = ({ item, index }: { item: any, index: any }) => (
-    <View
-      key={index}
-      className="bg-gray-100 rounded-xl shadow-md p-3 relative"
-      style={{ width: CARD_WIDTH, marginRight: 16 }}
-    >
-      <Image
-        source={item?.restaurant_images?.length ? { uri: IMAGE_URL + item.restaurant_images[0] } : ImagePath.item1}
-        className="w-full h-48 rounded-xl mb-4"
-        resizeMode="cover"
-      />
-      <View className="flex-row justify-between items-center mb-2">
-        <Text
-          className="text-base font-medium text-gray-800"
-          numberOfLines={1}
-        >
-          {item.restaurant_name?.length > 18
-            ? item.restaurant_name.slice(0, 18) + '...'
-            : item.restaurant_name}
+  const renderItem = ({ item, index }: { item: any, index: any }) => {
+    return (
+      <TouchableOpacity
+        onPress={() => navigation.navigate("ShopDetailsScreen", { shop_info: item })}
+        key={index}
+        className="bg-gray-100 rounded-xl shadow-md p-3 relative"
+        style={{ width: CARD_WIDTH, marginRight: 16 }}
+      >
+        <Image
+          source={item?.restaurant_images?.length ? { uri: IMAGE_URL + item.restaurant_images[0] } : ImagePath.item1}
+          className="w-full h-48 rounded-xl mb-4"
+          resizeMode="cover"
+        />
+        <View className="flex-row justify-between items-center mb-2">
+          <Text
+            className="text-base font-medium text-gray-800"
+            numberOfLines={1}
+            ellipsizeMode='tail'
+          >
+            {item.restaurant_name?.length > 18
+              ? item.restaurant_name.slice(0, 18) + '...'
+              : item.restaurant_name}
+          </Text>
+          <TouchableOpacity
+            className=""
+            onPress={() => handleWishlistToggle(item)}
+            disabled={status === 'loading'}
+          >
+            <MaterialIcons
+              name={item?.is_wishlisted ? 'favorite' : 'favorite-outline'}
+              size={24}
+              color={item?.is_wishlisted ? 'red' : 'black'}
+            />
+          </TouchableOpacity>
+        </View>
+        <Text className="text-sm text-gray-500 mb-2" numberOfLines={2}>
+          {item.about_business?.length > 40
+            ? item.about_business.slice(0, 40) + '...'
+            : item.about_business || 'No description available'}
         </Text>
-        <TouchableOpacity
-          className=""
-          onPress={() => handleWishlistToggle(item)}
-          disabled={status === 'loading'}
-        >
-          <MaterialIcons
-            name={item?.fav ? 'favorite' : 'favorite-outline'}
-            size={24}
-            color={item?.fav ? 'red' : 'black'}
-          />
-        </TouchableOpacity>
-      </View>
-      <Text className="text-sm text-gray-500 mb-2" numberOfLines={2}>
-        {item.about_business?.length > 40
-          ? item.about_business.slice(0, 40) + '...'
-          : item.about_business || 'No description available'}
-      </Text>
-      <View className="flex-row items-center justify-between bg-white p-3 rounded-lg my-4">
-        <View className="flex-row items-center space-x-1">
-          <Icon name="location" size={14} color="#6B7280" />
-          <Text className="text-xs text-gray-500">{item.city || '1.2 km'}</Text>
+        <View className="flex-row items-center justify-between bg-white p-3 rounded-lg my-4">
+          <View className="flex-row items-center space-x-1">
+            <Icon name="location" size={14} color="#6B7280" />
+            <Text className="text-xs text-gray-500"> {item?.distance_km || '1.2'}Km</Text>
+          </View>
+          <View className="h-4 w-px bg-gray-300" />
+          <View className="flex-row items-center space-x-1">
+            <Icon name="time" size={14} color="#6B7280" />
+            <Text className="text-xs text-gray-500">{item?.travel_time_mins || '10'} Min</Text>
+          </View>
+          <View className="h-4 w-px bg-gray-300" />
+          <View className="flex-row items-center space-x-1">
+            <Icon name="star" size={14} color="#6B7280" />
+            <Text className="text-xs text-gray-500"> {item?.average_rating || '0'}</Text>
+          </View>
         </View>
-        <View className="h-4 w-px bg-gray-300" />
-        <View className="flex-row items-center space-x-1">
-          <Icon name="time" size={14} color="#6B7280" />
-          <Text className="text-xs text-gray-500">{item.time || '10 min'}</Text>
-        </View>
-        <View className="h-4 w-px bg-gray-300" />
-        <View className="flex-row items-center space-x-1">
-          <Icon name="star" size={14} color="#6B7280" />
-          <Text className="text-xs text-gray-500">{item.average_rating || '4.5'}</Text>
-        </View>
-      </View>
-    </View>
-  );
+      </TouchableOpacity>
+    )
+  };
 
   const renderFooter = () => {
     if (loadMoreLoading) {

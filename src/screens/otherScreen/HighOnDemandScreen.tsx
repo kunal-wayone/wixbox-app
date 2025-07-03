@@ -129,13 +129,13 @@ const HighOnDemandScreen = () => {
         resizeMode="cover"
       />
       <View style={{ flex: 1 }}>
-        <Text className="text-xl font-bold">{item?.item_name}</Text>
+        <Text numberOfLines={1} ellipsizeMode='tail' className="text-xl font-bold">{item?.item_name}</Text>
         <View className="flex-row items-center gap-4 mb-2">
           <Text className="text-gray-500">{item?.category?.name}</Text>
           <Text className="text-gray-500">{item?.distance || 'NA'} KM</Text>
         </View>
         <Text className="mb-1">₹{item?.price}/-</Text>
-        <Text>{item?.restaurant_name || 'NA'}</Text>
+        <Text numberOfLines={1} ellipsizeMode='tail'>{item?.shop?.restaurant_name || 'NA'}</Text>
       </View>
     </View>
   );

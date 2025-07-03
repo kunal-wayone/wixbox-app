@@ -18,10 +18,10 @@ const ShiftCard: React.FC<ShiftProps> = ({
   shift,
   firstShift,
   secondShift,
-  first_shift_start = "09:00 AM",
-  first_shift_end = "01:00 PM",
-  second_shift_start = "03:00 PM",
-  second_shift_end = "09:00 PM",
+  first_shift_start,
+  first_shift_end,
+  second_shift_start,
+  second_shift_end,
   status = true
 }) => {
   if (!status)
@@ -47,9 +47,11 @@ const ShiftCard: React.FC<ShiftProps> = ({
       </Text>
 
       {first_shift_start && first_shift_end && !second_shift_start && !second_shift_end && (
-        <Text className="text-black text-sm font-poppins text-center">
-          {first_shift_start + " - " + first_shift_end}
-        </Text>
+        <View className='flex-row items-center justify-center w-2/3'>
+          <Text className="text-black text-sm font-poppins text-center">
+            {first_shift_start + " - " + first_shift_end}
+          </Text>
+        </View>
       )}
 
       {second_shift_start && second_shift_end && (

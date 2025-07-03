@@ -25,16 +25,31 @@ interface Post {
   description?: string;
 }
 
-const Post = () => {
+const SkeletonLoader = () => (
+  <View className="mb-4 w-full rounded-2xl overflow-hidden shadow-md bg-white">
+    <View className="h-48 w-full bg-gray-200 animate-pulse" />
+    <View className="p-3">
+      <View className="h-5 w-3/4 bg-gray-200 rounded mb-2 animate-pulse" />
+      <View className="flex-row justify-between">
+        <View className="h-4 w-1/4 bg-gray-200 rounded animate-pulse" />
+        <View className="h-4 w-1/4 bg-gray-200 rounded animate-pulse" />
+      </View>
+    </View>
+  </View>
+);
+
+const UsersPost = ({ vendor_id }: any) => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
-
   const { data: user }: any = useSelector((state: any) => state.user);
 
   const formatDate = (dateString: string) => {
@@ -48,32 +63,46 @@ const Post = () => {
     });
   };
 
-  const fetchPosts = useCallback(async () => {
-    if (!user?.shop?.id) return;
+  const fetchPosts = useCallback(
+    async (pageNum: number, reset = false) => {
+      if (!vendor_id) return;
 
-    try {
-      setIsLoading(true);
-      const response: any = await Fetch(`/user/posts?shopId=${user.shop.id}`, { method: 'GET' }, 5000);
-      console.log(response)
-      if (!response.success) throw new Error(response.message);
-      setPosts(response.data);
-    } catch (error: any) {
-      ToastAndroid.show(error?.message || 'Failed to load posts.', ToastAndroid.SHORT);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  }, [user?.shop?.id]);
+      try {
+        if (pageNum === 1) setIsLoading(true);
+        else setIsLoadingMore(true);
+
+        const response: any = await Fetch(
+          `/user/shop-posts?vendor_id=${vendor_id}&per_page=2&page=${pageNum}`,
+          {},
+          5000
+        );
+
+        if (!response.success) throw new Error(response.message);
+
+        const { posts: newPosts, pagination } = response;
+
+        setPosts((prev) => (reset ? newPosts : [...prev, ...newPosts]));
+        setLastPage(pagination.last_page);
+        setPage(pageNum);
+      } catch (error: any) {
+        ToastAndroid.show(error?.message || 'Failed to load posts.', ToastAndroid.SHORT);
+      } finally {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+        setIsRefreshing(false);
+      }
+    },
+    [vendor_id]
+  );
 
   const deletePost = async () => {
     if (!selectedPostId) return;
 
     try {
       setDeletingPostId(selectedPostId);
-      console.log(selectedPostId)
       const response: any = await Delete(`/user/posts/${selectedPostId}`, {}, undefined, 5000);
       if (!response.success) throw new Error(response.message);
-      setPosts(prev => prev.filter(p => p.id !== selectedPostId));
+      setPosts((prev) => prev.filter((p) => p.id !== selectedPostId));
       ToastAndroid.show('Post deleted successfully', ToastAndroid.SHORT);
     } catch (error: any) {
       ToastAndroid.show(error?.message || 'Failed to delete post.', ToastAndroid.SHORT);
@@ -86,14 +115,22 @@ const Post = () => {
 
   const onRefresh = useCallback(() => {
     setIsRefreshing(true);
-    fetchPosts();
+    setPage(1);
+    fetchPosts(1, true);
   }, [fetchPosts]);
 
-  useEffect(() => {
-    if (isFocused && user?.shop?.id) {
-      fetchPosts();
+  const handleLoadMore = () => {
+    if (page < lastPage && !isLoading && !isLoadingMore) {
+      fetchPosts(page + 1);
     }
-  }, [isFocused, fetchPosts]);
+  };
+
+  useEffect(() => {
+    if (isFocused && vendor_id) {
+      setPage(1);
+      fetchPosts(1, true);
+    }
+  }, [isFocused, fetchPosts, vendor_id]);
 
   const renderPost = ({ item }: { item: Post }) => (
     <View className="mb-4 rounded-2xl overflow-hidden shadow-md bg-white relative">
@@ -108,12 +145,16 @@ const Post = () => {
         >
           <View className="absolute inset-0 bg-black/50 rounded-2xl" />
           <View className="flex-row justify-between items-center z-10">
-            <View className={`${item?.status?.toLocaleUpperCase() === "DRAFT" ? "bg-red-500" : "bg-green-600"} px-3 py-1 rounded-lg`}>
-              <Text className={`text-xs font-semibold text-white`}>
-                {item?.status?.toLocaleUpperCase() || "Tag"}
-              </Text>
+            <View
+              className={`
+                // ${item?.status?.toUpperCase() === 'DRAFT' ? 'bg-transparent' : 'bg-transparent'}
+               px-3 py-1 rounded-lg bg-transparent`}
+            >
+              {/* <Text className="text-xs font-semibold text-white">
+                {item?.status?.toUpperCase() || 'Tag'}
+              </Text> */}
             </View>
-            <TouchableOpacity onPress={() => setSelectedPostId(prev => prev === item.id ? null : item.id)}>
+            <TouchableOpacity onPress={() => setSelectedPostId((prev) => (prev === item.id ? null : item.id))}>
               <Icon name="dots-three-vertical" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -141,13 +182,14 @@ const Post = () => {
             }}
             className="px-3 py-2"
           >
-            <Text className="text-sm"><Icon name='edit' color={""} /> Edit</Text>
+            <Text className="text-sm">
+              <Icon name="edit" color="#000" /> Edit
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setConfirmDeleteVisible(true)}
-            className="px-3 py-2"
-          >
-            <Text className="text-sm text-red-600"><Icon name='trash' color={'red'} /> Delete</Text>
+          <TouchableOpacity onPress={() => setConfirmDeleteVisible(true)} className="px-3 py-2">
+            <Text className="text-sm text-red-600">
+              <Icon name="trash" color="red" /> Delete
+            </Text>
           </TouchableOpacity>
         </View>
       )}
@@ -167,10 +209,7 @@ const Post = () => {
               <TouchableOpacity onPress={() => setConfirmDeleteVisible(false)}>
                 <Text className="text-base">Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={deletePost}
-                disabled={!!deletingPostId}
-              >
+              <TouchableOpacity onPress={deletePost} disabled={!!deletingPostId}>
                 {deletingPostId ? (
                   <ActivityIndicator size="small" color="#FF0000" />
                 ) : (
@@ -184,18 +223,23 @@ const Post = () => {
     </View>
   );
 
+  const renderFooter = () => {
+    if (!isLoadingMore) return null;
+    return (
+      <View className="py-4">
+        <SkeletonLoader />
+        <SkeletonLoader />
+      </View>
+    );
+  };
+
   return (
     <View className="max-h-[85vh] bg-gray-50">
-      <TouchableOpacity
-        onPress={() => navigation.navigate("PostScreen")}
-        className="bg-primary-100 py-3 rounded-xl my-4 items-center"
-      >
-        <Text className="text-white font-semibold text-base">Add Post</Text>
-      </TouchableOpacity>
-
       {isLoading && posts.length === 0 ? (
         <View className="h-full justify-center items-center">
-          <ActivityIndicator size="large" color="#007AFF" />
+          <SkeletonLoader />
+          <SkeletonLoader />
+          <SkeletonLoader />
         </View>
       ) : posts.length === 0 ? (
         <View className="flex-1 justify-center items-center">
@@ -208,13 +252,16 @@ const Post = () => {
           keyExtractor={(item: Post) => item.id}
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
-          initialNumToRender={10}
+          initialNumToRender={2}
           refreshing={isRefreshing}
           onRefresh={onRefresh}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={renderFooter}
         />
       )}
     </View>
   );
 };
 
-export default Post;
+export default UsersPost;

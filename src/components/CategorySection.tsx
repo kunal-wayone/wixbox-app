@@ -102,7 +102,7 @@ const CategorySection = () => {
 
   // Handle category press
   const handleCategoryPress = (category: any) => {
-    navigation.navigate('CategoryDetails', { categoryId: category.id, categoryName: category.type });
+    navigation.navigate('MenuItemListScreen', { categoryId: category.id, categoryName: category.type });
   };
 
   // Render footer (loading more)
