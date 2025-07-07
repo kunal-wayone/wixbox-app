@@ -1,6 +1,7 @@
 import React from 'react';
-import {View, Text, Image, TouchableOpacity} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { View, Text, Image, TouchableOpacity, Switch, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
 const ProfileCard = ({
   profileImageUrl,
@@ -10,6 +11,11 @@ const ProfileCard = ({
   rating,
   layout = 'col', // 'row' or 'col' for flex direction
   onProfilePress, // Optional callback for profile image press
+  toggleLoadingIds,
+  toggleStoreStatus,
+  storeStatus,
+  shopId,
+  shopCategory
 }: any) => {
   const navigation = useNavigation<any>();
 
@@ -20,9 +26,8 @@ const ProfileCard = ({
       stars.push(
         <Text
           key={i}
-          className={`text-lg ${
-            i <= rating ? 'text-yellow-400' : 'text-gray-300'
-          }`}>
+          className={`text-lg ${i <= rating ? 'text-yellow-400' : 'text-gray-300'
+            }`}>
           ★
         </Text>,
       );
@@ -32,9 +37,8 @@ const ProfileCard = ({
 
   return (
     <View
-      className={`pt-4 bg-white rounded-2xl shadow-md ${
-        layout === 'row' ? 'flex-row' : 'flex-col'
-      } items-center justify-start w-full mb-4`}>
+      className={` bg-white rounded-2xl shadow-md ${layout === 'row' ? 'flex-row' : 'flex-col'
+        } items-center justify-start w-full mb-4`}>
       {/* Section 1: Profile Image */}
       {profileImageUrl && (
         <TouchableOpacity
@@ -55,31 +59,41 @@ const ProfileCard = ({
       {/* Section 2: Name and Icon */}
       {(name || iconImageUrl) && (
         <View
-          className={`flex-col items-center ${
-            layout === 'col' ? 'mb-4' : 'mx-4'
-          }`}>
+          className={`flex-col items-center ${layout === 'col' ? 'mb-4' : 'mx-4'
+            }`}>
           <View className='flex-row items-center justify-start  '>
             {name && (
               <Text className="text-lg font-semibold text-gray-800 mr-2">
                 {name}
               </Text>
             )}
-            {iconImageUrl && (
-              <Image
-                source={iconImageUrl}
-                className="w-4 h-4 rounded-full"
-                resizeMode="contain"
-              />
+            {status && (
+              <View className={`w-3 h-3 rounded-full ${status === "Online" ? "bg-green-500" : "bg-red-500"}`} />
             )}
           </View>
-          {status && (
-            <Text className="text-sm w-full text-gray-500 mt-1">{status}</Text>
-          )}
+          {rating && <View className="flex-row mr-auto">{renderStars(rating)}</View>}
+          {/* {shopCategory && (
+            <Text className="text-  text-gray-500 mr-auto">{shopCategory}</Text>
+          )} */}
         </View>
       )}
 
       {/* Section 3: Rating Stars */}
-      {/* {rating && <View className="flex-row">{renderStars(rating)}</View>} */}
+      <View className="flex-col items-center justify-between ml-auto">
+        {/* {rating && <Text className="flex-row gap-1 mr-auto">
+          <Icon name='star' size={14} className='text-yellow-400' color={"#FFE015"} />
+          {(rating).toFixed(1)}</Text>} */}
+
+        {toggleLoadingIds ? (
+          <ActivityIndicator size="small" color="#007AFF" style={{ marginLeft: 8 }} />
+        ) : (
+          <Switch
+            value={storeStatus}
+            onValueChange={val => {
+              toggleStoreStatus(shopId, val);
+            }}
+          />)}
+      </View>
     </View>
   );
 };

@@ -110,6 +110,7 @@ const MenuItemListScreen = () => {
     };
 
     const handleAddToCart = (item: any) => {
+        console.log(item,"hdsjfjdj")
         dispatch(addToCart({
             id: item.id,
             name: item.item_name,

@@ -103,19 +103,18 @@ const HomeScreen = () => {
     switch (activeTab) {
       case 'About':
         return (
-          <View className="py-4 min-h-screen">
-            <Text className="text-xl text-gray-600 font-semibold font-poppins mb-2">
-              About Us
-            </Text>
-            <Text className="font-poppins text-gray-600 mb-4">
-              {user?.shop?.about_business}
-            </Text>
+          <View className="py-4">
+            <View className=' p-2 rounded-xl shadow-xl'>
+              <Text className="text-base text-gray-800 font-semibold font-poppins hidden">
+                About Us
+              </Text>
+              <Text className="font-poppins text-base text-gray-600 mb-2">
+                {user?.shop?.about_business}
+              </Text>
 
+
+            </View>
             <Text className="text-xl text-gray-600 font-semibold font-poppins mb-2">
-              Business Contact
-            </Text>
-            <Text className="font-poppins text-gray-600">{user?.shop?.phone}</Text>
-            <Text className="text-xl text-gray-600 font-semibold font-poppins mb-4 mt-4">
               Business Hours
             </Text>
             {user?.shop?.shift_details && JSON.parse(user?.shop?.shift_details).map((item: any, index: any) => (
@@ -132,12 +131,18 @@ const HomeScreen = () => {
                 status={item?.status}
               />
             ))}
-            <Text className="text-xl text-gray-600 font-semibold font-poppins mb-2 mt-4">
+            <Text className="text-base text-gray-600 font-semibold font-poppins mb-1 mt-2">
               Address
             </Text>
-            <Text className="font-poppins text-gray-600 mb-4">
+            <Text className="font-poppins ml-1 text-gray-600 mb-2">
               {user?.shop?.address + ", " + user?.shop?.city + ", " + user?.shop?.state + ", " + "(" + user?.shop?.zip_code + ")" || "Store No - 002, Belagere Rd, Near Hilife Pearl Shell, Varthur,Bangalore"}
             </Text>
+            <Text className="text-base text-gray-600 font-semibold font-poppins ">
+              Business Contact
+            </Text>
+            <Text className="font-poppins text-sm text-gray-600 ml-1">{user?.shop?.phone ?? "NA"}</Text>
+            {/* <Text className="font-poppins text-sm text-gray-600 ml-1">{user?.shop?.email ?? "NA"}</Text> */}
+
           </View>
         );
       case 'Menu':
@@ -207,24 +212,29 @@ const HomeScreen = () => {
         className="p-4"
         scrollEventThrottle={16}>
         <Animated.View style={{ transform: [{ translateY }] }}>
-          <View className="flex-row items-center justify-between py-4">
-            <Text className="text-lg font-semibold font-poppins pl-2">
-              {user?.shop?.restaurant_name || ' Burger One (Cafe & Bakery)'}
-            </Text>
+          <View className="flex-row items-center justify-between mb-4" >
+            <View>
+              <Text className="text-lg font-semibold font-poppins" numberOfLines={1} ellipsizeMode='tail'>
+                {user?.shop?.restaurant_name || ' Burger One (Cafe & Bakery)'}
+              </Text>
+              <Text className='text-sm pl-1' numberOfLines={2} ellipsizeMode='tail'>
+                {user?.shop?.address + ", " + user?.shop?.city}
+              </Text>
+            </View>
             <View className="flex-row items-center gap-2">
               <TouchableOpacity
                 onPress={() => navigaton.navigate('NotificationScreen')}
-                className="bg-primary-20 w-7 h-7 rounded-full justify-center items-center">
+                className="bg-primary-20 w-8 h-8 rounded-full justify-center items-center">
                 <Image
                   source={ImagePath.bellIcon}
-                  className="h-3 w-3"
+                  className="h-4 w-4"
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigaton.navigate("CreateShopScreen", { shopId: user?.shop?.id })} className="bg-primary-20 w-7 h-7 rounded-full justify-center items-center">
+              <TouchableOpacity onPress={() => navigaton.navigate("CreateShopScreen", { shopId: user?.shop?.id })} className="bg-primary-20 w-8 h-8 rounded-full justify-center items-center">
                 <Image
                   source={ImagePath.edit}
-                  className="h-3 w-3"
+                  className="h-4 w-4"
                   resizeMode="contain"
                 />
               </TouchableOpacity>
@@ -247,83 +257,36 @@ const HomeScreen = () => {
             onProfilePress={() =>
               navigaton.navigate("Profile")
             }
+
+            toggleLoadingIds={toggleLoadingIds}
+            toggleStoreStatus={toggleStoreStatus}
+            storeStatus={storeStatus}
+            shopId={user?.shop?.id}
+            shopCategory={user?.shop?.shop_category ?? "Restaurent"}
+
           />
 
-          {storeStatus && (
-            <>
-              <View className="flex-row items-center justify-between gap-4">
-                <TouchableOpacity className="flex-row items-center gap-3">
-                  <View className="bg-primary-20 w-10 h-10 rounded-full justify-center items-center">
-                    <Image
-                      source={ImagePath.home2}
-                      className="h-4 w-4"
-                      resizeMode="contain"
-                    />
-                  </View>
-                  <Text className="text-lg font-poppins">Burger One</Text>
-                </TouchableOpacity>
-                <TouchableOpacity className="flex-row items-center gap-3">
-                  <View className="bg-primary-20 w-10 h-10 rounded-full justify-center items-center">
-                    <Image
-                      source={ImagePath.cafe}
-                      className="h-4 w-4"
-                      resizeMode="contain"
-                    />
-                  </View>
-                  <Text className="text-lg font-poppins">Cafe and Bakery</Text>
-                </TouchableOpacity>
-              </View>
-              <TouchableOpacity className="bg-primary-20 p-4 rounded-xl mt-6 my-4">
-                <Text className="text-center">
-                  Member Since -  {
-                    user?.shop?.created_at
-                      ? new Date(user.shop.created_at).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })
-                      : "February 3, 2025"
-                  }
-                </Text>
-              </TouchableOpacity>
-            </>
-          )}
 
-          <View className="flex-row items-center justify-between">
-            <Text className="text-lg font-semibold font-poppins pl-2">
-              Shop Status:
-            </Text>
-            {toggleLoadingIds ? (
-              <ActivityIndicator size="small" color="#007AFF" style={{ marginLeft: 8 }} />
-            ) : (
-              <Switch
-                value={storeStatus}
-                onValueChange={val => {
-                  console.log(val);
-                  toggleStoreStatus(user?.shop?.id, val);
-                }}
-              />)}
-          </View>
 
           <View className="flex-row items-center justify-between gap-3 py-4">
             <TouchableOpacity
-              onPress={() => navigaton.navigate('CreateAdScreen')}
+              onPress={() => navigaton.navigate('AddOrderScreen')}
               disabled={!shopStatus}
               className={`${shopStatus ? 'bg-primary-70' : 'bg-primary-50'
                 } p-4 w-1/2 rounded-xl justify-center items-center`}>
               <Text className="text-white font-bold font-poppins">
-                Create Ad
+                Add Orders
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => navigaton.navigate('AddProductScreen')}
+              onPress={() => navigaton.navigate('ManageStockScreen')}
               disabled={!shopStatus}
               className={`${shopStatus ? 'bg-white' : ' '
                 } p-4 w-1/2 border rounded-xl justify-center items-center`}>
               <Text
                 className={`font-bold font-poppins ${shopStatus ? '' : 'text-gray-500'
                   }`}>
-                Add Products
+                Manage Stocks
               </Text>
             </TouchableOpacity>
           </View>
@@ -355,7 +318,7 @@ const HomeScreen = () => {
           </View>
         </View>
         {/* Render Tab Content (NO nested ScrollView) */}
-        <View className='min-h-[85vh]'>
+        <View className=''>
           {renderTabContent()}
         </View>
 

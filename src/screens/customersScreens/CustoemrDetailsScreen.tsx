@@ -93,7 +93,14 @@ const CustomerDetailsScreen = () => {
 
       {/* Add Order Button */}
       <TouchableOpacity
-        className="bg-primary-80 py-3 rounded-lg items-center"
+        className="bg-white border border-gray-400 py-3 rounded-lg items-center mb-2 hidden"
+        onPress={() => {
+          navigation.navigate('OrderSummaryScreen', { orderDetails })
+        }}>
+        <Text className="text-gray-800 font-bold text-base">View Order Details</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        className="bg-primary-80 py-3 rounded-lg items-center mb-2"
         onPress={() => {
           navigation.navigate('AddCustomerFormScreen', { orderDetails })
         }}>

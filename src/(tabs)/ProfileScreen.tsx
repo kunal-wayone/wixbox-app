@@ -58,10 +58,12 @@ const ProfileScreen = () => {
   ];
 
   const moreLinks = [
-    { name: 'About Us', route: 'AboutUs', link: '' },
-    { name: 'Contact Us', route: 'ContactUs', link: '' },
-    { name: 'Terms & Conditions', route: 'TermsConditions', link: '' },
-    { name: 'Privacy Policy', route: 'PrivacyPolicy', link: '' },
+    { name: 'About Us', route: 'AboutUs', link: 'AboutUsScreen' },
+    { name: 'Contact Us', route: 'ContactUs', link: 'ContactUsScreen' },
+    { name: 'Terms & Conditions', route: 'TermsConditions', link: 'TermsConditionScreen' },
+    { name: 'Privacy Policy', route: 'PrivacyPolicy', link: 'PrivecyPolicyScreen' },
+    { name: 'FAQs', route: 'Faqs', link: 'FaqsScreen' },
+
   ];
 
   const handleAction = (action: string) => {

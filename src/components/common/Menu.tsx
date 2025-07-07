@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -24,15 +24,23 @@ const Menu = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [products, setProducts] = useState<any[]>([]);
   const [toggleLoadingIds, setToggleLoadingIds] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Fetch menu items from server
-  const fetchProducts = useCallback(async () => {
+  const fetchProducts = useCallback(async (page: number = 1, append: boolean = false) => {
     try {
-      setIsLoading(true);
-      const response: any = await Fetch(`/user/menu-items`, {}, 5000);
-      console.log(response)
+      setIsLoading(!append);
+      setIsLoadingMore(append);
+      const response: any = await Fetch(`/user/menu-items?per_page=5&page=${page}`, {}, 5000);
+      console.log(response, "fetch items");
       if (!response.success) throw new Error('Failed to fetch products');
-      setProducts(response.data.menu_items || []);
+      
+      const { menu_items, current_page, last_page } = response.data;
+      setProducts((prev) => (append ? [...prev, ...menu_items] : menu_items));
+      setCurrentPage(current_page);
+      setLastPage(last_page);
     } catch (error: any) {
       console.error('fetchProducts error:', error.message);
       ToastAndroid.show(
@@ -41,9 +49,16 @@ const Menu = () => {
       );
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
   }, []);
 
+  // Load more products
+  const loadMoreProducts = useCallback(() => {
+    if (currentPage < lastPage && !isLoadingMore) {
+      fetchProducts(currentPage + 1, true);
+    }
+  }, [currentPage, lastPage, isLoadingMore, fetchProducts]);
 
   // Toggle product status
   const toggleProductStatus = useCallback(
@@ -60,8 +75,8 @@ const Menu = () => {
         // Update products state optimistically
         setProducts((prevProducts) =>
           prevProducts.map((item) =>
-            item.id === id ? { ...item, status: currentStatus ? 0 : 1 } : item)
-
+            item.id === id ? { ...item, status: currentStatus ? 0 : 1 } : item
+          )
         );
 
         ToastAndroid.show('Status updated successfully!', ToastAndroid.SHORT);
@@ -80,17 +95,19 @@ const Menu = () => {
     []
   );
 
-
   useEffect(() => {
     if (isFocused) {
-      fetchProducts();
+      fetchProducts(1);
     }
-  }, [isFocused]);
+  }, [isFocused, fetchProducts]);
 
   // Memoized filtered products
-  const filteredProducts = React.useMemo(() => products.filter((item) =>
-    item?.item_name?.toLowerCase().includes(search?.toLowerCase())
-  ), [products, search]);
+  const filteredProducts = React.useMemo(() =>
+    products.filter((item) =>
+      item?.item_name?.toLowerCase().includes(search?.toLowerCase())
+    ),
+    [products, search]
+  );
 
   const renderItem = useCallback(
     ({ item }: { item: any }) => (
@@ -107,11 +124,13 @@ const Menu = () => {
             <View className='w-1/2'>
               {toggleLoadingIds.includes(item.id) ? (
                 <ActivityIndicator size="small" color="#007AFF" style={{ marginLeft: 8 }} />
-              ) : (<Switch
-                value={item?.status === 1}
-                onValueChange={() => toggleProductStatus(item.id, item.status === 1)}
-                disabled={toggleLoadingIds.includes(item.id)}
-              />)}
+              ) : (
+                <Switch
+                  value={item?.status === 1}
+                  onValueChange={() => toggleProductStatus(item.id, item.status === 1)}
+                  disabled={toggleLoadingIds.includes(item.id)}
+                />
+              )}
             </View>
           </View>
         </View>
@@ -154,10 +173,31 @@ const Menu = () => {
     [toggleLoadingIds, toggleProductStatus, navigation]
   );
 
+  const renderFooter = useCallback(() => {
+    if (isLoadingMore) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      );
+    }
+    if (currentPage < lastPage) {
+      return (
+        <TouchableOpacity
+          onPress={loadMoreProducts}
+          className="bg-primary-90 py-3 px-4 rounded-lg my-4 mx-4"
+        >
+          <Text className="text-white text-center text-md font-medium">Load More</Text>
+        </TouchableOpacity>
+      );
+    }
+    return null;
+  }, [isLoadingMore, currentPage, lastPage, loadMoreProducts]);
+
   return (
     <View className="min-h-[85vh] bg-gray-50">
       {/* Search & Add Button */}
-      <View className="flex-row items-center gap-3 mt-4  mb-4">
+      <View className="flex-row items-center gap-3 mt-4 mb-4">
         <View className="flex-row items-center flex-1 bg-white px-3 py-0.5 border rounded-xl shadow-sm">
           <AntDesign name="search1" color="#6B7280" size={20} />
           <TextInput
@@ -193,6 +233,7 @@ const Menu = () => {
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
           initialNumToRender={10}
+          ListFooterComponent={renderFooter}
         />
       )}
     </View>

@@ -1,65 +1,55 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Image, FlatList, ToastAndroid, ActivityIndicator } from 'react-native';
+import { View, Text, Image, FlatList, ToastAndroid, ActivityIndicator, TouchableOpacity } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { ImagePath } from '../../constants/ImagePath';
 import { Fetch } from '../../utils/apiUtils';
 import { useSelector } from 'react-redux';
 import { useIsFocused } from '@react-navigation/native';
 
-const reviews = [
-  {
-    id: '1',
-    name: 'Amit Sharma',
-    avatar: ImagePath.profile1,
-    timeAgo: '2 days ago',
-    rating: 4.5,
-    review:
-      'The food was really good and the service was excellent. Definitely coming back!',
-  },
-  {
-    id: '2',
-    name: 'Priya Singh',
-    avatar: ImagePath.profile1,
-    timeAgo: '1 week ago',
-    rating: 4.0,
-    review: 'Nice experience. Good ambiance and staff was friendly.',
-  },
-];
-
 const Review = () => {
-  const averageRating = 4.3;
   const isFocused = useIsFocused();
-  const [reviews, setReviews] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const { status: userStatus, data: user }: any = useSelector(
-    (state: any) => state.user,
-  );
+  const [reviews, setReviews] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const { status: userStatus, data: user }: any = useSelector((state: any) => state.user);
 
-  const fetchReviews = useCallback(async () => {
-    const id = user?.shop.id
+  const fetchReviews = useCallback(async (page: number = 1, append: boolean = false) => {
+    const id = user?.shop.id;
     try {
-      setIsLoading(true);
-      const response: any = await Fetch(`/user/shops/${id}/reviews`, {}, 5000);
-      if (!response.success) throw new Error('Failed to fetch posts');
-      console.log(response.data)
-      setReviews(response.data.reviews || []);
+      setIsLoading(!append);
+      setIsLoadingMore(append);
+      const response: any = await Fetch(`/user/shops/${id}/reviews?per_page=1&page=${page}`, {}, 5000);
+      if (!response.success) throw new Error('Failed to fetch reviews');
+      console.log(response.data);
+      const { reviews, current_page, last_page } = response.data;
+      setReviews((prev) => (append ? [...prev, ...reviews] : reviews));
+      setCurrentPage(current_page);
+      setLastPage(last_page);
     } catch (error: any) {
-      console.error('fetchProducts error:', error.message);
+      console.error('fetchReviews error:', error.message);
       ToastAndroid.show(
         error?.message || 'Failed to load reviews.',
         ToastAndroid.SHORT
       );
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  }, []);
+  }, [user?.shop.id]);
 
+  const loadMoreReviews = useCallback(() => {
+    if (currentPage < lastPage && !isLoadingMore) {
+      fetchReviews(currentPage + 1, true);
+    }
+  }, [currentPage, lastPage, isLoadingMore, fetchReviews]);
 
   useEffect(() => {
-    if (isFocused) {
-      fetchReviews();
+    if (isFocused && user?.shop.id) {
+      fetchReviews(1);
     }
-  }, [isFocused]);
+  }, [isFocused, user?.shop.id, fetchReviews]);
 
   const renderReviewCard = ({ item }: { item: any }) => (
     <View key={item?.id} className="border-gray-200 border p-4 rounded-xl mb-4 shadow-sm">
@@ -67,12 +57,15 @@ const Review = () => {
       <View className="flex-row justify-between items-start mb-2">
         {/* Left: Avatar + Name + Time */}
         <View className="flex-row items-start">
-          <Image source={item?.avatar || ImagePath?.profile1} className="w-10 h-10 rounded-full mr-3" />
+          <Image
+            source={item?.user?.avatar || ImagePath?.profile1}
+            className="w-10 h-10 rounded-full mr-3"
+          />
           <View>
-            <Text className="text-sm font-semibold text-gray-800">
-              {item?.user?.name}
+            <Text className="text-base font-semibold text-gray-800">
+              {item?.user?.name || 'Anonymous'}
             </Text>
-            <Text className="text-xs text-gray-500">{item.timeAgo}</Text>
+            <Text className="text-xs text-gray-500">{item?.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}</Text>
           </View>
         </View>
 
@@ -83,21 +76,42 @@ const Review = () => {
             .map((_, index) => (
               <AntDesign key={index} name="star" color="#FBBF24" size={16} />
             ))}
-          <Text className="ml-1 text-sm text-gray-800">{item?.rating}</Text>
+          <Text className="ml-1 text-sm text-gray-800">{item?.rating || 0}</Text>
         </View>
       </View>
 
       {/* Bottom: Review Description */}
-      <Text className="text-sm text-gray-700">{item?.comment}</Text>
+      <Text className="text-sm text-gray-700">{item?.comment || 'No comment provided'}</Text>
     </View>
   );
+
+  const renderFooter = useCallback(() => {
+    if (isLoadingMore) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      );
+    }
+    if (currentPage < lastPage) {
+      return (
+        <TouchableOpacity
+          onPress={loadMoreReviews}
+          className="bg-primary-90 py-3 px-4 rounded-lg my-4 mx-4"
+        >
+          <Text className="text-white text-center text-md font-medium">Load More</Text>
+        </TouchableOpacity>
+      );
+    }
+    return null;
+  }, [isLoadingMore, currentPage, lastPage, loadMoreReviews]);
 
   return (
     <View className="mt-5 min-h-[83vh]">
       {/* Title and Rating */}
       <View className="flex-row justify-between items-center mb-3">
-        <Text className="text-lg font-semibold text-gray-700">
-          {user?.shop?.restaurant_name || "Burger One (Cafe & Bakery)"}{' '}
+        <Text className="text-lg font-semibold text-gray-700" numberOfLines={1} ellipsizeMode="tail">
+          {user?.shop?.restaurant_name || "Burger One (Cafe & Bakery)"}
         </Text>
         <View className="flex-row items-center px-2 py-1 rounded-md">
           {[1, 2, 3, 4, 5].map((_, index) => (
@@ -111,7 +125,7 @@ const Review = () => {
       {/* SubTitle and Total Count */}
       <Text className="text-xl text-gray-900 font-semibold font-poppins mb-1">
         Reviews
-      </Text>{' '}
+      </Text>
       <Text className="text-sm text-gray-600 mb-4">
         {reviews.length} Reviews
       </Text>
@@ -132,6 +146,7 @@ const Review = () => {
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
           initialNumToRender={10}
+          ListFooterComponent={renderFooter}
         />
       )}
     </View>

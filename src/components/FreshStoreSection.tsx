@@ -8,10 +8,12 @@ import {
   ToastAndroid,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  TouchableOpacity,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { ImagePath } from '../constants/ImagePath';
 import { Fetch, IMAGE_URL } from '../utils/apiUtils';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.75;
@@ -36,6 +38,7 @@ const SkeletonCard = () => (
 );
 
 const FreshStoreSection = () => {
+  const navigation = useNavigation<any>()
   const [products, setProducts] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,13 +63,13 @@ const FreshStoreSection = () => {
         throw new Error(response.message || 'Failed to fetch products');
       }
       console.log(response?.data)
-      const newProducts = response.data || [];
+      const newProducts = response?.data?.recent_shops || [];
       const filtered = newProducts.filter((item: any) => item?.id);
 
       // Prevent duplicates
       setProducts(prev => {
         const existingIds = new Set(prev.map(p => p.id));
-        const uniqueNew = filtered.filter((item:any) => !existingIds.has(item.id));
+        const uniqueNew = filtered.filter((item: any) => !existingIds.has(item.id));
         return [...prev, ...uniqueNew];
       });
 
@@ -97,7 +100,7 @@ const FreshStoreSection = () => {
   return (
     <View className="pt-6">
       {/* Header */}
-      <View className="mb-3 px-4">
+      <View className="mb-3">
         <Text className="text-lg font-semibold text-gray-900">Fresh Stores</Text>
         <Text className="text-sm text-gray-500">Discover the latest additions</Text>
       </View>
@@ -106,7 +109,7 @@ const FreshStoreSection = () => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        className="px-4"
+        className=""
         onScroll={handleScroll}
         scrollEventThrottle={16}
         ref={scrollViewRef}
@@ -128,7 +131,8 @@ const FreshStoreSection = () => {
         ) : (
           <>
             {products.map((product, index) => (
-              <View
+              <TouchableOpacity
+                onPress={() => navigation.navigate("ShopDetailsScreen", { shop_info: product })}
                 key={`${product.id}-${index}`} // Unique key using id-index
                 style={{ width: CARD_WIDTH }}
                 className="mr-4 rounded-xl overflow-hidden">
@@ -150,15 +154,24 @@ const FreshStoreSection = () => {
                     <Text
                       className="text-base font-semibold p-1 text-gray-900"
                       numberOfLines={1}
+                      ellipsizeMode='tail'
                     >
                       {product?.restaurant_name || 'Unknown'}
                     </Text>
                     <View className="h-px bg-gray-300 my-1" />
-                    <View className="flex-row items-center gap-2 mb-2">
-                      <Icon name="pricetag-outline" size={14} color="#10B981" />
-                      <Text className="text-sm text-green-600 font-medium">
-                        {product?.offer || 'No Offer'}
-                      </Text>
+                    <View className='flex-row items-center justify-between'>
+                      {!product?.offer && <View className="flex-row items-center gap-2 mb-2">
+                        <Icon name="pricetag-outline" size={14} color="#10B981" />
+                        <Text className="text-sm text-green-600 font-medium">
+                          {product?.offer || 'No Offer'}
+                        </Text>
+                      </View>}
+                      {!product?.offer && <View className="flex-row items-center gap-2 mb-2">
+                        <Icon name="timer-outline" size={14} color="#000" />
+                        <Text className="text-sm text-gray-900 ">
+                          {product?.travel_time_mins ?? "NA"} min
+                        </Text>
+                      </View>}
                     </View>
                     <View className="flex-row justify-between items-center">
                       <View className="flex-row items-center space-x-1">
@@ -170,13 +183,13 @@ const FreshStoreSection = () => {
                       <View className="flex-row items-center space-x-1">
                         <Icon name="location-outline" size={14} color="#6B7280" />
                         <Text className="text-xs text-gray-500">
-                          {product?.distance || '0'} Km
+                          {product?.distance_km || '0'} Km
                         </Text>
                       </View>
                     </View>
                   </View>
                 </ImageBackground>
-              </View>
+              </TouchableOpacity>
             ))}
 
             {isLoading && products.length > 0 && (

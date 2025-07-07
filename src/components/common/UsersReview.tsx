@@ -31,16 +31,18 @@ const UsersReview = ({ shopId, average_rating }: any) => {
 
   const fetchReviews = useCallback(
     async (pageNum: number, reset = false) => {
+      if (!shopId) return;
+
       try {
         if (pageNum === 1) setIsLoading(true);
         else setIsLoadingMore(true);
 
         const response: any = await Fetch(
-          `/user/shop-reviews?shop_id=${shopId}&per_page=2&page=${pageNum}`,
+          `/user/shop-reviews?shop_id=${shopId}&per_page=5&page=${pageNum}`,
           {},
           5000
         );
-
+        console.log(response)
         if (!response.success) throw new Error('Failed to fetch reviews');
 
         const { reviews: newReviews, pagination } = response;
@@ -59,18 +61,11 @@ const UsersReview = ({ shopId, average_rating }: any) => {
     [shopId]
   );
 
-  useEffect(() => {
-    if (isFocused) {
-      setPage(1);
-      fetchReviews(1, true); // Reset reviews on focus
-    }
-  }, [isFocused, fetchReviews]);
-
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (page < lastPage && !isLoading && !isLoadingMore) {
       fetchReviews(page + 1);
     }
-  };
+  }, [page, lastPage, isLoading, isLoadingMore, fetchReviews]);
 
   const handleSubmitReview = async () => {
     if (rating < 1 || rating > 5) {
@@ -99,6 +94,7 @@ const UsersReview = ({ shopId, average_rating }: any) => {
         setModalVisible(false);
         setRating(0);
         setComment('');
+        setPage(1);
         fetchReviews(1, true); // Refresh reviews
       } else {
         throw new Error('Failed to submit review');
@@ -111,18 +107,25 @@ const UsersReview = ({ shopId, average_rating }: any) => {
     }
   };
 
+  useEffect(() => {
+    if (isFocused && shopId) {
+      setPage(1);
+      fetchReviews(1, true); // Reset reviews on focus
+    }
+  }, [isFocused, shopId, fetchReviews]);
+
   const renderReviewCard = ({ item }: { item: any }) => (
     <View key={item?.id} className="border-gray-200 border p-4 rounded-xl mb-4 shadow-sm">
       <View className="flex-row justify-between items-start mb-2">
         <View className="flex-row items-start">
           <Image
-            source={item?.user?.profile ? { uri: IMAGE_URL + item?.user?.profile } : ImagePath?.profile1}
+            source={item?.user?.profile ? { uri: IMAGE_URL + item.user.profile } : ImagePath?.profile1}
             className="w-10 h-10 rounded-full mr-3"
           />
           <View>
-            <Text className="text-sm font-semibold text-gray-800">{item?.user?.name}</Text>
+            <Text className="text-sm font-semibold text-gray-800">{item?.user?.name || 'Anonymous'}</Text>
             <Text className="text-xs text-gray-500">
-              {new Date(item.created_at).toLocaleDateString()}
+              {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}
             </Text>
           </View>
         </View>
@@ -132,21 +135,35 @@ const UsersReview = ({ shopId, average_rating }: any) => {
             .map((_, index) => (
               <AntDesign key={index} name="star" color="#FBBF24" size={16} />
             ))}
-          <Text className="ml-1 text-sm text-gray-800">{item?.rating}</Text>
+          <Text className="ml-1 text-sm text-gray-800">{item?.rating || 0}</Text>
         </View>
       </View>
-      <Text className="text-sm text-gray-700">{item?.comment}</Text>
+      <Text className="text-sm text-gray-700">{item?.comment || 'No comment provided'}</Text>
     </View>
   );
 
-  const renderFooter = () => {
-    if (!isLoadingMore) return null;
-    return (
-      <View className="py-4">
-        <ActivityIndicator size="small" color="#007AFF" />
-      </View>
-    );
-  };
+  const renderFooter = useCallback(() => {
+    if (isLoadingMore) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator size="large" color="#999" />
+        </View>
+      );
+    }
+    if (page < lastPage) {
+      return (
+        <View className="pb-20">
+          <TouchableOpacity
+            onPress={handleLoadMore}
+            className="bg-primary-90 py-3 px-4 rounded-lg my-4 mx-4"
+          >
+            <Text className="text-white text-center text-md font-medium">Load More</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return null;
+  }, [isLoadingMore, page, lastPage, handleLoadMore]);
 
   return (
     <View className="mt-5 min-h-[83vh]">
@@ -167,7 +184,7 @@ const UsersReview = ({ shopId, average_rating }: any) => {
         </View>
       </View>
       {/* SubTitle, Button, and Total Count */}
-      <View className="flex-row justify-between items-center ">
+      <View className="flex-row justify-between items-center">
         <Text className="text-xl text-gray-900 font-semibold font-poppins">Reviews</Text>
         <TouchableOpacity
           onPress={() => setModalVisible(true)}
@@ -194,8 +211,6 @@ const UsersReview = ({ shopId, average_rating }: any) => {
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
           initialNumToRender={10}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
         />
       )}
@@ -244,7 +259,7 @@ const UsersReview = ({ shopId, average_rating }: any) => {
               <TouchableOpacity
                 onPress={handleSubmitReview}
                 disabled={isSubmitting}
-                className={`px-4 py-2 rounded-md ${isSubmitting ? 'bg-gray-400' : 'bg-blue-500'}`}
+                className={`px-4 py-2 rounded-md ${isSubmitting ? 'bg-gray-400' : 'bg-primary-80'}`}
               >
                 <Text className="text-white">Submit</Text>
               </TouchableOpacity>

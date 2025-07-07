@@ -15,11 +15,10 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { ImagePath } from '../../constants/ImagePath';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
-import { useDispatch, useSelector } from 'react-redux'; // Import Redux hooks
-import { addToCart } from '../../store/slices/cartSlice'; // Import cart actions
-import { RootState } from '../../store'; // Adjust path to your store
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart } from '../../store/slices/cartSlice';
+import { RootState } from '../../store/store';
 
-// Skeleton Loader Component
 const SkeletonLoader = () => (
   <View className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm animate-pulse">
     <View className="w-2/5 mr-3">
@@ -52,8 +51,9 @@ const SkeletonLoader = () => (
 const UsersMenuItems = ({ shopId }: any) => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
-  const dispatch = useDispatch(); // Initialize Redux dispatch
-  const cartItems = useSelector((state: RootState) => state.cart.items); // Access cart items from Redux store
+  const dispatch = useDispatch();
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isFetchingMore, setIsFetchingMore] = useState<boolean>(false);
@@ -63,14 +63,15 @@ const UsersMenuItems = ({ shopId }: any) => {
   const [lastPage, setLastPage] = useState(1);
   const flatListRef = useRef<FlatList>(null);
 
-  // Fetch menu items from server
   const fetchProducts = useCallback(async (page: number = 1, append: boolean = false) => {
+    if (!shopId) return;
+
     try {
       if (page === 1) setIsLoading(true);
       else setIsFetchingMore(true);
 
       const response: any = await Fetch(
-        `/user/shop-menu-items?shop_id=${shopId}&page=${page}`,
+        `/user/shop-menu-items?shop_id=${shopId}&page=${page}&per_page=5`,
         {},
         5000
       );
@@ -78,11 +79,11 @@ const UsersMenuItems = ({ shopId }: any) => {
       if (!response.success) throw new Error('Failed to fetch products');
 
       setLastPage(response.pagination.last_page);
+      setCurrentPage(response.pagination.current_page);
       setProducts((prev) =>
         append ? [...prev, ...response.menu_items] : response.menu_items || []
       );
     } catch (error: any) {
-      console.error('fetchProducts error:', error.message);
       ToastAndroid.show(
         error?.message || 'Failed to load products.',
         ToastAndroid.SHORT
@@ -93,7 +94,6 @@ const UsersMenuItems = ({ shopId }: any) => {
     }
   }, [shopId]);
 
-  // Toggle product status
   const toggleProductStatus = useCallback(
     async (id: string, currentStatus: boolean) => {
       try {
@@ -107,18 +107,16 @@ const UsersMenuItems = ({ shopId }: any) => {
 
         setProducts((prevProducts) =>
           prevProducts.map((item) =>
-            item.id === id ? { ...item, status: currentStatus ? 0 : 1 } : item)
+            item.id === id ? { ...item, status: currentStatus ? 0 : 1 } : item
+          )
         );
 
         ToastAndroid.show('Status updated successfully!', ToastAndroid.SHORT);
-        return response.data;
       } catch (error: any) {
-        console.error('toggleProductStatus error:', error.message);
         ToastAndroid.show(
           error?.message || 'Failed to toggle status.',
           ToastAndroid.SHORT
         );
-        throw error;
       } finally {
         setToggleLoadingIds((prev) => prev.filter((itemId) => itemId !== id));
       }
@@ -126,14 +124,13 @@ const UsersMenuItems = ({ shopId }: any) => {
     []
   );
 
-  // Handle add to cart
   const handleAddToCart = useCallback(
     (item: any) => {
       const cartItem = {
         id: item.id,
         name: item.item_name,
         price: item.price,
-        quantity: 1, // Default quantity
+        quantity: 1,
         image: item.images?.length > 0 ? IMAGE_URL + item.images[0] : ImagePath.item1,
       };
       dispatch(addToCart(cartItem));
@@ -142,27 +139,21 @@ const UsersMenuItems = ({ shopId }: any) => {
     [dispatch]
   );
 
-  // Handle scroll to load more
   const handleLoadMore = useCallback(() => {
     if (!isFetchingMore && currentPage < lastPage) {
-      setCurrentPage((prev) => {
-        const nextPage = prev + 1;
-        fetchProducts(nextPage, true);
-        return nextPage;
-      });
+      const nextPage = currentPage + 1;
+      fetchProducts(nextPage, true);
     }
   }, [isFetchingMore, currentPage, lastPage, fetchProducts]);
 
-  // Reset and fetch on focus or shopId change
   useEffect(() => {
-    if (isFocused) {
+    if (isFocused && shopId) {
       setCurrentPage(1);
       setProducts([]);
       fetchProducts(1, false);
     }
   }, [isFocused, shopId, fetchProducts]);
 
-  // Memoized filtered products
   const filteredProducts = React.useMemo(() =>
     products.filter((item) =>
       item?.item_name?.toLowerCase().includes(search?.toLowerCase())
@@ -170,42 +161,27 @@ const UsersMenuItems = ({ shopId }: any) => {
 
   const renderItem = useCallback(
     ({ item }: { item: any }) => {
-      const isInCart = cartItems.some((cartItem) => cartItem.id === item.id);
+      const isInCart = cartItems.some((cartItem: any) => cartItem.id === item.id);
       return (
         <View key={item?.id} className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm">
           <View className="w-2/5 mr-3 items-center">
             <Image
-              source={item?.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
-              className="w-full h-40 rounded-lg mb-2"
+              source={item?.item?.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
+              className="w-full h-40 my-auto rounded-lg mb-2"
               resizeMode="cover"
             />
-            <View className="flex-row items-center h-10 hidden">
-              <Text className="text-xs text-gray-500 mr-2">Status</Text>
-              <View className='w-1/2'>
-                {toggleLoadingIds.includes(item.id) ? (
-                  <ActivityIndicator size="small" color="#007AFF" style={{ marginLeft: 8 }} />
-                ) : (
-                  <Switch
-                    value={item?.status === 1}
-                    onValueChange={() => toggleProductStatus(item.id, item.status === 1)}
-                    disabled={toggleLoadingIds.includes(item.id)}
-                  />
-                )}
-              </View>
-            </View>
           </View>
-          <View className="flex-1">
+          <View className="flex-">
             {item?.offer && (
               <View className="self-start bg-primary-80 px-2 py-1 rounded-md mb-2">
                 <Text className="text-white text-xs font-semibold">{item?.offer}</Text>
               </View>
             )}
-            <Text className="text-lg font-semibold text-gray-800">{item?.item_name}</Text>
+            <Text numberOfLines={1} ellipsizeMode='tail' className="text-lg font-semibold text-gray-800">{item?.item_name}</Text>
             <View className="flex-row justify-between items-center">
               <Text className="text-sm text-gray-500">{item?.category?.name || 'N/A'} •</Text>
               <Text className="text-md font-bold">
-                {item?.currency || '₹'}
-                {item?.price}
+                {item?.currency || '₹'}{item?.price}
               </Text>
             </View>
             <Text className="text-sm text-gray-600 mt-1">{item?.unit || 'N/A'}</Text>
@@ -213,14 +189,14 @@ const UsersMenuItems = ({ shopId }: any) => {
               <AntDesign name="star" color="#FBBF24" size={16} />
               <Text className="ml-1 text-sm text-gray-700">{item?.average_rating || '0'}</Text>
             </View>
-            <View className="flex-row items-center justify-between mt-1">
+            <View className="flex-row items-center justify-start mt-1">
               <Text className="text-sm text-gray-600">Stock Count:</Text>
-              <Text className="font-semibold">{item?.stock_quantity || '0'}</Text>
+              <Text className="font-medium text-sm"> {item?.stock_quantity || '0'}</Text>
             </View>
             <TouchableOpacity
               onPress={() => {
                 if (isInCart) {
-                  navigation.navigate('AddOrderScreen', { shopId: shopId }); // Navigate to cart if item is already in cart
+                  navigation.navigate('CartScreen');
                 } else {
                   handleAddToCart(item);
                 }
@@ -238,17 +214,28 @@ const UsersMenuItems = ({ shopId }: any) => {
     [toggleLoadingIds, toggleProductStatus, navigation, handleAddToCart, cartItems]
   );
 
-  const renderFooter = () => (
-    <View className="pb-20">
-      {isFetchingMore ? (
-        <>
-          <SkeletonLoader />
-          <SkeletonLoader />
-          <SkeletonLoader />
-        </>
-      ) : null}
-    </View>
-  );
+  const renderFooter = useCallback(() => {
+    if (isFetchingMore) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator size="large" color="#999" />
+        </View>
+      );
+    }
+    if (currentPage < lastPage) {
+      return (
+        <View className="pb-20">
+          <TouchableOpacity
+            onPress={handleLoadMore}
+            className="bg-primary-90 py-3 px-4 rounded-lg my-4 mx-4"
+          >
+            <Text className="text-white text-center text-md font-medium">Load More</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return null;
+  }, [isFetchingMore, currentPage, lastPage, handleLoadMore]);
 
   return (
     <View className="min-h-[85vh]">
@@ -264,9 +251,13 @@ const UsersMenuItems = ({ shopId }: any) => {
           />
         </View>
         <TouchableOpacity
-          onPress={() => fetchProducts(1, false)}
+          onPress={() => {
+            setCurrentPage(1);
+            setProducts([]);
+            fetchProducts(1, false);
+          }}
           className="bg-primary-90 p-3 rounded-lg"
-        >
+          className="bg-primary-90 p-3 rounded-lg">
           <Icon name="refresh" size={20} color="white" />
         </TouchableOpacity>
       </View>
@@ -289,9 +280,6 @@ const UsersMenuItems = ({ shopId }: any) => {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
-          initialNumToRender={10}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
         />
       )}

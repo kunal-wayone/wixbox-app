@@ -39,6 +39,7 @@ const PostDetailScreen = () => {
       if (!response.success) throw new Error(response.message);
       setPost(response.data);
     } catch (error: any) {
+      console.log(error)
       ToastAndroid.show(error?.message || 'Failed to load post', ToastAndroid.SHORT);
     } finally {
       setLoading(false);

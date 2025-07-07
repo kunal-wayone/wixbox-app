@@ -116,7 +116,7 @@ const AddCustomerScreen = () => {
 
       {/* Title */}
       <Text className={`text-2xl font-semibold text-center mb-4 `}>
-        Manage Orders
+        Manage Customers
       </Text>
 
       {/* Search and Add Customer Section */}

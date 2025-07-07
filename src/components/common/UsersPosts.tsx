@@ -72,7 +72,7 @@ const UsersPost = ({ vendor_id }: any) => {
         else setIsLoadingMore(true);
 
         const response: any = await Fetch(
-          `/user/shop-posts?vendor_id=${vendor_id}&per_page=2&page=${pageNum}`,
+          `/user/shop-posts?vendor_id=${vendor_id}&per_page=5&page=${pageNum}`,
           {},
           5000
         );
@@ -119,18 +119,18 @@ const UsersPost = ({ vendor_id }: any) => {
     fetchPosts(1, true);
   }, [fetchPosts]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = useCallback(() => {
     if (page < lastPage && !isLoading && !isLoadingMore) {
       fetchPosts(page + 1);
     }
-  };
+  }, [page, lastPage, isLoading, isLoadingMore, fetchPosts]);
 
   useEffect(() => {
     if (isFocused && vendor_id) {
       setPage(1);
       fetchPosts(1, true);
     }
-  }, [isFocused, fetchPosts, vendor_id]);
+  }, [isFocused, vendor_id, fetchPosts]);
 
   const renderPost = ({ item }: { item: Post }) => (
     <View className="mb-4 rounded-2xl overflow-hidden shadow-md bg-white relative">
@@ -139,22 +139,21 @@ const UsersPost = ({ vendor_id }: any) => {
         activeOpacity={0.8}
       >
         <ImageBackground
-          source={{ uri: IMAGE_URL + item.image }}
+          source={{ uri: item.image ? IMAGE_URL + item.image : ImagePath.placeholder }}
           className="h-48 w-full justify-between p-3"
           imageStyle={{ borderRadius: 16 }}
         >
           <View className="absolute inset-0 bg-black/50 rounded-2xl" />
           <View className="flex-row justify-between items-center z-10">
             <View
-              className={`
-                // ${item?.status?.toUpperCase() === 'DRAFT' ? 'bg-transparent' : 'bg-transparent'}
-               px-3 py-1 rounded-lg bg-transparent`}
+              className={`${item?.status?.toUpperCase() === 'DRAFT' ? 'bg-red-500' : 'bg-green-600'
+                } px-3 py-1 rounded-lg`}
             >
-              {/* <Text className="text-xs font-semibold text-white">
-                {item?.status?.toUpperCase() || 'Tag'}
-              </Text> */}
+              <Text className="text-xs font-semibold text-white">
+                {item?.status?.toUpperCase() || 'PUBLISHED'}
+              </Text>
             </View>
-            <TouchableOpacity onPress={() => setSelectedPostId((prev) => (prev === item.id ? null : item.id))}>
+            <TouchableOpacity className='hidden' onPress={() => setSelectedPostId((prev) => (prev === item.id ? null : item.id))}>
               <Icon name="dots-three-vertical" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -223,15 +222,28 @@ const UsersPost = ({ vendor_id }: any) => {
     </View>
   );
 
-  const renderFooter = () => {
-    if (!isLoadingMore) return null;
-    return (
-      <View className="py-4">
-        <SkeletonLoader />
-        <SkeletonLoader />
-      </View>
-    );
-  };
+  const renderFooter = useCallback(() => {
+    if (isLoadingMore) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator size="large" color="#999" />
+        </View>
+      );
+    }
+    if (page < lastPage) {
+      return (
+        <View className="pb-20">
+          <TouchableOpacity
+            onPress={handleLoadMore}
+            className="bg-primary-90 py-3 px-4 rounded-lg my-4 mx-4"
+          >
+            <Text className="text-white text-center text-md font-medium">Load More</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    return null;
+  }, [isLoadingMore, page, lastPage, handleLoadMore]);
 
   return (
     <View className="max-h-[85vh] bg-gray-50">
@@ -252,11 +264,9 @@ const UsersPost = ({ vendor_id }: any) => {
           keyExtractor={(item: Post) => item.id}
           contentContainerStyle={{ paddingBottom: 20 }}
           showsVerticalScrollIndicator={false}
-          initialNumToRender={2}
+          initialNumToRender={5}
           refreshing={isRefreshing}
           onRefresh={onRefresh}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
         />
       )}

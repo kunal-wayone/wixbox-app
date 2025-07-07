@@ -41,12 +41,18 @@ import TopCafesScreen from '../screens/otherScreen/TopCafesScreen';
 import TableBookingFormScreen from '../screens/otherScreen/TableBookingFormScreen';
 import BookedTablesScreen from '../screens/otherScreen/BookedTablesScreen';
 import MenuItemListScreen from '../screens/stockScreens/MenuItemListScreen';
+import CartScreen from '../screens/orderScreen/CartScreen';
+import AboutUsScreen from '../screens/moreLInkPages/AboutUsScreen';
+import ContactUsScreen from '../screens/moreLInkPages/ContactUsScreen';
+import TermsConditionsScreen from '../screens/moreLInkPages/TermsConditionsScreen';
+import PrivacyPolicyScreen from '../screens/moreLInkPages/PrivecyPolicyScreen';
+import FaqsScreen from '../screens/moreLInkPages/FaqsScreen';
 
 const Stack = createNativeStackNavigator();
 
 const MainNavigation = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName='HomeScreen' screenOptions={{ headerShown: false }}>
       {/* Splash Always First */}
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
 
@@ -71,6 +77,7 @@ const MainNavigation = () => {
       <Stack.Screen name="AddCustomerScreen" component={AddCustomerScreen} />
       <Stack.Screen name="CustomerDetailsScreen" component={CustomerDetailsScreen} />
       <Stack.Screen name="AddCustomerFormScreen" component={AddCustomerFormScreen} />
+      <Stack.Screen name="CartScreen" component={CartScreen} />
       <Stack.Screen name="AddOrderScreen" component={AddOrderScreen} />
       <Stack.Screen name="OrderSummaryScreen" component={OrderSummaryScreen} />
       <Stack.Screen name="HighOnDemandScreen" component={HighOnDemandScreen} />
@@ -90,6 +97,16 @@ const MainNavigation = () => {
       <Stack.Screen name="TableBookingFormScreen" component={TableBookingFormScreen} />
       <Stack.Screen name="BookedTablesScreen" component={BookedTablesScreen} />
       <Stack.Screen name="MenuItemListScreen" component={MenuItemListScreen} />
+
+
+      {/* More Links Screens */}
+      <Stack.Screen name="AboutUsScreen" component={AboutUsScreen} />
+      <Stack.Screen name="ContactUsScreen" component={ContactUsScreen} />
+      <Stack.Screen name="TermsConditionScreen" component={TermsConditionsScreen} />
+      <Stack.Screen name="PrivecyPolicyScreen" component={PrivacyPolicyScreen} />
+      <Stack.Screen name="FaqsScreen" component={FaqsScreen} />
+
+
 
 
 

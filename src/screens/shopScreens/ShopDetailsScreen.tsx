@@ -426,6 +426,7 @@ const ShopDetailsScreen = () => {
                 keyExtractor={(item) => `${item.floor}-${item.table_number}`}
                 numColumns={2}
                 showsVerticalScrollIndicator={false}
+                className=''
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
               />
               <TouchableOpacity

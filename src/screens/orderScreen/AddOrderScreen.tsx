@@ -36,19 +36,19 @@ const AddOrderScreen = () => {
 
   const fetchProducts = useCallback(async (pageNum: number, append = false) => {
     if (!hasMore && append) return;
-    const endpoint: any = shopId ? `/user/shop-menu-items?shop_id=${shopId}&page=${page}` : `/user/menu-items?page=${pageNum}`
-
+    const endpoint: any = `/user/menu-items?page=${pageNum}`
     try {
       setIsLoading(!append);
       setIsLoadingMore(append);
       const response: any = await Fetch(`${endpoint}`, {}, 5000);
+      console.log(pageNum, page, append, endpoint, hasMore, response?.menuItems)
       if (!response.success) throw new Error('Failed to fetch products');
 
-      const newProducts = shopId ? response.menu_items : response.data.menu_items || [];
+      const newProducts = response.menuItems || [];
       setProducts(prev => (append ? [...prev, ...newProducts] : newProducts));
       setHasMore(newProducts.length > 0); // Assume no more products if empty
     } catch (error: any) {
-      console.error('fetchProducts error:', error.message);
+      console.error('fetchProducts error:', error);
       ToastAndroid.show(error?.message || 'Failed to load products.', ToastAndroid.SHORT);
     } finally {
       setIsLoading(false);
@@ -65,11 +65,11 @@ const AddOrderScreen = () => {
   }, [isFocused, fetchProducts]);
 
   const handleLoadMore = () => {
-    if (!isLoadingMore && hasMore) {
-      const nextPage = page + 1;
-      setPage(nextPage);
-      fetchProducts(nextPage, true);
-    }
+    // if (!isLoadingMore && hasMore) {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage, true);
+    // }
   };
 
   const filteredProducts = products.filter((product: any) =>
@@ -77,6 +77,7 @@ const AddOrderScreen = () => {
   );
 
   const handleAddToCart = (product: any) => {
+    console.log(product)
     dispatch(
       addToCart({
         id: product?.id,
@@ -122,62 +123,65 @@ const AddOrderScreen = () => {
     </TouchableOpacity>
   );
 
-  const renderCartItem = ({ item }: { item: any }) => (
-    <View
-      style={{
-        flexDirection: 'row',
-        backgroundColor: '#F9FAFB',
-        borderRadius: 12,
-        marginVertical: 8,
-        padding: 12,
-      }}>
-      <Image
-        source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
-        style={{ width: 80, height: 80, borderRadius: 10, marginRight: 12 }}
-        resizeMode="cover"
-      />
-      <View style={{ flex: 1 }}>
-        <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 4 }}>
-          {item?.name}
-        </Text>
-        <Text style={{ color: '#6B7280', marginBottom: 4 }}>
-          ₹{item?.price}
-        </Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }} className='gap-2'>
-          <TouchableOpacity
-            className='bg-primary-30'
-            style={{
-              borderRadius: 6,
-              paddingHorizontal: 10,
-            }}
-            onPress={() => updateQuantity(item.id, -1)}>
-            <Text style={{ fontSize: 18 }}>-</Text>
-          </TouchableOpacity>
-          <Text style={{ color: '#6B7280', marginBottom: 4 }}>
-            {item?.quantity}
+  const renderCartItem = ({ item }: { item: any }) => {
+    console.log(item)
+    return (
+      <View
+        style={{
+          flexDirection: 'row',
+          backgroundColor: '#F9FAFB',
+          borderRadius: 12,
+          marginVertical: 8,
+          padding: 12,
+        }}>
+        <Image
+          source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
+          style={{ width: 80, height: 80, borderRadius: 10, marginRight: 12 }}
+          resizeMode="cover"
+        />
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 4 }}>
+            {item?.name}
           </Text>
-          <TouchableOpacity
-            className='bg-primary-30'
-            style={{
-              borderRadius: 6,
-              paddingHorizontal: 10,
-            }}
-            onPress={() => updateQuantity(item?.id, 1)}>
-            <Text style={{ fontSize: 18 }}>+</Text>
-          </TouchableOpacity>
+          <Text style={{ color: '#6B7280', marginBottom: 4 }}>
+            ₹{item?.price}
+          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }} className='gap-2'>
+            <TouchableOpacity
+              className='bg-primary-30'
+              style={{
+                borderRadius: 6,
+                paddingHorizontal: 10,
+              }}
+              onPress={() => updateQuantity(item.id, -1)}>
+              <Text style={{ fontSize: 18 }}>-</Text>
+            </TouchableOpacity>
+            <Text style={{ color: '#6B7280', marginBottom: 4 }}>
+              {item?.quantity}
+            </Text>
+            <TouchableOpacity
+              className='bg-primary-30'
+              style={{
+                borderRadius: 6,
+                paddingHorizontal: 10,
+              }}
+              onPress={() => updateQuantity(item?.id, 1)}>
+              <Text style={{ fontSize: 18 }}>+</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
+    )
+  };
+
+  const renderFooter = () => (
+    <View className="pb-20">
+      <TouchableOpacity className='bg-primary-80 rounded-lg  p-2 w-32 m-auto' onPress={() => handleLoadMore()}>
+        <Text className='text-white text-center'>Load More</Text>
+      </TouchableOpacity>
+      {isLoadingMore && <ActivityIndicator size="large" color="#999" style={{ marginTop: 20 }} />}
     </View>
   );
-
-  const renderFooter = () => {
-    if (!isLoadingMore) return null;
-    return (
-      <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
-  };
 
   return (
     <View style={{ flex: 1, backgroundColor: '#fff', padding: 16 }}>
@@ -271,8 +275,8 @@ const AddOrderScreen = () => {
           numColumns={2}
           contentContainerStyle={{ paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
-          onEndReached={handleLoadMore}
-          onEndReachedThreshold={0.5}
+          // onEndReached={handleLoadMore}
+          // onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
         />
       )}

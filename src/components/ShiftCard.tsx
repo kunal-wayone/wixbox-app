@@ -26,7 +26,7 @@ const ShiftCard: React.FC<ShiftProps> = ({
 }) => {
   if (!status)
     return (
-      <View className="flex-row items-center gap-4 mb-8">
+      <View className="flex-row items-center gap-4 mb-8 hidden">
         <Text className="px-3 py-2 w-16 text-center bg-primary-50 rounded-lg text-black">
           {day}
         </Text>
@@ -41,14 +41,14 @@ const ShiftCard: React.FC<ShiftProps> = ({
     );
 
   return (
-    <View className="flex-row items-center gap-4 mb-8">
+    <View className="flex-row items-center gap-4 mb-4">
       <Text className="px-3 py-2 w-16 text-center bg-primary-50 rounded-lg text-black">
         {day}
       </Text>
 
       {first_shift_start && first_shift_end && !second_shift_start && !second_shift_end && (
-        <View className='flex-row items-center justify-center w-2/3'>
-          <Text className="text-black text-sm font-poppins text-center">
+        <View className='flex-row items-center justify-start w-2/3'>
+          <Text className="text-black text-sm font-poppins text-left">
             {first_shift_start + " - " + first_shift_end}
           </Text>
         </View>

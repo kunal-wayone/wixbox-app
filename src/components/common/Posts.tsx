@@ -34,7 +34,9 @@ const Post = () => {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
-
+  const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const { data: user }: any = useSelector((state: any) => state.user);
 
   const formatDate = (dateString: string) => {
@@ -48,32 +50,42 @@ const Post = () => {
     });
   };
 
-  const fetchPosts = useCallback(async () => {
+  const fetchPosts = useCallback(async (page: number = 1, append: boolean = false) => {
     if (!user?.shop?.id) return;
 
     try {
-      setIsLoading(true);
-      const response: any = await Fetch(`/user/posts?shopId=${user.shop.id}`, { method: 'GET' }, 5000);
-      console.log(response)
+      setIsLoading(!append);
+      setIsLoadingMore(append);
+      const response: any = await Fetch(`/user/posts?shopId=${user.shop.id}&per_page=5&page=${page}`, {}, 5000);
+      console.log(response);
       if (!response.success) throw new Error(response.message);
-      setPosts(response.data);
+      const { data, current_page, last_page } = response;
+      setPosts((prev) => (append ? [...prev, ...data] : data));
+      setCurrentPage(current_page);
+      setLastPage(last_page);
     } catch (error: any) {
       ToastAndroid.show(error?.message || 'Failed to load posts.', ToastAndroid.SHORT);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
       setIsRefreshing(false);
     }
   }, [user?.shop?.id]);
+
+  const loadMorePosts = useCallback(() => {
+    if (currentPage < lastPage && !isLoadingMore) {
+      fetchPosts(currentPage + 1, true);
+    }
+  }, [currentPage, lastPage, isLoadingMore, fetchPosts]);
 
   const deletePost = async () => {
     if (!selectedPostId) return;
 
     try {
       setDeletingPostId(selectedPostId);
-      console.log(selectedPostId)
       const response: any = await Delete(`/user/posts/${selectedPostId}`, {}, undefined, 5000);
       if (!response.success) throw new Error(response.message);
-      setPosts(prev => prev.filter(p => p.id !== selectedPostId));
+      setPosts((prev) => prev.filter((p) => p.id !== selectedPostId));
       ToastAndroid.show('Post deleted successfully', ToastAndroid.SHORT);
     } catch (error: any) {
       ToastAndroid.show(error?.message || 'Failed to delete post.', ToastAndroid.SHORT);
@@ -86,14 +98,14 @@ const Post = () => {
 
   const onRefresh = useCallback(() => {
     setIsRefreshing(true);
-    fetchPosts();
+    fetchPosts(1);
   }, [fetchPosts]);
 
   useEffect(() => {
     if (isFocused && user?.shop?.id) {
-      fetchPosts();
+      fetchPosts(1);
     }
-  }, [isFocused, fetchPosts]);
+  }, [isFocused, user?.shop?.id, fetchPosts]);
 
   const renderPost = ({ item }: { item: Post }) => (
     <View className="mb-4 rounded-2xl overflow-hidden shadow-md bg-white relative">
@@ -113,7 +125,7 @@ const Post = () => {
                 {item?.status?.toLocaleUpperCase() || "Tag"}
               </Text>
             </View>
-            <TouchableOpacity onPress={() => setSelectedPostId(prev => prev === item.id ? null : item.id)}>
+            <TouchableOpacity onPress={() => setSelectedPostId((prev) => (prev === item.id ? null : item.id))}>
               <Icon name="dots-three-vertical" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -141,13 +153,13 @@ const Post = () => {
             }}
             className="px-3 py-2"
           >
-            <Text className="text-sm"><Icon name='edit' color={""} /> Edit</Text>
+            <Text className="text-sm"><Icon name="edit" color="#000" /> Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setConfirmDeleteVisible(true)}
             className="px-3 py-2"
           >
-            <Text className="text-sm text-red-600"><Icon name='trash' color={'red'} /> Delete</Text>
+            <Text className="text-sm text-red-600"><Icon name="trash" color="red" /> Delete</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -184,6 +196,27 @@ const Post = () => {
     </View>
   );
 
+  const renderFooter = useCallback(() => {
+    if (isLoadingMore) {
+      return (
+        <View className="py-4">
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      );
+    }
+    if (currentPage < lastPage) {
+      return (
+        <TouchableOpacity
+          onPress={loadMorePosts}
+          className="bg-primary-100 py-3 px-4 rounded-lg my-4 mx-4"
+        >
+          <Text className="text-white text-center text-md font-medium">Load More</Text>
+        </TouchableOpacity>
+      );
+    }
+    return null;
+  }, [isLoadingMore, currentPage, lastPage, loadMorePosts]);
+
   return (
     <View className="max-h-[85vh] bg-gray-50">
       <TouchableOpacity
@@ -211,6 +244,7 @@ const Post = () => {
           initialNumToRender={10}
           refreshing={isRefreshing}
           onRefresh={onRefresh}
+          ListFooterComponent={renderFooter}
         />
       )}
     </View>

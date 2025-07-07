@@ -15,6 +15,7 @@ import { TokenStorage } from '../utils/apiUtils';
 import LoadingComponent from '../screens/otherScreen/LoadingComponent';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
+import AddCustomerScreen from '../screens/customersScreens/AddCustomerScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -97,7 +98,7 @@ export default function BottomTabNavigator() {
         initialRouteName="Home"
         screenOptions={screenOptions(ownerIconMap)}>
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="Customer" component={CustormerScreen} />
+        <Tab.Screen name="Customer" component={AddCustomerScreen} />
         <Tab.Screen name="Analytics" component={AnalyticsScreen} />
         <Tab.Screen name="Profile" component={ProfileScreen} />
       </Tab.Navigator>

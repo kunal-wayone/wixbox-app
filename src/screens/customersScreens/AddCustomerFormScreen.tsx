@@ -124,7 +124,7 @@ const AddCustomerFormScreen = () => {
         keyboardShouldPersistTaps="always"
       >
         {/* Header with Back Button and Title */}
-        <View className="flex-row items-center border-gray-200">
+        <View className="flex-row items-center absolute  border-gray-200">
           <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
             <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
