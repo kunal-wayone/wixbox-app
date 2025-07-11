@@ -102,7 +102,8 @@ const CategorySection = () => {
 
   // Handle category press
   const handleCategoryPress = (category: any) => {
-    navigation.navigate('MenuItemListScreen', { categoryId: category.id, categoryName: category.type });
+    console.log(category)
+    navigation.navigate('MenuItemListScreen', { categoryId: category.id, categoryName: category.name });
   };
 
   // Render footer (loading more)
@@ -151,7 +152,7 @@ const CategorySection = () => {
         </View>
         <TouchableOpacity
           className="flex-row items-center"
-          onPress={() => navigation.navigate('AllCategories')}
+          onPress={() => navigation.navigate('AllCategoriesScreen')}
         >
           <Text className="text-sm font-medium">See More</Text>
           <Icon name="chevron-forward-outline" size={16} color="#000" />
@@ -186,13 +187,13 @@ const CategorySection = () => {
             onPress={() => handleCategoryPress(category)}
           >
             <Image
-              source={{ uri: category.image }}
+              source={{ uri: category?.image }}
               className="w-28 h-24 rounded-xl mb-2"
               resizeMode="cover"
-              onError={() => handleImageError(category.id)}
+              onError={() => handleImageError(category?.id)}
             />
             <Text className="text-xs text-center text-gray-700 max-w-[100px]">
-              {category.type}
+              {category?.name}
             </Text>
           </TouchableOpacity>
         ))}

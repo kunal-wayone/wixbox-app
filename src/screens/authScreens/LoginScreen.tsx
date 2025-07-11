@@ -20,7 +20,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { ImagePath } from '../../constants/ImagePath';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-import { login } from '../../store/slices/authSlice';
+import { googleAuth, login } from '../../store/slices/authSlice';
 import { fetchUser } from '../../store/slices/userSlice';
 import { RootState } from '../../store/store';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -130,6 +130,11 @@ const LoginScreen = () => {
         ToastAndroid.SHORT,
       );
     }
+  };
+
+
+  const handleGoogleLogin = async () => {
+    dispatch(googleAuth());
   };
 
   return (
@@ -291,12 +296,7 @@ const LoginScreen = () => {
             <TouchableOpacity
               className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl"
               accessibilityLabel="Google Sign Up"
-              onPress={() =>
-                ToastAndroid.show(
-                  'Google Sign-In not implemented yet.',
-                  ToastAndroid.SHORT,
-                )
-              }>
+              onPress={handleGoogleLogin}>
               <Image
                 source={ImagePath.google}
                 className="w-14 h-16 m-auto"

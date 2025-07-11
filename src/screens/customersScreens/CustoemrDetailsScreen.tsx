@@ -51,7 +51,12 @@ const CustomerDetailsScreen = () => {
           source={orderDetails?.image ? { uri: IMAGE_URL + orderDetails?.image } : ImagePath?.profile1}
           className="w-20 h-20 rounded-full mr-4"
         />
-        <Text className="text-xl font-bold">{orderDetails?.name}</Text>
+        <View>
+          <Text className="text-xl font-bold">{orderDetails?.name}</Text>
+          <Text className="text-sm">{orderDetails?.email}</Text>
+          <Text className="text-sm">{orderDetails?.phone}</Text>
+
+        </View>
       </View>
 
       {/* Ordered Items Title */}
@@ -100,7 +105,7 @@ const CustomerDetailsScreen = () => {
         <Text className="text-gray-800 font-bold text-base">View Order Details</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        className="bg-primary-80 py-3 rounded-lg items-center mb-2"
+        className="bg-primary-80 py-3 rounded-lg items-center mb-8"
         onPress={() => {
           navigation.navigate('AddCustomerFormScreen', { orderDetails })
         }}>

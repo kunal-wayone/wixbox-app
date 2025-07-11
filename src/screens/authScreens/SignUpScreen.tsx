@@ -27,6 +27,7 @@ import { Post, TokenStorage } from '../../utils/apiUtils';
 import { useDispatch } from 'react-redux';
 import { signup } from '../../store/slices/authSlice';
 import { fetchUser } from '../../store/slices/userSlice';
+import { getFcmToken } from '../../utils/notification/firebase';
 const { width, height } = Dimensions.get('screen');
 
 // Validation schema using Yup
@@ -59,6 +60,7 @@ const SignUpScreen = ({ route }: any) => {
   });
   const [isCheck, setIsCheck] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
 
   // const handleSignUp = async (values: any, {setSubmitting, resetForm}: any) => {
   //   setIsSubmitting(true);
@@ -152,7 +154,8 @@ const SignUpScreen = ({ route }: any) => {
       setIsSubmitting(false);
       return;
     }
-
+    const fcmToken = getFcmToken()
+    console.log(fcmToken, "signup")
     try {
       const payload = {
         name: values.fullName,
@@ -160,6 +163,7 @@ const SignUpScreen = ({ route }: any) => {
         password: values.password,
         password_confirmation: values.confirmPassword, // Fixed typo in original code
         role: accountType,
+        
       };
       console.log('Sending payload:', payload);
 
@@ -311,7 +315,7 @@ const SignUpScreen = ({ route }: any) => {
                       Email Address
                     </Text>
                     <TextInput
-                      className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base"
+                      className="border border-gray-300 bg-gray-100 dark:text-gray-900 rounded-lg p-3 text-base"
                       placeholder="Enter your email"
                       onChangeText={handleChange('email')}
                       onBlur={handleBlur('email')}

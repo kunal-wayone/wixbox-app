@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
@@ -7,10 +6,8 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  Alert,
   FlatList,
   Dimensions,
-  Switch,
   ToastAndroid,
   RefreshControl,
 } from 'react-native';
@@ -21,7 +18,6 @@ import { useNavigation } from '@react-navigation/native';
 import Modal from 'react-native-modal';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { ImagePath } from '../../constants/ImagePath';
-import Icon from 'react-native-vector-icons/Ionicons';
 
 // Default image for restaurants
 const DEFAULT_IMAGE = ImagePath.restaurant1;
@@ -43,7 +39,7 @@ const SkeletonCard = () => (
 
 const BookATableScreen = () => {
   const navigation = useNavigation<any>();
-  const PER_PAGE = 10; // Match the endpoint's per_page value
+  const PER_PAGE = 5;
 
   const [data, setData] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -52,14 +48,11 @@ const BookATableScreen = () => {
   const [loadMoreLoading, setLoadMoreLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pickupReminderEnabled, setPickupReminderEnabled] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isModalTableReserveVisible, setIsModalTableReserveVisible] = useState(false);
-  const [isPaymentModal, setIsPaymentModal] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<any>(null);
   const [selectTable, setSelectedTable] = useState<any>(null);
   const [selectedFloor, setSelectedFloor] = useState<string>('Ground');
-  const [selectedOption, setSelectedOption] = useState('half');
 
   // Fetch nearby shops
   const fetchStores = useCallback(
@@ -68,16 +61,12 @@ const BookATableScreen = () => {
         return;
       }
 
-      if (isInitial || isRefresh) {
-        setInitialLoading(true);
-      } else {
-        setLoadMoreLoading(true);
-      }
-
       try {
+        if (isInitial || isRefresh) setInitialLoading(true);
+        else setLoadMoreLoading(true);
+
         setError(null);
         const queryParams = `/user/shops-nearby?per_page=${PER_PAGE}&page=${pageNumber}`;
-
         const response: any = await Fetch(queryParams, {}, 5000);
 
         if (!response.success) {
@@ -93,26 +82,20 @@ const BookATableScreen = () => {
         })) || [];
 
         setData((prev) => {
-          if (isInitial || isRefresh) {
-            return newShops; // Reset data for initial load or refresh
-          }
-          // Avoid duplicates by filtering out shops already in the data
+          if (isInitial || isRefresh) return newShops;
           const existingIds = new Set(prev.map((shop) => shop.id));
           const uniqueNewShops = newShops.filter((shop: any) => !existingIds.has(shop.id));
           return [...prev, ...uniqueNewShops];
         });
 
-        setHasMore(newShops.length === PER_PAGE);
-        setPage(pageNumber + 1); // Increment page only after successful fetch
+        setHasMore(response.data.pagination?.last_page > pageNumber);
+        setPage(pageNumber);
       } catch (error: any) {
         setError(error.message || 'Failed to fetch shops');
         ToastAndroid.show(error.message || 'Failed to fetch shops', ToastAndroid.SHORT);
       } finally {
-        if (isInitial || isRefresh) {
-          setInitialLoading(false);
-        } else {
-          setLoadMoreLoading(false);
-        }
+        if (isInitial || isRefresh) setInitialLoading(false);
+        else setLoadMoreLoading(false);
       }
     },
     [loadMoreLoading, hasMore]
@@ -121,7 +104,7 @@ const BookATableScreen = () => {
   // Initial fetch
   useEffect(() => {
     fetchStores(1, true);
-  }, []);
+  }, [fetchStores]);
 
   // Refresh handler
   const onRefresh = useCallback(async () => {
@@ -154,37 +137,24 @@ const BookATableScreen = () => {
   // Render table item
   const renderTableItem = ({ item }: { item: any }) => {
     const seats = parseInt(item.seats) || 2;
-
-    let tableWidth = 100;
-    let tableHeight = 100;
-    let borderRadius = 12;
-
-    if (seats <= 8) {
-      tableWidth = 75;
-      tableHeight = 80;
-      borderRadius = 12;
-    } else {
-      tableWidth = 155;
-      tableHeight = 80;
-      borderRadius = 16;
-    }
+    let tableWidth = seats <= 8 ? 75 : 155;
+    let tableHeight = 80;
+    let borderRadius = seats <= 8 ? 12 : 16;
 
     const getSeatDistribution = (count: number) => {
-      if (count <= 8) {
-        return [
+      return count <= 8
+        ? [
           { side: 'top', count: 1 },
           { side: 'right', count: 1 },
           { side: 'bottom', count: 1 },
           { side: 'left', count: 1 },
-        ];
-      } else {
-        return [
+        ]
+        : [
           { side: 'top', count: 3 },
           { side: 'right', count: 1 },
           { side: 'bottom', count: 3 },
           { side: 'left', count: 1 },
         ];
-      }
     };
 
     const seatDistribution = getSeatDistribution(seats);
@@ -192,9 +162,12 @@ const BookATableScreen = () => {
     const seatThickness = 6;
 
     const getLineColor = () => {
-      if (item.is_booked === "1") return 'lightgray';
-      if (item.premium === 1) return selectTable?.table_number === item?.table_number && selectTable?.floor === item?.floor ? "#00C01A80" : '#B68AD480';
-      return '#00C01A80';
+      if (item.is_booked === '1') return 'lightgray';
+      return selectTable?.table_number === item?.table_number && selectTable?.floor === item?.floor
+        ? '#00C01A80'
+        : item.premium === 1
+          ? '#B68AD480'
+          : '#00C01A80';
     };
 
     const renderChairLines = (side: string, count: number) => {
@@ -214,7 +187,6 @@ const BookATableScreen = () => {
           backgroundColor: color,
           borderRadius: 6,
         };
-
 
         if (isHorizontal) {
           style.width = seatSize;
@@ -236,13 +208,13 @@ const BookATableScreen = () => {
 
     return (
       <TouchableOpacity
-        className={`flex-1 m-2 items-center justify-center ${seats > 8 ? 'col-span-2' : ''} ${selectTable?.table_number === item?.table_number && selectTable?.floor === item?.floor ? "" : ""}`}
-        disabled={item.is_booked !== '0'}
+        className={`flex-1 m-2 items-center justify-center ${seats > 8 ? 'col-span-2' : ''}`}
+        disabled={item.is_booked === '1'}
         onPress={() => {
           if (item.is_booked !== '1') {
-            setSelectedTable(item)
-          } else if (item?.is_booked !== "0") {
-            ToastAndroid.show("This table is already booked.", ToastAndroid.SHORT)
+            setSelectedTable(item);
+          } else {
+            ToastAndroid.show('This table is already booked.', ToastAndroid.SHORT);
           }
         }}
       >
@@ -257,18 +229,32 @@ const BookATableScreen = () => {
         >
           <View
             className={`w-10/12 h-16 rounded-xl flex-col justify-center items-center ${selectTable?.table_number === item?.table_number && selectTable?.floor === item?.floor
-              ? 'bg-green-500'
-              : item.premium === 1
-                ? 'border rounded-xl border-primary-40'
-                : item?.is_booked !== '0' ? "bg-gray-100" : 'border rounded-xl border-green-300'
+                ? 'bg-green-500'
+                : item.premium === 1
+                  ? 'border rounded-xl border-primary-40'
+                  : item.is_booked === '1'
+                    ? 'bg-gray-100'
+                    : 'border rounded-xl border-green-300'
               }`}
           >
-            <Text className={`text-black text-xs font-semibold ${item?.is_booked !== '0' ? "text-gray-400" : selectTable?.table_number === item?.table_number && selectTable?.floor === item?.floor ? "text-white" :
-              ""}  `}>
+            <Text
+              className={`text-black text-xs font-semibold ${item.is_booked === '1'
+                  ? 'text-gray-400'
+                  : selectTable?.table_number === item?.table_number && selectTable?.floor === item?.floor
+                    ? 'text-white'
+                    : ''
+                }`}
+            >
               {item.table_number} ({item.seats})
             </Text>
-            <Text className={`text-black text-xs font-semibold ${item?.is_booked !== '0' ? "text-gray-400" : selectTable?.table_number === item?.table_number && selectTable?.floor === item?.floor ? "text-white" :
-              ""}  `}>
+            <Text
+              className={`text-black text-xs font-semibold ${item.is_booked === '1'
+                  ? 'text-gray-400'
+                  : selectTable?.table_number === item?.table_number && selectTable?.floor === item?.floor
+                    ? 'text-white'
+                    : ''
+                }`}
+            >
               ₹ {item.price}/-
             </Text>
           </View>
@@ -287,8 +273,7 @@ const BookATableScreen = () => {
       onPress={() => setSelectedFloor(item.floor)}
     >
       <Text
-        className={`font-poppins-regular ${selectedFloor === item.floor ? 'text-white' : 'text-black'
-          }`}
+        className={`font-poppins-regular ${selectedFloor === item.floor ? 'text-white' : 'text-black'}`}
       >
         {item.floor}
       </Text>
@@ -296,7 +281,7 @@ const BookATableScreen = () => {
   );
 
   // Render footer with Load More button
-  const renderFooter = () => {
+  const renderFooter = useCallback(() => {
     if (loadMoreLoading) {
       return (
         <View className="py-4">
@@ -306,16 +291,18 @@ const BookATableScreen = () => {
     }
     if (hasMore) {
       return (
-        <TouchableOpacity
-          className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto my-4"
-          onPress={() => fetchStores(page)}
-        >
-          <Text className="text-center text-white font-poppins font-semibold">Load More</Text>
-        </TouchableOpacity>
+        <View className="pb-20">
+          <TouchableOpacity
+            className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto my-4"
+            onPress={() => fetchStores(page, true)}
+          >
+            <Text className="text-center text-white font-poppins font-semibold">Load More</Text>
+          </TouchableOpacity>
+        </View>
       );
     }
     return null;
-  };
+  }, [loadMoreLoading, hasMore, page, fetchStores]);
 
   // Main render
   return (
@@ -351,29 +338,26 @@ const BookATableScreen = () => {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         >
-          {error && (
-            <Text className="text-red-600 mb-4 text-center">{error}</Text>
-          )}
+          {error && <Text className="text-red-600 mb-4 text-center">{error}</Text>}
           {data.map((shop) => (
-            <View
-              key={shop.id}
-              className="flex-row gap-4 bg-primary-10 rounded-xl p-6 mb-4"
-            >
+            <View key={shop.id} className="flex-row gap-4 bg-primary-10 rounded-xl p-6 mb-4">
               <Text className="absolute top-2 right-12 font-poppins-bold">
                 <AntDesign name="star" size={19} color="#FFC727" /> {shop.average_rating || 0}
               </Text>
-              <TouchableOpacity className="absolute top-2 right-5">
+              <TouchableOpacity
+                className="absolute top-2 right-5"
+                onPress={() =>
+                  setData((prev) =>
+                    prev.map((item) =>
+                      item.id === shop.id ? { ...item, fav: !item.fav } : item
+                    )
+                  )
+                }
+              >
                 <MaterialIcons
                   name={shop.fav ? 'favorite' : 'favorite-outline'}
                   size={19}
                   color={shop.fav ? 'red' : 'black'}
-                  onPress={() =>
-                    setData((prev) =>
-                      prev.map((item) =>
-                        item.id === shop.id ? { ...item, fav: !item.fav } : item
-                      )
-                    )
-                  }
                 />
               </TouchableOpacity>
               <Image
@@ -394,7 +378,8 @@ const BookATableScreen = () => {
                 </View>
                 <View className="flex-row items-center gap-1 mb-2">
                   <Text className="mb-1 font-poppins-regular">
-                    {shop.tables?.filter((t: any) => !t?.is_booked !== "1").length || 0} Table Available
+                    {shop.tables?.filter((t: any) => t.is_booked !== '1').length || 0} Table
+                    Available
                   </Text>
                 </View>
                 <TouchableOpacity
@@ -432,7 +417,7 @@ const BookATableScreen = () => {
             keyExtractor={(item) => item.floor}
             renderItem={renderFloorTab}
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, }}
+            contentContainerStyle={{ paddingHorizontal: 16 }}
             style={{ marginBottom: 16 }}
           />
           <FlatList
@@ -444,8 +429,15 @@ const BookATableScreen = () => {
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
           />
           <TouchableOpacity
-            onPress={() => setIsModalTableReserveVisible(true)}
             className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto"
+            onPress={() => {
+              if (!selectTable) {
+                ToastAndroid.show('Please select a table.', ToastAndroid.SHORT);
+                return;
+              }
+              setIsModalVisible(false);
+              setIsModalTableReserveVisible(true);
+            }}
           >
             <Text className="text-center text-white font-poppins font-semibold">
               Reserve a Table
@@ -464,8 +456,11 @@ const BookATableScreen = () => {
           className="bg-white rounded-t-3xl pt-6 pb-4"
           style={{ height: '80%', borderRadius: 20 }}
         >
-          <TouchableOpacity onPress={() => setIsModalTableReserveVisible(false)} className='absolute top-1 right-2 z-50'>
-            <Icon name='close' size={30} />
+          <TouchableOpacity
+            onPress={() => setIsModalTableReserveVisible(false)}
+            className="absolute top-1 right-2 z-50"
+          >
+            <Ionicons name="close" size={30} />
           </TouchableOpacity>
           <Image
             source={{ uri: selectedRestaurant?.restaurant_images || DEFAULT_IMAGE }}
@@ -489,105 +484,32 @@ const BookATableScreen = () => {
               <Text className="text-base mb-1">Price:</Text>
             </View>
             <View className="flex-1 ml-2 items-end">
-              <Text className="text-base mb-1">{selectTable?.floor}</Text>
-              <Text className="text-base mb-1">{selectTable?.table_number}</Text>
-              <Text className="text-base mb-1">{selectTable?.premium === "0" ? "Not Premium" : "Premium"}</Text>
-              <Text className="text-base mb-1">{selectTable?.seats}</Text>
-              <Text className="text-base mb-1">₹ {selectTable?.price}/-</Text>
+              <Text className="text-base mb-1">{selectTable?.floor || 'N/A'}</Text>
+              <Text className="text-base mb-1">{selectTable?.table_number || 'N/A'}</Text>
+              <Text className="text-base mb-1">
+                {selectTable?.premium === '0' ? 'Not Premium' : 'Premium'}
+              </Text>
+              <Text className="text-base mb-1">{selectTable?.seats || 'N/A'}</Text>
+              <Text className="text-base mb-1">₹ {selectTable?.price || 0}/-</Text>
             </View>
-          </View>
-          <View className="border-b border-dashed border-gray-400 mx-4 my-2" />
-          <View className="mx-4 mt-2 space-y-3 hidden">
-            <View className="flex-row items-center mb-2">
-              <AntDesign name="checkcircle" size={16} color="#B68AD4" />
-              <Text className="ml-2">No waiting in line</Text>
-            </View>
-            <View className="flex-row items-center mb-2">
-              <Ionicons name="time" size={18} color="#B68AD4" />
-              <Text className="ml-2">Ready in 15 mins</Text>
-            </View>
-            <View className="flex-row items-center mb-2">
-              <Ionicons name="lock-closed" size={18} color="#B68AD4" />
-              <Text className="ml-2">Your product is safe with us</Text>
-            </View>
-          </View>
-          <View className="flex-row justify-between items-center mx-4 mt-4 hidden">
-            <Switch
-              value={pickupReminderEnabled}
-              onValueChange={setPickupReminderEnabled}
-            />
-            <Text className="text-base">Send me a pickup reminder notification</Text>
           </View>
           <TouchableOpacity
-            onPress={() => navigation.navigate("TableBookingFormScreen", { shop_id: selectedRestaurant?.id, table_info: [selectTable] })}
+            onPress={() =>
+              navigation.navigate('TableBookingFormScreen', {
+                shop_id: selectedRestaurant?.id,
+                table_info: [selectTable],
+              })
+            }
             className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto mt-5"
           >
             <Text className="text-center text-white font-poppins font-semibold">
-              Pay ₹ {selectTable?.price}/- & Reserve Now
+              Pay ₹ {selectTable?.price || 0}/- & Reserve Now
             </Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-
-      {/* Modal for Payment Options */}
-      <Modal
-        isVisible={isPaymentModal}
-        onBackdropPress={() => setIsPaymentModal(false)}
-        style={{ justifyContent: 'flex-end', margin: 0 }}
-      >
-        <View
-          className="bg-white rounded-t-[2rem] pt-6 pb-4"
-          style={{ width: '100%', height: '30%', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
-        >
-          <View className="absolute top-2 self-center w-12 h-1 bg-gray-400 rounded-full" />
-          <Text className="text-lg font-bold mb-3 px-4">Select to pay</Text>
-          <View className="px-4 space-y-3">
-            <TouchableOpacity
-              className="flex-row justify-between items-center p-3"
-              onPress={() => setSelectedOption('half')}
-            >
-              <View className="flex-row items-center justify-between gap-4">
-                <Text className="text-base font-medium">Pay Half Amount</Text>
-                <Text className="text-gray-600">₹100.00</Text>
-              </View>
-              <View
-                className={`w-5 h-5 rounded-full border-2 ${selectedOption === 'half' ? 'border-primary-100' : 'border-gray-400'
-                  } items-center justify-center`}
-              >
-                {selectedOption === 'half' && (
-                  <View className="w-2.5 h-2.5 bg-primary-100 rounded-full" />
-                )}
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className="flex-row justify-between items-center p-3"
-              onPress={() => setSelectedOption('full')}
-            >
-              <View className="flex-row items-center justify-between gap-4">
-                <Text className="text-base font-medium">Pay Full Amount</Text>
-                <Text className="text-gray-600">₹200.00</Text>
-              </View>
-              <View
-                className={`w-5 h-5 rounded-full border-2 ${selectedOption === 'full' ? 'border-blue-500' : 'border-gray-400'
-                  } items-center justify-center`}
-              >
-                {selectedOption === 'full' && (
-                  <View className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity
-            onPress={() => setIsPaymentModal(false)}
-            className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto mt-4"
-          >
-            <Text className="text-center text-white font-semibold">Pay Now</Text>
           </TouchableOpacity>
         </View>
       </Modal>
     </View>
   );
 };
-
 
 export default BookATableScreen;

@@ -1,0 +1,97 @@
+{
+  "project_info": {
+    "project_number": "825024769088",
+    "project_id": "wisbox-d50c3",
+    "storage_bucket": "wisbox-d50c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825024769088:android:4128e5daa62ae6411403a5",
+        "android_client_info": {
+          "package_name": "com.wisbox"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDz_0jQtGV1Tn_7gsnjGHZO_bmZxUcUfms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825024769088:android:85a28ff3b6fae6841403a5",
+        "android_client_info": {
+          "package_name": "com.wishbox"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDz_0jQtGV1Tn_7gsnjGHZO_bmZxUcUfms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825024769088:android:3fb5a9b3126195271403a5",
+        "android_client_info": {
+          "package_name": "com.wishbox.users.wishbox"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDz_0jQtGV1Tn_7gsnjGHZO_bmZxUcUfms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,13 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.wishbox">
 
-    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- Recommended feature declaration -->
     <uses-feature android:name="android.hardware.location.gps" />
 
     <application
@@ -38,6 +39,20 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}" />
-        <uses-library android:name="org.apache.http.legacy" android:required="false"/>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="high_importance_channel"
+            tools:replace="android:value" />
+        <meta-data
+            android:name="com.google.android.gms.signin.default_web_client_id"
+            android:value="@string/default_web_client_id"/>
+        <meta-data 
+            android:name="com.google.android.gms.auth.api.signin.v2.ENABLE_AUTHZ" 
+            android:value="true"/>
+        <meta-data
+            android:name="com.google.android.gms.auth.api.phone.SMS_CONSENT_SERVICE"
+            android:value="true"/>
+
+        <uses-library android:name="org.apache.http.legacy" android:required="false" />
     </application>
 </manifest>

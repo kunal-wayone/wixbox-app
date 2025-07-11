@@ -13,6 +13,8 @@ import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { ImagePath } from '../../constants/ImagePath';
 import { Fetch } from '../../utils/apiUtils';
+import { RootState } from '../../store/store';
+import {  useSelector } from 'react-redux';
 
 // Mock customer data
 const mockCustomers = [
@@ -32,12 +34,15 @@ const mockCustomers = [
   },
 ];
 
+
+
 const AddCustomerScreen = () => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const [searchQuery, setSearchQuery] = useState('');
   const [ordersList, setOrdersList] = useState([]);
   const [isLoading, setIsLoading] = useState(false)
+  const user: any | null = useSelector((state: RootState) => state.user.data);
   // const [filterOrders, setFilterOrders] = useState([])
 
   // Fetch menu items from server
@@ -116,7 +121,7 @@ const AddCustomerScreen = () => {
 
       {/* Title */}
       <Text className={`text-2xl font-semibold text-center mb-4 `}>
-        Manage Customers
+        {user?.role === 'user' ? 'Orders List' : 'Manage Customer'}
       </Text>
 
       {/* Search and Add Customer Section */}

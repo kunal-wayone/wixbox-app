@@ -1,15 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  Image,
-  Dimensions,
-  ToastAndroid,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, FlatList, Image, Dimensions, ToastAndroid, ActivityIndicator } from 'react-native';
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Modal from 'react-native-modal';
@@ -18,6 +7,7 @@ import { addToCart, removeFromCart } from '../../store/slices/cartSlice';
 import { ImagePath } from '../../constants/ImagePath';
 import { RootState } from '../../store/store';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import { useCallback, useEffect, useState } from 'react';
 
 const AddOrderScreen = () => {
   const navigation = useNavigation<any>();
@@ -30,23 +20,33 @@ const AddOrderScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartVisible, setIsCartVisible] = useState(false);
+  const itemsPerPage = 10;
 
   const fetchProducts = useCallback(async (pageNum: number, append = false) => {
-    if (!hasMore && append) return;
-    const endpoint: any = `/user/menu-items?page=${pageNum}`
+    if (pageNum > totalPages && append) return;
+
+    const endpoint = shopId
+      ? `/user/menu-items?store_id=${shopId}&page=${pageNum}&per_page=${itemsPerPage}`
+      : `/user/menu-items?page=${pageNum}&per_page=${itemsPerPage}`;
+
     try {
-      setIsLoading(!append);
-      setIsLoadingMore(append);
-      const response: any = await Fetch(`${endpoint}`, {}, 5000);
-      console.log(pageNum, page, append, endpoint, hasMore, response?.menuItems)
+      if (append) setIsLoadingMore(true);
+      else setIsLoading(true);
+
+      const response: any = await Fetch(endpoint, {}, 5000);
+
       if (!response.success) throw new Error('Failed to fetch products');
 
-      const newProducts = response.menuItems || [];
+      const newProducts = response.data.menu_items || [];
       setProducts(prev => (append ? [...prev, ...newProducts] : newProducts));
-      setHasMore(newProducts.length > 0); // Assume no more products if empty
+      setTotalPages(response.data.last_page || 1);
+
+      if (newProducts.length === 0 && append) {
+        ToastAndroid.show('No more products to load.', ToastAndroid.SHORT);
+      }
     } catch (error: any) {
       console.error('fetchProducts error:', error);
       ToastAndroid.show(error?.message || 'Failed to load products.', ToastAndroid.SHORT);
@@ -54,22 +54,20 @@ const AddOrderScreen = () => {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  }, [hasMore]);
+  }, [shopId, totalPages]);
 
   useEffect(() => {
-    if (isFocused) {
-      setPage(1);
-      setHasMore(true);
+    if (isFocused && page === 1 && products.length === 0) {
       fetchProducts(1);
     }
   }, [isFocused, fetchProducts]);
 
   const handleLoadMore = () => {
-    // if (!isLoadingMore && hasMore) {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchProducts(nextPage, true);
-    // }
+    if (page < totalPages && !isLoadingMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchProducts(nextPage, true);
+    }
   };
 
   const filteredProducts = products.filter((product: any) =>
@@ -77,16 +75,16 @@ const AddOrderScreen = () => {
   );
 
   const handleAddToCart = (product: any) => {
-    console.log(product)
     dispatch(
       addToCart({
-        id: product?.id,
+        id: product?.id.toString(),
         name: product?.item_name,
-        price: product?.price,
+        price: parseFloat(product?.price),
         quantity: 1,
-        image: product?.images[0],
+        image: product?.images[0] ?? '',
       })
     );
+    ToastAndroid.show(`${product?.item_name} added to cart`, ToastAndroid.SHORT);
   };
 
   const updateQuantity = (id: string, change: number) => {
@@ -96,6 +94,7 @@ const AddOrderScreen = () => {
     const newQty = item.quantity + change;
     if (newQty <= 0) {
       dispatch(removeFromCart(id));
+      ToastAndroid.show(`${item.name} removed from cart`, ToastAndroid.SHORT);
     } else {
       dispatch(
         addToCart({
@@ -120,66 +119,76 @@ const AddOrderScreen = () => {
       <Text style={{ fontSize: 14, color: '#374151', textAlign: 'center' }}>
         {item?.item_name}
       </Text>
+      <Text style={{ fontSize: 12, color: '#6B7280', textAlign: 'center' }}>
+        ₹{item?.price}
+      </Text>
     </TouchableOpacity>
   );
 
-  const renderCartItem = ({ item }: { item: any }) => {
-    console.log(item)
-    return (
-      <View
-        style={{
-          flexDirection: 'row',
-          backgroundColor: '#F9FAFB',
-          borderRadius: 12,
-          marginVertical: 8,
-          padding: 12,
-        }}>
-        <Image
-          source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
-          style={{ width: 80, height: 80, borderRadius: 10, marginRight: 12 }}
-          resizeMode="cover"
-        />
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 4 }}>
-            {item?.name}
-          </Text>
+  const renderCartItem = ({ item }: { item: any }) => (
+    <View
+      style={{
+        flexDirection: 'row',
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        marginVertical: 8,
+        padding: 12,
+      }}>
+      <Image
+        source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
+        style={{ width: 80, height: 80, borderRadius: 10, marginRight: 12 }}
+        resizeMode="cover"
+      />
+      <View style={{ flex: 1 }}>
+        <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 4 }}>
+          {item?.name}
+        </Text>
+        <Text style={{ color: '#6B7280', marginBottom: 4 }}>
+          ₹{item?.price}
+        </Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }} className='gap-2'>
+          <TouchableOpacity
+            className='bg-primary-30'
+            style={{
+              borderRadius: 6,
+              paddingHorizontal: 10,
+            }}
+            onPress={() => updateQuantity(item.id, -1)}>
+            <Text style={{ fontSize: 18 }}>-</Text>
+          </TouchableOpacity>
           <Text style={{ color: '#6B7280', marginBottom: 4 }}>
-            ₹{item?.price}
+            {item?.quantity}
           </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }} className='gap-2'>
-            <TouchableOpacity
-              className='bg-primary-30'
-              style={{
-                borderRadius: 6,
-                paddingHorizontal: 10,
-              }}
-              onPress={() => updateQuantity(item.id, -1)}>
-              <Text style={{ fontSize: 18 }}>-</Text>
-            </TouchableOpacity>
-            <Text style={{ color: '#6B7280', marginBottom: 4 }}>
-              {item?.quantity}
-            </Text>
-            <TouchableOpacity
-              className='bg-primary-30'
-              style={{
-                borderRadius: 6,
-                paddingHorizontal: 10,
-              }}
-              onPress={() => updateQuantity(item?.id, 1)}>
-              <Text style={{ fontSize: 18 }}>+</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            className='bg-primary-30'
+            style={{
+              borderRadius: 6,
+              paddingHorizontal: 10,
+            }}
+            onPress={() => updateQuantity(item?.id, 1)}>
+            <Text style={{ fontSize: 18 }}>+</Text>
+          </TouchableOpacity>
         </View>
       </View>
-    )
-  };
+    </View>
+  );
 
   const renderFooter = () => (
-    <View className="pb-20">
-      <TouchableOpacity className='bg-primary-80 rounded-lg  p-2 w-32 m-auto' onPress={() => handleLoadMore()}>
-        <Text className='text-white text-center'>Load More</Text>
-      </TouchableOpacity>
-      {isLoadingMore && <ActivityIndicator size="large" color="#999" style={{ marginTop: 20 }} />}
+    <View className="pb-20 flex-row justify-center items-center">
+      {page < totalPages && (
+        <TouchableOpacity
+          className='bg-primary-80 rounded-lg p-2 w-32'
+          onPress={handleLoadMore}
+          disabled={isLoadingMore}
+        >
+          <Text className='text-white text-center'>
+            {isLoadingMore ? 'Loading...' : 'Load More'}
+          </Text>
+        </TouchableOpacity>
+      )}
+      {isLoadingMore && (
+        <ActivityIndicator size="small" color="#007AFF" style={{ marginLeft: 10 }} />
+      )}
     </View>
   );
 
@@ -271,12 +280,10 @@ const AddOrderScreen = () => {
         <FlatList
           data={filteredProducts}
           renderItem={renderProductItem}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id.toString()}
           numColumns={2}
           contentContainerStyle={{ paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
-          // onEndReached={handleLoadMore}
-          // onEndReachedThreshold={0.5}
           ListFooterComponent={renderFooter}
         />
       )}
@@ -291,17 +298,29 @@ const AddOrderScreen = () => {
             backgroundColor: '#fff',
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
-            padding: 16,
+            padding: 8,
           }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>Your Cart</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12, paddingHorizontal: 8 }}>
+            Your Cart
+          </Text>
           <FlatList
             data={cartItems}
             renderItem={renderCartItem}
             keyExtractor={item => item.id}
             showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 8 }}
           />
-          <TouchableOpacity className='bg-primary-90 p-4 rounded-xl' onPress={() => navigation.goBack()}>
-            <Text className='text-center text-white'>Place Order</Text>
+          <TouchableOpacity
+            className='bg-primary-90 p-4 rounded-xl m-2'
+            onPress={() => {
+              setIsCartVisible(false);
+              navigation.navigate('AddCustomerFormScreen', { shopId });
+            }}
+            disabled={cartItems.length === 0}
+          >
+            <Text className='text-center text-white'>
+              {cartItems.length === 0 ? 'Cart is Empty' : 'Proceed to Checkout'}
+            </Text>
           </TouchableOpacity>
         </View>
       </Modal>

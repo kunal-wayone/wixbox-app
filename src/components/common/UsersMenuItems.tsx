@@ -166,12 +166,12 @@ const UsersMenuItems = ({ shopId }: any) => {
         <View key={item?.id} className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm">
           <View className="w-2/5 mr-3 items-center">
             <Image
-              source={item?.item?.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
+              source={item?.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
               className="w-full h-40 my-auto rounded-lg mb-2"
               resizeMode="cover"
             />
           </View>
-          <View className="flex-">
+          <View className="flex-1">
             {item?.offer && (
               <View className="self-start bg-primary-80 px-2 py-1 rounded-md mb-2">
                 <Text className="text-white text-xs font-semibold">{item?.offer}</Text>
@@ -201,7 +201,7 @@ const UsersMenuItems = ({ shopId }: any) => {
                   handleAddToCart(item);
                 }
               }}
-              className={`mt-2 ${isInCart ? 'bg-green-500' : 'bg-primary-90'} w-full px-3 py-2 rounded-lg`}
+              className={`mt-2 ${isInCart ? 'bg-green-600' : 'bg-primary-90'} w-full px-3 py-2 rounded-lg`}
             >
               <Text className="text-white text-center text-md font-medium">
                 {isInCart ? 'View Cart' : 'Add To Cart'}

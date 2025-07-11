@@ -94,7 +94,7 @@ const BookedTablesScreen = () => {
     };
 
     const renderBooking = ({ item }: any) => (
-        <View className="bg-primary-10 m-4 p-4 rounded-xl shadow-sm">
+        <View className="bg-primary-10 m-4 my-2 p-4 rounded-xl shadow-sm">
             <Text className="font-bold text-lg">{item.name}</Text>
             <Text className="text-gray-600 mb-1 mt-1 flex-row gap-1">
                 <Ionicons name="calendar-sharp" size={16} color="#B68AD4" /> {item.booking_date}{'  '}
@@ -142,7 +142,7 @@ const BookedTablesScreen = () => {
         <View className="flex-1 bg-gray-100 pt-4">
             {/* Header */}
             <View className="flex-row items-center mb-4 px-4">
-                <TouchableOpacity onPress={() => navigation.goBack()} className="pr-2 absolute left-4 z-10">
+                <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} className="pr-2 absolute left-4 z-10">
                     <Ionicons name="arrow-back" size={24} color="#111827" />
                 </TouchableOpacity>
                 <Text className="text-xl font-bold text-gray-800 text-center flex-1">My Bookings</Text>
@@ -165,7 +165,11 @@ const BookedTablesScreen = () => {
                     }
                 />
             )}
-
+            <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} className="p-3 rounded-xl w-11/12 m-auto mb-0   bg-primary-80  z-10">
+                <Text className='text-center text-white font-semibold'>
+                    Go To Home
+                </Text>
+            </TouchableOpacity>
             {/* Cancel Modal */}
             <Modal
                 visible={cancelModalVisible}

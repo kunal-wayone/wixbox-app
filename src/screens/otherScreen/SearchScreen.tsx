@@ -188,18 +188,45 @@ const SearchScreen = () => {
             data={restaurants}
             keyExtractor={(item: any) => item.id.toString()}
             renderItem={({ item }: any) => (
-              <TouchableOpacity onPress={() => navigation.navigate("ShopDetailsScreen", { shopId: item.id })}>
-                <View className="rounded-xl overflow-hidden mb-4 mx-4">
-                  <ImageBackground
-                    source={item?.restaurant_images?.[0] ? { uri: IMAGE_URL + item.restaurant_images[0] } : ImagePath.restaurant1}
-                    className="h-72 w-full justify-end"
-                    imageStyle={{ borderRadius: 16 }}
-                  >
-                    <View className="bg-white p-3 mx-2 mb-2 rounded-xl">
-                      <Text className="text-base font-semibold" numberOfLines={1}>{item.restaurant_name}</Text>
-                      <Text className="text-xs text-gray-600" numberOfLines={1}>{item.about_business}</Text>
+              <TouchableOpacity onPress={() => navigation.navigate("ShopDetailsScreen", { shop_info: item })}>
+                <View className="flex-row bg-primary-10 rounded-xl p-4 mb-4 mx-4 gap-4">
+                  <TouchableOpacity className='my-auto' >
+                    <Image
+                      source={item?.restaurant_images?.length > 0 ? { uri: IMAGE_URL + item.restaurant_images[0] } : ImagePath.restaurant1}
+                      className="w-28 h-28 rounded-xl"
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                  <View className="flex-1">
+                    <Text className="text-lg font-semibold" numberOfLines={1} ellipsizeMode='tail' >{item?.restaurant_name}</Text>
+                    <Text className="text-gray-500 mb-2">{item?.address}</Text>
+                    <View className="flex-row justify-between items-center mt-1">
+                      <View className="flex-row items-center">
+                        <Ionicons name="location-outline" size={16} color="gray" />
+                        <Text className="text-sm text-gray-600"> {item?.distance_km || 0} Km</Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <MaterialIcons name="access-time" size={16} color="gray" />
+                        <Text className="text-sm text-gray-600"> {item?.travel_time_mins || 0} min</Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <MaterialIcons name="star" size={16} color="#FFC727" />
+                        <Text className="text-sm text-gray-600"> {item?.average_rating || 0}</Text>
+                      </View>
                     </View>
-                  </ImageBackground>
+
+                    <TouchableOpacity
+                      // onPress={() => {
+                      //   const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
+                      //   Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
+                      // }}
+                      className="mt-2 bg-primary-90 w-full px-3 py-2 rounded-lg"
+                    >
+                      <Text className="text-white text-center text-md font-medium">
+                        Get Direction
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </TouchableOpacity>
             )}
@@ -221,7 +248,7 @@ const SearchScreen = () => {
                 <View className="flex-row bg-primary-10 rounded-xl p-4 mb-4 mx-4 gap-4">
                   <TouchableOpacity onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.id })}>
                     <Image
-                      source={{ uri: IMAGE_URL + item.images[0] }}
+                      source={item?.images.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
                       className="w-28 h-28 rounded-xl"
                       resizeMode="cover"
                     />

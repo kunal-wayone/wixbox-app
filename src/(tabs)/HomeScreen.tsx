@@ -182,7 +182,7 @@ const HomeScreen = () => {
         ToastAndroid.show('Status updated successfully!', ToastAndroid.SHORT);
         return response.data;
       } catch (error: any) {
-        console.error('toggleAdsStatus error:', error.message);
+        console.error('toggleAdsStatus error:', error);
         ToastAndroid.show(
           error?.message || 'Failed to toggle status.',
           ToastAndroid.SHORT

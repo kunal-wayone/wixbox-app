@@ -7,14 +7,37 @@ import './global.css';
 import { NavigationContainer } from '@react-navigation/native';
 import { store } from './src/store/store';
 import AuthProvider from './src/providers/AuthProvider';
-import { getToken, requestUserPermission } from './src/utils/notification/firebase';
+
+import {
+  requestUserPermission,
+  getFcmToken,
+  onForegroundMessageListener,
+  onTokenRefreshListener,
+  onNotificationOpenedAppHandler,
+  checkInitialNotification,
+} from './src/utils/notification/firebase';
+import { configureGoogleSignIn } from './src/utils/authentication/googleAuth';
 
 const App = () => {
+  useEffect(() => {
+     configureGoogleSignIn()
+    // Request permission and fetch token
+    requestUserPermission();
+    getFcmToken();
+    configureGoogleSignIn()
 
-  // useEffect(() => {
-  //   requestUserPermission()
-  //   getToken()
-  // }, [])
+    // Setup all listeners
+    const unsubscribeForeground = onForegroundMessageListener();
+    const unsubscribeTokenRefresh = onTokenRefreshListener();
+    onNotificationOpenedAppHandler();
+    checkInitialNotification();
+
+    // Cleanup on unmount
+    return () => {
+      // unsubscribeForeground();
+      unsubscribeTokenRefresh();
+    };
+  }, []);
 
   return (
     <ReduxProvider store={store}>

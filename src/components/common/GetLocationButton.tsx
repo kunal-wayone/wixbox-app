@@ -9,6 +9,7 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
+import { getToken } from '../../utils/notification/firebase';
 
 const GetLocationButton = ({ setLocation }: any) => {
     const [showOptions, setShowOptions] = useState(false);
@@ -66,8 +67,9 @@ const GetLocationButton = ({ setLocation }: any) => {
 
                     <Pressable
                         onPress={() => {
-                            setShowOptions(false);
-                            manualAddLocation();
+                            // setShowOptions(false);
+                            // manualAddLocation();
+                            getToken()
                         }}
                         className="flex-row items-center space-x-2 py-2"
                     >

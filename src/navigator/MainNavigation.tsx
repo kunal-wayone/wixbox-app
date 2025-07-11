@@ -47,16 +47,15 @@ import ContactUsScreen from '../screens/moreLInkPages/ContactUsScreen';
 import TermsConditionsScreen from '../screens/moreLInkPages/TermsConditionsScreen';
 import PrivacyPolicyScreen from '../screens/moreLInkPages/PrivecyPolicyScreen';
 import FaqsScreen from '../screens/moreLInkPages/FaqsScreen';
+import AllCategoriesScreen from '../screens/otherScreen/AllCategoriesScreen';
 
 const Stack = createNativeStackNavigator();
 
 const MainNavigation = () => {
   return (
-    <Stack.Navigator initialRouteName='HomeScreen' screenOptions={{ headerShown: false }}>
+    <Stack.Navigator initialRouteName='SplashScreen' screenOptions={{ headerShown: false }}>
       {/* Splash Always First */}
       <Stack.Screen name="SplashScreen" component={SplashScreen} />
-
-
       <Stack.Screen name="SplashScreen1" component={IntroScreen} />
       <Stack.Screen name="AccountTypeScreen" component={AccountTypeScreen} />
       <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
@@ -97,6 +96,7 @@ const MainNavigation = () => {
       <Stack.Screen name="TableBookingFormScreen" component={TableBookingFormScreen} />
       <Stack.Screen name="BookedTablesScreen" component={BookedTablesScreen} />
       <Stack.Screen name="MenuItemListScreen" component={MenuItemListScreen} />
+      <Stack.Screen name="AllCategoriesScreen" component={AllCategoriesScreen} />
 
 
       {/* More Links Screens */}
@@ -105,6 +105,7 @@ const MainNavigation = () => {
       <Stack.Screen name="TermsConditionScreen" component={TermsConditionsScreen} />
       <Stack.Screen name="PrivecyPolicyScreen" component={PrivacyPolicyScreen} />
       <Stack.Screen name="FaqsScreen" component={FaqsScreen} />
+
 
 
 
