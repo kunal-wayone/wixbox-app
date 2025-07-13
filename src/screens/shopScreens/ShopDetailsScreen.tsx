@@ -41,7 +41,7 @@ const ShopDetailsScreen = () => {
   const scrollY = useRef<any>(new Animated.Value(0)).current;
   const tabBarRef = useRef<any>(null);
   const [tabBarOffset, setTabBarOffset] = useState(0);
-  console.log(shop_info)
+
   // Parse shift_details safely
   const shiftDetails = shop_info?.shift_details
     ? JSON.parse(shop_info.shift_details)
@@ -94,19 +94,6 @@ const ShopDetailsScreen = () => {
   if (shop_info?.payment_card) paymentMethods.push('Card');
   if (shop_info?.payment_upi) paymentMethods.push('UPI');
 
-  // Tab bar layout
-  // const onTabBarLayout = (event) => {
-  //   tabBarRef.current?.measure?.((x, y, width, height, pageX, pageY) => {
-  //     setTabBarOffset(pageY);
-  //   });
-  // };
-
-  // const translateY = scrollY.interpolate({
-  //   inputRange: [0, tabBarOffset],
-  //   outputRange: [0, -tabBarOffset],
-  //   extrapolate: 'clamp',
-  // });
-
   // Render tab content
   const renderTabContent = () => {
     switch (activeTab) {
@@ -154,6 +141,7 @@ const ShopDetailsScreen = () => {
   const renderTableItem = ({ item }: any) => {
     const seats = parseInt(item.seats) || 2;
     const isSelected = selectedTable?.table_number === item.table_number && selectedTable?.floor === item.floor;
+    const isAvailable = item.is_booked !== '1';
 
     const getSeatDistribution = (count: any) => {
       if (count <= 8) {
@@ -177,7 +165,7 @@ const ShopDetailsScreen = () => {
     const seatThickness = 6;
 
     const getLineColor = () => {
-      if (item.is_booked === "1") return 'lightgray';
+      if (!isAvailable) return 'lightgray';
       if (item.premium === 1) return isSelected ? "#00C01A80" : '#B68AD480';
       return '#00C01A80';
     };
@@ -199,17 +187,17 @@ const ShopDetailsScreen = () => {
           borderRadius: 6,
           ...(isHorizontal
             ? {
-              width: seatSize,
-              height: seatThickness,
-              left: center - seatSize / 2,
-              [side]: 1,
-            }
+                width: seatSize,
+                height: seatThickness,
+                left: center - seatSize / 2,
+                [side]: 1,
+              }
             : {
-              width: seatThickness,
-              height: seatSize,
-              top: center - seatSize / 2,
-              [side]: -1,
-            }),
+                width: seatThickness,
+                height: seatSize,
+                top: center - seatSize / 2,
+                [side]: -1,
+              }),
         };
 
         lines.push(<View key={`${side}-seat-${i}`} style={style} />);
@@ -220,9 +208,9 @@ const ShopDetailsScreen = () => {
     return (
       <TouchableOpacity
         className={`flex-1 m-2 items-center justify-center ${seats > 8 ? 'col-span-2' : ''}`}
-        disabled={item.is_booked === '1'}
+        disabled={!isAvailable}
         onPress={() => {
-          if (item.is_booked !== '1') {
+          if (isAvailable) {
             setSelectedTable(item);
           } else {
             ToastAndroid.show("This table is already booked.", ToastAndroid.SHORT);
@@ -233,24 +221,35 @@ const ShopDetailsScreen = () => {
           className={`justify-center items-center ${seats <= 8 ? 'w-24 h-24' : 'w-44 h-24'} rounded-xl`}
         >
           <View
-            className={`w-10/12 h-16 rounded-xl flex-col justify-center items-center ${isSelected ? 'bg-green-500' :
+            className={`w-10/12 h-16 rounded-xl flex-col justify-center items-center ${
+              isSelected ? 'bg-green-500' :
               item.premium === 1 ? 'border border-[#B68AD480] rounded-xl' :
-                item.is_booked === '1' ? 'bg-gray-100' : 'border border-green-300 rounded-xl'
-              }`}
+              !isAvailable ? 'bg-gray-100' : 'border border-green-300 rounded-xl'
+            }`}
           >
             <Text
-              className={`text-xs font-semibold ${item.is_booked === '1' ? 'text-gray-400' :
+              className={`text-xs font-semibold ${
+                !isAvailable ? 'text-gray-400' :
                 isSelected ? 'text-white' : 'text-black'
-                }`}
+              }`}
             >
               T{item.table_number} ({item.seats})
             </Text>
             <Text
-              className={`text-xs font-semibold ${item.is_booked === '1' ? 'text-gray-400' :
+              className={`text-xs font-semibold ${
+                !isAvailable ? 'text-gray-400' :
                 isSelected ? 'text-white' : 'text-black'
-                }`}
+              }`}
             >
               ₹ {item.price}/-
+            </Text>
+            <Text
+              className={`text-xs font-semibold ${
+                !isAvailable ? 'text-red-500' :
+                isSelected ? 'text-white' : 'text-green-500'
+              }`}
+            >
+              {isAvailable ? 'Available' : 'Booked'}
             </Text>
           </View>
           {seatDistribution.map(({ side, count }) => renderChairLines(side, count))}
@@ -262,13 +261,11 @@ const ShopDetailsScreen = () => {
   // Floor tab rendering
   const renderFloorTab = ({ item }: any) => (
     <TouchableOpacity
-      className={`py-2 px-4 m-2 h-10 mb-8 rounded-lg ${selectedFloor === item.floor ? 'bg-primary-90' : 'bg-gray-200'
-        }`}
+      className={`py-2 px-4 m-2 h-10 mb-8 rounded-lg ${selectedFloor === item.floor ? 'bg-primary-90' : 'bg-gray-200'}`}
       onPress={() => setSelectedFloor(item.floor)}
     >
       <Text
-        className={`font-poppins-regular ${selectedFloor === item.floor ? 'text-white' : 'text-black'
-          }`}
+        className={`font-poppins-regular ${selectedFloor === item.floor ? 'text-white' : 'text-black'}`}
       >
         {item.floor}
       </Text>
@@ -292,10 +289,6 @@ const ShopDetailsScreen = () => {
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
-        // onScroll={Animated.event(
-        //   [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-        //   { useNativeDriver: true }
-        // )}
         scrollEventThrottle={16}
       >
         <View className="flex-row items-center justify-between mb-6">
@@ -358,15 +351,12 @@ const ShopDetailsScreen = () => {
 
         <Animated.View
           ref={tabBarRef}
-          // onLayout={()=>onTabBarLayout}
           className="flex-row justify-between border-b-2 border-gray-200 mb-4"
-        // style={{ transform: [{ translateY }] }}
         >
           {['About', 'Menu', 'Reviews', 'Post'].map((tab) => (
             <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} className="flex-1 items-center">
               <Text
-                className={`text-lg font-poppins px-2 ${activeTab === tab ? 'font-bold text-black' : 'text-gray-500'
-                  }`}
+                className={`text-lg font-poppins px-2 ${activeTab === tab ? 'font-bold text-black' : 'text-gray-500'}`}
               >
                 {tab}
               </Text>
@@ -408,7 +398,7 @@ const ShopDetailsScreen = () => {
             className="w-full justify-end"
             onPress={() => setIsModalVisible(false)}
           >
-            <View className="bg-white rounded-t-3xl  pt-6 pb-4 " style={{ height: '85%' }}>
+            <View className="bg-white rounded-t-3xl pt-6 pb-4" style={{ height: '85%' }}>
               <View className="w-12 h-1 bg-gray-400 rounded-full self-center mb-3" />
               <Text className="text-lg font-bold mb-3 px-4">Select a Table</Text>
               <FlatList
@@ -426,7 +416,6 @@ const ShopDetailsScreen = () => {
                 keyExtractor={(item) => `${item.floor}-${item.table_number}`}
                 numColumns={2}
                 showsVerticalScrollIndicator={false}
-                className=''
                 contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
               />
               <TouchableOpacity
@@ -463,9 +452,9 @@ const ShopDetailsScreen = () => {
           <TouchableOpacity
             activeOpacity={1}
             className="w-11/12"
-            onPress={() => { }}
+            onPress={() => {}}
           >
-            <View className="bg-white rounded-2xl p-4 ">
+            <View className="bg-white rounded-2xl p-4">
               <TouchableOpacity
                 onPress={() => setIsModalTableReserveVisible(false)}
                 className="absolute top-0 right-0 z-[1000]"
@@ -495,6 +484,7 @@ const ShopDetailsScreen = () => {
                   <Text className="text-base mb-1">Table Type:</Text>
                   <Text className="text-base mb-1">Seats:</Text>
                   <Text className="text-base mb-1">Price:</Text>
+                  <Text className="text-base mb-1">Availability:</Text>
                 </View>
                 <View className="flex-1 ml-2 items-end">
                   <Text className="text-base mb-1">{selectedTable?.floor}</Text>
@@ -504,21 +494,27 @@ const ShopDetailsScreen = () => {
                   </Text>
                   <Text className="text-base mb-1">{selectedTable?.seats}</Text>
                   <Text className="text-base mb-1">₹ {selectedTable?.price}/-</Text>
+                  <Text className={`text-base mb-1 ${selectedTable?.is_booked === "1" ? 'text-red-500' : 'text-green-500'}`}>
+                    {selectedTable?.is_booked === "1" ? 'Booked' : 'Available'}
+                  </Text>
                 </View>
               </View>
               <View className="border-b border-dashed border-gray-400 mx-4 my-2" />
               <TouchableOpacity
-                className="bg-primary-80 rounded-xl p-4 mx-4 mt-5"
+                className={`rounded-xl p-4 mx-4 mt-5 ${selectedTable?.is_booked === "1" ? 'bg-gray-300' : 'bg-primary-80'}`}
                 onPress={() => {
-                  if (selectedTable) {
+                  if (selectedTable && selectedTable.is_booked !== "1") {
                     navigation.navigate("TableBookingFormScreen", {
                       shop_id: shop_info?.id,
                       table_info: [selectedTable],
                     });
+                  } else {
+                    ToastAndroid.show("This table is already booked.", ToastAndroid.SHORT);
                   }
                 }}
+                disabled={selectedTable?.is_booked === "1"}
               >
-                <Text className="text-center text-white font-semibold font-poppins">
+                <Text className={`text-center font-semibold font-poppins ${selectedTable?.is_booked === "1" ? 'text-gray-500' : 'text-white'}`}>
                   Pay ₹ {selectedTable?.price}/- & Reserve Now
                 </Text>
               </TouchableOpacity>

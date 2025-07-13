@@ -93,18 +93,18 @@ const SplashScreen = () => {
       if (user) {
         console.log(user, "dskjfkjjdsk")
         if (user?.role === 'user') {
-          navigation.navigate('HomeScreen', {
+          navigation.replace('HomeScreen', {
             screen: 'Market',
           });
           return
         } else {
           if (user?.shopcreated) {
-            navigation.navigate('HomeScreen', {
+            navigation.replace('HomeScreen', {
               screen: 'Home',
             });
             return
           } else if (user?.shopcreated) {
-            navigation.navigate('CreateShopScreen');
+            navigation.replace('CreateShopScreen');
             console.log("shor creaetd")
             return
           } else {

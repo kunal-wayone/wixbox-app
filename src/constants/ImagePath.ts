@@ -53,6 +53,9 @@ export const ImagePath = {
     cod: require('../assets/images/icons/cod.png'),
     pin: require('../assets/images/icons/pin.png'),
     share: require('../assets/images/icons/share.png'),
+    nonveg: require('../assets/images/icons/nonveg.png'),
+    veg: require('../assets/images/icons/veg.png'),
+
 
 
 

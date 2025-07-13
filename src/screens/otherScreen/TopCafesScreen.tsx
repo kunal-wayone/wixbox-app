@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchWishlist, removeWishlistShop, addWishlistShop } from '../../store/slices/wishlistSlice';
 import { AppDispatch, RootState } from '../../store/store';
+import Shop2 from '../../components/common/Shop2';
 const PER_PAGE = 4;
 
 const SkeletonCard = () => (
@@ -52,7 +53,7 @@ const TopCafesScreen = () => {
   const [loadMoreLoading, setLoadMoreLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchStores = async (pageNumber: number, isInitial = false) => {
+  const fetchStores = useCallback(async (pageNumber: number, isInitial = false) => {
     if ((loadMoreLoading && !isInitial) || (!hasMore && !isInitial)) return;
 
     if (isInitial) setInitialLoading(true);
@@ -65,12 +66,6 @@ const TopCafesScreen = () => {
       const newShops = response?.data?.top_shops || [];
       const pagination = response?.data?.pagination;
 
-      // Update shops with wishlist status
-      // const updatedShops = newShops.map((shop: any) => ({
-      //   ...shop,
-      //   is_wishlisted: wishlistShops.some(wishlistShop => wishlistShop.shop_id === shop.id.toString()),
-      // }));
-
       setData(prev => (isInitial ? newShops : [...prev, ...newShops]));
       setHasMore(pagination?.current_page < pagination?.last_page);
       setPage(pagination?.current_page + 1);
@@ -79,12 +74,12 @@ const TopCafesScreen = () => {
     } finally {
       isInitial ? setInitialLoading(false) : setLoadMoreLoading(false);
     }
-  };
+  }, [loadMoreLoading, hasMore]);
 
   useEffect(() => {
     dispatch(fetchWishlist());
     fetchStores(1, true);
-  }, [dispatch]);
+  }, [dispatch, fetchStores]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -103,7 +98,6 @@ const TopCafesScreen = () => {
         await dispatch(addWishlistShop({ shop_id: shop.id.toString() })).unwrap();
         ToastAndroid.show('Added to wishlist', ToastAndroid.SHORT);
       }
-      // Update local data to reflect wishlist change
       setData(prev =>
         prev.map(d =>
           d.id === shop.id ? { ...d, is_wishlisted: !d.is_wishlisted } : d
@@ -114,78 +108,17 @@ const TopCafesScreen = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: any }) => (
-    <TouchableOpacity
-      onPress={() => navigation.navigate("ShopDetailsScreen", { shop_info: item })}
-      className="w-full mx-auto px-4 py-2">
-      <View className="rounded-xl overflow-hidden relative">
-        <ImageBackground
-          source={item?.restaurant_images?.length ? { uri: IMAGE_URL + item.restaurant_images[0] } : ImagePath.restaurant1}
-          className="h-72 w-full justify-end relative"
-          imageStyle={{ borderRadius: 16 }}
-        >
-          <TouchableOpacity
-            className="absolute top-2 right-2 z-10"
-            onPress={() => handleWishlistToggle(item)}
-            disabled={status === 'loading'}
-          >
-            <MaterialIcons
-              name={item?.is_wishlisted ? 'favorite' : 'favorite-outline'}
-              size={24}
-              color={item?.is_wishlisted ? 'red' : 'white'}
-            />
-          </TouchableOpacity>
-          <View className="absolute inset-0 bg-black" style={{ opacity: 0.3 }} />
-          <View className="bg-white p-3 w-11/12 mx-auto rounded-xl bottom-4">
-            <View className="flex-row justify-between items-center">
-              <View>
-                <Text className="text-base font-semibold py-1 text-gray-900" numberOfLines={1}>
-                  {item?.restaurant_name?.length > 18
-                    ? item.restaurant_name.slice(0, 18) + '...'
-                    : item?.restaurant_name}
-                </Text>
-                <Text className="text-xs mb-2 w-40 text-gray-900" numberOfLines={1}>
-                  {item?.about_business?.length > 40
-                    ? item.about_business.slice(0, 40) + '...'
-                    : item?.about_business}
-                </Text>
-              </View>
-              <View className="flex-row items-center bg-gray-200 rounded-md p-1 space-x-1">
-                <Icon name="location" size={14} color="#000" />
-                <Text className="text-xs text-gray-900">{item.distance_km || "NA"} Km</Text>
-              </View>
-            </View>
-            <View className="h-px bg-gray-300 my-1" />
-            <View className="flex-row items-center justify-between bg-white rounded-lg p-2">
-              <View className="flex-row items-center space-x-1">
-                <Icon name="time" size={14} color="#6B7280" />
-                <Text className="text-xs text-gray-500">{item?.travel_time_mins || "NA"} min</Text>
-              </View>
-              <View className="h-4 w-px bg-gray-300" />
-              <View className="flex-row items-center space-x-1">
-                <Icon name="star" size={14} color="#6B7280" />
-                <Text className="text-xs text-gray-500"> {item?.average_rating || 0}</Text>
-              </View>
-            </View>
-          </View>
-        </ImageBackground>
-      </View>
-    </TouchableOpacity>
-  );
-
   const Header = () => (
     <View className='mb-4'>
       <TouchableOpacity onPress={() => navigation.goBack()} className="absolute top-5 left-5 z-10">
         <Ionicons name="arrow-back" color="#fff" size={24} />
       </TouchableOpacity>
-
       <Image
         source={ImagePath?.cofee}
         className="w-44 h-44 absolute top-[-7%] left-[-10%] z-[1] rounded-xl"
         resizeMode="contain"
         tintColor="#FFFFFF33"
       />
-
       <View className="bg-primary-80 px-4 py-14 justify-end h-56 rounded-b-[2.5rem]">
         <Text className="text-white mb-1 font-bold text-2xl">Top Cafes</Text>
         <Text className="text-white">Explore the best-rated cafés in your city.</Text>
@@ -215,17 +148,6 @@ const TopCafesScreen = () => {
       );
     }
 
-    if (hasMore && data.length > 0) {
-      return (
-        <TouchableOpacity
-          onPress={() => fetchStores(page)}
-          className="mx-4 my-4 py-3 bg-primary-80 rounded-xl"
-        >
-          <Text className="text-center text-white font-semibold">Load More</Text>
-        </TouchableOpacity>
-      );
-    }
-
     return null;
   };
 
@@ -236,12 +158,18 @@ const TopCafesScreen = () => {
         keyExtractor={(item, index) =>
           initialLoading ? index.toString() : item.id.toString()
         }
-        renderItem={initialLoading ? () => <SkeletonCard /> : renderItem}
+        renderItem={initialLoading ? () => <SkeletonCard /> : (item: any) => <Shop2 item={item} handleWishlistToggle={handleWishlistToggle} status={status} />}
         ListHeaderComponent={Header}
         ListFooterComponent={renderFooter}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        onEndReached={() => {
+          if (!initialLoading && !loadMoreLoading && hasMore) {
+            fetchStores(page);
+          }
+        }}
+        onEndReachedThreshold={0.5}
         contentContainerStyle={{ paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
       />

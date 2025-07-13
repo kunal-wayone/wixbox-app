@@ -17,6 +17,7 @@ import { fetchWishlist, removeWishlistItem, addWishlistItem, removeWishlistShop,
 import { AppDispatch, RootState } from '../store/store';
 import { Fetch, IMAGE_URL } from '../utils/apiUtils';
 import { useNavigation } from '@react-navigation/native';
+import Shop from './common/Shop';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.7; // 1 full + 1/2 card peek
@@ -227,16 +228,38 @@ const ProductSlider = () => {
         onScroll={handleScroll}
         scrollEventThrottle={16} // Adjust for smooth scrolling
       >
-        {(initialLoading ? Array(3).fill(0) : data).map((item, index) =>
+        {(initialLoading ? Array(3).fill(0) : data).map((store, index) =>
           initialLoading ? (
             <SkeletonCard key={index} />
           ) : (
-            renderItem({ item, index })
+            <View key={store.id} style={{ width: CARD_WIDTH }}>
+              <Shop
+                id={store.id}
+                name={store.name}
+                description={store.description || 'No description available'}
+                images={store?.restaurant_images || []}
+                address={store.address || 'No address provided'}
+                phone={store.phone || 'No phone provided'}
+                rating={store.rating || 0}
+                categories={store.categories || []}
+                isOpen={store.is_open !== false}
+                featuredItems={
+                  store.featured_items?.map((item) => ({
+                    id: item.id,
+                    name: item.name,
+                    price: item.price,
+                    image: item.image || ImagePath.item1,
+                  })) || []
+                }
+                maxImages={5}
+                item={store}
+              />
+            </View>
           )
         )}
         {renderFooter()}
-      </ScrollView>
-    </View>
+      </ScrollView >
+    </View >
   );
 };
 

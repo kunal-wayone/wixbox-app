@@ -15,7 +15,12 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchWishlist, removeWishlistItem, addWishlistItem } from '../../store/slices/wishlistSlice';
+import {
+  fetchWishlist,
+  removeWishlistItem,
+  addWishlistItem,
+  clearWishlistError,
+} from '../../store/slices/wishlistSlice';
 import { AppDispatch, RootState } from '../../store/store';
 
 const PER_PAGE = 5;
@@ -35,7 +40,7 @@ const SkeletonCard = () => (
 const HighOnDemandScreen = () => {
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<AppDispatch>();
-  const { items: wishlistItems, status } = useSelector((state: RootState) => state.wishlist);
+  const { menu_items: wishlistItems, status, error } = useSelector((state: RootState) => state.wishlist);
 
   const [data, setData] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -43,6 +48,13 @@ const HighOnDemandScreen = () => {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (error) {
+      ToastAndroid.show(error, ToastAndroid.SHORT);
+      dispatch(clearWishlistError());
+    }
+  }, [error]);
 
   const fetchItems = async (pageNumber = 1, isInitial = false) => {
     if (loadingMore && !isInitial) return;
@@ -61,7 +73,7 @@ const HighOnDemandScreen = () => {
       // Update items with wishlist status
       const updatedItems = items.map((item: any) => ({
         ...item,
-        fav: wishlistItems.some(wishlistItem => wishlistItem.menu_item_id === item.id.toString()),
+        fav: wishlistItems.some(w => w.id === item.id),
       }));
 
       setData(prev => (isInitial ? updatedItems : [...prev, ...updatedItems]));
@@ -90,19 +102,16 @@ const HighOnDemandScreen = () => {
   const handleWishlistToggle = async (item: any) => {
     try {
       if (item.fav) {
-        await dispatch(removeWishlistItem({ menu_item_id: item.id.toString() })).unwrap();
+        await dispatch(removeWishlistItem({ menu_item_id: item.id })).unwrap();
         ToastAndroid.show('Removed from wishlist', ToastAndroid.SHORT);
       } else {
-        await dispatch(addWishlistItem({ menu_item_id: item.id.toString() })).unwrap();
+        await dispatch(addWishlistItem({ menu_item_id: item.id })).unwrap();
         ToastAndroid.show('Added to wishlist', ToastAndroid.SHORT);
       }
-      // Update local data to reflect wishlist change
       setData(prev =>
-        prev.map(d =>
-          d.id === item.id ? { ...d, fav: !d.fav } : d
-        )
+        prev.map(d => (d.id === item.id ? { ...d, fav: !d.fav } : d))
       );
-    } catch (error) {
+    } catch {
       ToastAndroid.show('Failed to update wishlist', ToastAndroid.SHORT);
     }
   };
@@ -129,13 +138,13 @@ const HighOnDemandScreen = () => {
         resizeMode="cover"
       />
       <View style={{ flex: 1 }}>
-        <Text numberOfLines={1} ellipsizeMode='tail' className="text-xl font-bold">{item?.item_name}</Text>
+        <Text numberOfLines={1} className="text-xl font-bold">{item?.item_name}</Text>
         <View className="flex-row items-center gap-4 mb-2">
           <Text className="text-gray-500">{item?.category?.name}</Text>
           <Text className="text-gray-500">{item?.distance || 'NA'} KM</Text>
         </View>
         <Text className="mb-1">₹{item?.price}/-</Text>
-        <Text numberOfLines={1} ellipsizeMode='tail'>{item?.shop?.restaurant_name || 'NA'}</Text>
+        <Text numberOfLines={1}>{item?.shop?.restaurant_name || 'NA'}</Text>
       </View>
     </View>
   );
@@ -174,21 +183,10 @@ const HighOnDemandScreen = () => {
   );
 
   const renderFooter = () => {
-    if (loadingMore) {
-      return (
-        <>
-          <SkeletonCard />
-          <SkeletonCard />
-        </>
-      );
-    }
+    if (loadingMore) return (<><SkeletonCard /><SkeletonCard /></>);
 
     if (!hasMore && data.length > 0) {
-      return (
-        <Text className="text-center text-gray-400 py-4">
-          No more data found.
-        </Text>
-      );
+      return <Text className="text-center text-gray-400 py-4">No more data found.</Text>;
     }
 
     if (hasMore && data.length > 0) {
@@ -197,9 +195,7 @@ const HighOnDemandScreen = () => {
           onPress={() => fetchItems(page)}
           className="my-4 py-3 bg-primary-80 w-1/3 m-auto rounded-xl"
         >
-          <Text className="text-center text-white font-semibold">
-            Load More
-          </Text>
+          <Text className="text-center text-white font-semibold">Load More</Text>
         </TouchableOpacity>
       );
     }
@@ -217,9 +213,7 @@ const HighOnDemandScreen = () => {
         renderItem={initialLoading ? () => <SkeletonCard /> : renderItem}
         ListHeaderComponent={Header}
         ListFooterComponent={renderFooter}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         contentContainerStyle={{ paddingBottom: 80 }}
         showsVerticalScrollIndicator={false}
       />

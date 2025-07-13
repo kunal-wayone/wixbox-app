@@ -1,190 +1,185 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Fetch, Post, Delete } from '../../utils/apiUtils';
 
-interface WishlistItem {
-    menu_item_id: string;
-    name?: string;
-    price?: number;
-    added_at?: string;
+interface Shop {
+  id: number;
+  restaurant_name: string;
+  restaurant_images: string[];
+  address: string;
+  city: string;
+  state: string;
+  phone: string;
+  [key: string]: any;
 }
 
-interface WishlistShop {
-    shop_id: string;
-    name?: string;
-    added_at?: string;
+interface MenuItem {
+  id: number;
+  item_name: string;
+  price: string;
+  description: string;
+  stock_quantity: number;
+  unit: string;
+  subunit: string;
+  status: number;
+  images: string[];
+  shop: Shop;
+  category: {
+    id: number;
+    name: string;
+  };
+  average_rating: number;
+  is_wishlisted: boolean;
 }
 
 interface WishlistState {
-    items: WishlistItem[];
-    shops: WishlistShop[];
-    status: 'idle' | 'loading' | 'succeeded' | 'failed';
-    error: string | null;
+  shop_ids: number[];
+  menu_items: MenuItem[];
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
 }
 
 const initialState: WishlistState = {
-    items: [],
-    shops: [],
-    status: 'idle',
-    error: null,
+  shop_ids: [],
+  menu_items: [],
+  status: 'idle',
+  error: null,
 };
 
-// Add item to wishlist
-export const addWishlistItem = createAsyncThunk(
-    'wishlist/addItem',
-    async (body: { menu_item_id: string }, { rejectWithValue }) => {
-        try {
-            const response: any = await Post('/user/wishlist-place', body, 5000);
-            console.log(response)
-            return response.data;
-        } catch (error: any) {
-            console.error('Failed to add item to wishlist', error);
-            return rejectWithValue('Failed to add item to wishlist');
-        }
-    }
-);
-
-// Add shop to wishlist
-export const addWishlistShop = createAsyncThunk(
-    'wishlist/addShop',
-    async (body: { shop_id: string }, { rejectWithValue }) => {
-        try {
-            const response: any = await Post('/user/wishlist-place', body, 5000);
-            console.log(response)
-            return response.data;
-        } catch (error: any) {
-            console.error('Failed to add shop to wishlist', error);
-            return rejectWithValue('Failed to add shop to wishlist');
-        }
-    }
-);
-
-// Remove item from wishlist
-export const removeWishlistItem = createAsyncThunk(
-    'wishlist/removeItem',
-    async (body: { menu_item_id: string }, { rejectWithValue }) => {
-        try {
-            await Delete('/user/wishlist-place', body, {}, 5000);
-            return body.menu_item_id;
-        } catch (error: any) {
-            console.error('Failed to remove item from wishlist', error);
-            return rejectWithValue('Failed to remove item from wishlist');
-        }
-    }
-);
-
-// Remove shop from wishlist
-export const removeWishlistShop = createAsyncThunk(
-    'wishlist/removeShop',
-    async (body: { shop_id: string }, { rejectWithValue }) => {
-        try {
-            await Delete('/user/wishlist-place', body, {}, 5000);
-            return body.shop_id;
-        } catch (error: any) {
-            console.error('Failed to remove shop from wishlist', error);
-            return rejectWithValue('Failed to remove shop from wishlist');
-        }
-    }
-);
-
-// Fetch wishlist
+// Fetch wishlist (unified API response)
 export const fetchWishlist = createAsyncThunk(
-    'wishlist/fetchWishlist',
-    async (_, { rejectWithValue }) => {
-        try {
-            const response: any = await Fetch<{ items: WishlistItem[]; shops: WishlistShop[] }>(
-                '/user/wishlist-place',
-                undefined,
-                5000
-            );
-            return response.data;
-        } catch (error: any) {
-            console.error('Failed to fetch wishlist', error);
-            return rejectWithValue('Failed to fetch wishlist');
-        }
+  'wishlist/fetchWishlist',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response: any = await Fetch('/user/wishlist', undefined, 5000);
+      return response.data.wishlist; // array of { id, type, data }
+    } catch (error) {
+      return rejectWithValue('Failed to fetch wishlist');
     }
+  }
 );
 
+// Add item
+export const addWishlistItem = createAsyncThunk(
+  'wishlist/addWishlistItem',
+  async (body: { menu_item_id: number }, { rejectWithValue }) => {
+    try {
+      const response: any = await Post('/user/wishlist-product', body, 5000);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue('Failed to add wishlist item');
+    }
+  }
+);
+
+// Remove item
+export const removeWishlistItem = createAsyncThunk(
+  'wishlist/removeWishlistItem',
+  async (body: { menu_item_id: number }, { rejectWithValue }) => {
+    try {
+      await Delete('/user/wishlist-product', body, {}, 5000);
+      return body.menu_item_id;
+    } catch (error) {
+      return rejectWithValue('Failed to remove wishlist item');
+    }
+  }
+);
+
+// Add shop
+export const addWishlistShop = createAsyncThunk(
+  'wishlist/addWishlistShop',
+  async (body: { shop_id: number }, { rejectWithValue }) => {
+    try {
+      const response: any = await Post('/user/wishlist-place', body, 5000);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue('Failed to add wishlist shop');
+    }
+  }
+);
+
+// Remove shop
+export const removeWishlistShop = createAsyncThunk(
+  'wishlist/removeWishlistShop',
+  async (body: { shop_id: number }, { rejectWithValue }) => {
+    try {
+      await Delete('/user/wishlist-place', body, {}, 5000);
+      return body.shop_id;
+    } catch (error) {
+      return rejectWithValue('Failed to remove wishlist shop');
+    }
+  }
+);
+
+// Slice
 const wishlistSlice = createSlice({
-    name: 'wishlist',
-    initialState,
-    reducers: {
-        clearError: (state) => {
-            state.error = null;
-        },
-        resetWishlistState: (state) => {
-            state.items = [];
-            state.shops = [];
-            state.status = 'idle';
-            state.error = null;
-        },
+  name: 'wishlist',
+  initialState,
+  reducers: {
+    clearWishlistError: (state) => {
+      state.error = null;
     },
-    extraReducers: (builder) => {
-        builder
-            // Fetch Wishlist
-            .addCase(fetchWishlist.pending, (state) => {
-                state.status = 'loading';
-                state.error = null;
-            })
-            .addCase(fetchWishlist.fulfilled, (state, action: PayloadAction<{ items: WishlistItem[]; shops: WishlistShop[] }>) => {
-                state.status = 'succeeded';
-                state.items = action.payload.items;
-                state.shops = action.payload.shops;
-                state.error = null;
-            })
-            .addCase(fetchWishlist.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.payload as string;
-            })
-            // Add Item
-            .addCase(addWishlistItem.pending, (state) => {
-                state.status = 'loading';
-                state.error = null;
-            })
-            .addCase(addWishlistItem.fulfilled, (state, action: PayloadAction<WishlistItem>) => {
-                state.status = 'succeeded';
-                state.items.push(action.payload);
-                state.error = null;
-            })
-            .addCase(addWishlistItem.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.payload as string;
-            })
-            // Add Shop
-            .addCase(addWishlistShop.pending, (state) => {
-                state.status = 'loading';
-                state.error = null;
-            })
-            .addCase(addWishlistShop.fulfilled, (state, action: PayloadAction<WishlistShop>) => {
-                state.status = 'succeeded';
-                state.shops.push(action.payload);
-                state.error = null;
-            })
-            .addCase(addWishlistShop.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.payload as string;
-            })
-            // Remove Item
-            .addCase(removeWishlistItem.fulfilled, (state, action: PayloadAction<string>) => {
-                state.status = 'succeeded';
-                state.items = state.items.filter(item => item.menu_item_id !== action.payload);
-                state.error = null;
-            })
-            .addCase(removeWishlistItem.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.payload as string;
-            })
-            // Remove Shop
-            .addCase(removeWishlistShop.fulfilled, (state, action: PayloadAction<string>) => {
-                state.status = 'succeeded';
-                state.shops = state.shops.filter(shop => shop.shop_id !== action.payload);
-                state.error = null;
-            })
-            .addCase(removeWishlistShop.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.payload as string;
-            });
-    },
+    resetWishlistState: () => initialState,
+  },
+  extraReducers: (builder) => {
+    builder
+
+      // Fetch Wishlist
+      .addCase(fetchWishlist.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(fetchWishlist.fulfilled, (state, action: PayloadAction<any[]>) => {
+        state.status = 'succeeded';
+
+        const shops: number[] = [];
+        const items: MenuItem[] = [];
+
+        action.payload.forEach((entry) => {
+          if (entry.type === 'Shop' && entry.id && entry.data) {
+            shops.push(entry.id);
+          } else if (entry.type === 'MenuItem' && entry.data) {
+            items.push(entry.data);
+          }
+        });
+
+        state.shop_ids = shops;
+        state.menu_items = items;
+      })
+      .addCase(fetchWishlist.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
+
+      // Add item
+      .addCase(addWishlistItem.fulfilled, (state, action: PayloadAction<any>) => {
+        const newItem = action.payload.menu_items?.[0];
+        if (newItem) {
+          const exists = state.menu_items.some(item => item.id === newItem.id);
+          if (!exists) state.menu_items.push(newItem);
+        }
+      })
+
+      // Remove item
+      .addCase(removeWishlistItem.fulfilled, (state, action: PayloadAction<number>) => {
+        state.menu_items = state.menu_items.filter(item => item.id !== action.payload);
+      })
+
+      // Add shop
+      .addCase(addWishlistShop.fulfilled, (state, action: PayloadAction<any>) => {
+        const newShopId = action.payload.shop_ids?.[0];
+        if (newShopId && !state.shop_ids.includes(newShopId)) {
+          state.shop_ids.push(newShopId);
+        }
+      })
+
+      // Remove shop
+      .addCase(removeWishlistShop.fulfilled, (state, action: PayloadAction<number>) => {
+        state.shop_ids = state.shop_ids.filter(id => id !== action.payload);
+        state.menu_items = state.menu_items.filter(item => item.shop.id !== action.payload);
+      });
+  },
 });
 
-export const { clearError, resetWishlistState } = wishlistSlice.actions;
+// Exports
+export const { clearWishlistError, resetWishlistState } = wishlistSlice.actions;
 export default wishlistSlice.reducer;

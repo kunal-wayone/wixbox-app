@@ -256,7 +256,6 @@ const UsersMenuItems = ({ shopId }: any) => {
             setProducts([]);
             fetchProducts(1, false);
           }}
-          className="bg-primary-90 p-3 rounded-lg"
           className="bg-primary-90 p-3 rounded-lg">
           <Icon name="refresh" size={20} color="white" />
         </TouchableOpacity>

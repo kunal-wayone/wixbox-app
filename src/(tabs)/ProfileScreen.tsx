@@ -14,6 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { TokenStorage } from '../utils/apiUtils';
 import { logout } from '../store/slices/authSlice';
 import { RootState } from '../store/store';
+import { googleSignOut } from '../utils/authentication/googleAuth';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<any>();
@@ -83,7 +84,10 @@ const ProfileScreen = () => {
           });
           // navigation.navigate('LoginScreen');
         });
+      TokenStorage.removeUser()
+      TokenStorage.removeRole()
       TokenStorage.removeToken();
+      googleSignOut()
 
       // Implement logout logic here
       console.log('Logging out...');

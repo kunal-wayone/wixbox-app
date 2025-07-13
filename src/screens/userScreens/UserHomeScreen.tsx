@@ -243,8 +243,8 @@ const UserHomeScreen = () => {
               </View>
             </View>
             <FreshStoreSection />
+            <VisitNearByStores />
             <PopularAreaSection />
-            {/* <VisitNearByStores /> */}
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
