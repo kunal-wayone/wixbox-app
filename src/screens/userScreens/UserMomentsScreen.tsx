@@ -143,7 +143,7 @@ const UserMomentsScreen: React.FC = () => {
       if (!res.success) {
         throw new Error(res.message || 'Failed to fetch shops');
       }
-      setRestaurantData(res?.data?.nearby_shops?.filter((store: Store) => (store.average_rating || 0) >= minRating) || []);
+      setRestaurantData(res?.data?.nearby_shops || []);
     } catch (error) {
       ToastAndroid.show('Failed to fetch nearby stores', ToastAndroid.SHORT);
       console.error('Error fetching stores:', error);
@@ -323,7 +323,7 @@ const UserMomentsScreen: React.FC = () => {
               title={store?.restaurant_name}
               description={store?.about_business}
               onPress={() => setSelectedStore(store)}
-              image={ImagePath.home}
+              image={ImagePath.home3}
             />
           ))}
       </MapView>
@@ -401,10 +401,10 @@ const UserMomentsScreen: React.FC = () => {
 
           <View style={styles.cardContent}>
             <Image
-              source={{ uri: IMAGE_URL + selectedStore?.restaurant_images }}
+              source={selectedStore?.restaurant_images.length > 0 ? { uri: IMAGE_URL + selectedStore?.restaurant_images[0] } : ImagePath.restaurant1}
               style={styles.storeImage}
               resizeMode="cover"
-              defaultSource={ImagePath.restaurant1}
+            // defaultSource={ImagePath.restaurant1}
             />
             <View style={{ flex: 1 }}>
               <Text style={styles.storeName}>{selectedStore?.restaurant_name}</Text>

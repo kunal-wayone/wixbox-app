@@ -22,6 +22,8 @@ import {
   clearWishlistError,
 } from '../../store/slices/wishlistSlice';
 import { AppDispatch, RootState } from '../../store/store';
+import FoodItem from '../../components/common/FoodItem';
+import { addToCart } from '../../store/slices/cartSlice';
 
 const PER_PAGE = 5;
 
@@ -116,36 +118,59 @@ const HighOnDemandScreen = () => {
     }
   };
 
-  const renderItem = ({ item }: { item: any }) => (
-    <View className="flex-row gap-4 bg-primary-10 rounded-xl p-4 mx-4 my-2">
-      <Text className="absolute top-2 right-12">
-        <AntDesign name="star" size={19} color={'#FFC727'} /> {item?.average_rating}
-      </Text>
-      <TouchableOpacity
-        className="absolute top-2 right-5"
-        onPress={() => handleWishlistToggle(item)}
-        disabled={status === 'loading'}
-      >
-        <MaterialIcons
-          name={item?.fav ? 'favorite' : 'favorite-outline'}
-          size={19}
-          color={item?.fav ? 'red' : 'black'}
-        />
-      </TouchableOpacity>
-      <Image
-        source={item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
-        className="w-24 h-28 rounded-xl"
-        resizeMode="cover"
+  const handleAddToCart = (item: any) => {
+    const cartItem = {
+      id: item.id.toString(),
+      name: item.item_name,
+      price: item.price,
+      quantity: 1,
+      image: item.images[0] ? IMAGE_URL + item.images[0] : undefined,
+      shop_id: item?.shop?.id ?? item?.store_id
+    };
+    dispatch(addToCart(cartItem));
+    ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
+  };
+
+
+  // Place order
+  const handlePlaceOrder = (item: any) => {
+    navigation.navigate('AddCustomerFormScreen', {
+      item: [
+        {
+          id: item.id,
+          quantity: 1,
+          price: Math.floor(Number(item.price)),
+          name: item.item_name,
+          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          shop_id: item?.shop?.id ?? item?.store_id
+        },
+      ],
+    });
+  };
+
+
+  const renderItem = ({ item, index }: { item: any, index: any }) => (
+    <View>
+      <FoodItem
+        id={item?.id}
+        name={item.item_name}
+        description={item.description || 'No description available'}
+        restaurent={item?.shop?.restaurant_name || "NA"}
+        price={parseFloat(item.price) || 0}
+        imageUrl={
+          (item.images?.length ?? 0) > 0
+            ? { uri: IMAGE_URL + item.images![0] }
+            : ImagePath.item1
+        }
+        dietaryInfo={item?.dietary_info || []}
+        rating={item.average_rating || 0}
+        isVegetarian={item.is_vegetarian || false}
+        isAvailable={item.is_available !== false}
+        onAddToCart={() => handleAddToCart}
+        handlePlaceOrder={handlePlaceOrder}
+        maxQuantity={10}
+        item={item}
       />
-      <View style={{ flex: 1 }}>
-        <Text numberOfLines={1} className="text-xl font-bold">{item?.item_name}</Text>
-        <View className="flex-row items-center gap-4 mb-2">
-          <Text className="text-gray-500">{item?.category?.name}</Text>
-          <Text className="text-gray-500">{item?.distance || 'NA'} KM</Text>
-        </View>
-        <Text className="mb-1">₹{item?.price}/-</Text>
-        <Text numberOfLines={1}>{item?.shop?.restaurant_name || 'NA'}</Text>
-      </View>
     </View>
   );
 

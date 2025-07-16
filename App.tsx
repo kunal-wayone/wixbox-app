@@ -1,6 +1,6 @@
 // App.tsx
-import React, { useEffect } from 'react';
-import { Provider as ReduxProvider } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { Provider as ReduxProvider, useDispatch, useSelector } from 'react-redux';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import './global.css';
 
@@ -17,15 +17,15 @@ import {
   checkInitialNotification,
 } from './src/utils/notification/firebase';
 import { configureGoogleSignIn } from './src/utils/authentication/googleAuth';
+import { getCurrentLocationWithAddress } from './src/utils/tools/locationServices';
 
 const App = () => {
   useEffect(() => {
-     configureGoogleSignIn()
+    configureGoogleSignIn()
     // Request permission and fetch token
     requestUserPermission();
     getFcmToken();
     configureGoogleSignIn()
-
     // Setup all listeners
     const unsubscribeForeground = onForegroundMessageListener();
     const unsubscribeTokenRefresh = onTokenRefreshListener();

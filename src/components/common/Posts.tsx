@@ -125,14 +125,14 @@ const Post = () => {
                 {item?.status?.toLocaleUpperCase() || "Tag"}
               </Text>
             </View>
-            <TouchableOpacity onPress={() => setSelectedPostId((prev) => (prev === item.id ? null : item.id))}>
+            <TouchableOpacity className='p-2' onPress={() => setSelectedPostId((prev) => (prev === item.id ? null : item.id))}>
               <Icon name="dots-three-vertical" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
           <View className="z-10">
             <Text className="text-white font-bold text-lg mb-1">{item.title}</Text>
             <View className="flex-row justify-between items-center">
-              <View className="flex-row gap-4">
+              <View className="flex-row gap-4 hidden">
                 <Text className="text-white text-xs">{item.views || 0} Views</Text>
                 <Text className="text-white text-xs">{item.comments || 0} Comments</Text>
               </View>

@@ -6,7 +6,6 @@ import {
   Image,
   TouchableOpacity,
   TextInput,
-  Alert,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -22,12 +21,11 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import CheckBox from '@react-native-community/checkbox';
 import { ImagePath } from '../../constants/ImagePath';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Post, TokenStorage } from '../../utils/apiUtils';
 import { useDispatch } from 'react-redux';
-import { signup } from '../../store/slices/authSlice';
+import { googleAuth, signup } from '../../store/slices/authSlice';
 import { fetchUser } from '../../store/slices/userSlice';
 import { getFcmToken } from '../../utils/notification/firebase';
+
 const { width, height } = Dimensions.get('screen');
 
 // Validation schema using Yup
@@ -44,152 +42,54 @@ const validationSchema = Yup.object().shape({
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), undefined], 'Passwords must match')
     .required('Confirm Password is required'),
+  // agreeTerms: Yup.boolean()
+  //   .oneOf([true], 'You must accept the Terms & Conditions')
+  //   .required('You must accept the Terms & Conditions'),
 });
 
 const SignUpScreen = ({ route }: any) => {
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<any>();
-  const { accountType } = route.params;
+  const { accountType } = route.params || {};
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [apiErrors, setApiErrors] = useState<any>({
+  const [isCheck, setIsCheck] = useState(false);
+  const [apiErrors, setApiErrors] = useState({
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
+    password_confirmation: '',
   });
-  const [isCheck, setIsCheck] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-
-  // const handleSignUp = async (values: any, {setSubmitting, resetForm}: any) => {
-  //   setIsSubmitting(true);
-  //   console.log(true);
-  //   if (!isCheck) {
-  //     ToastAndroid.show('Please Check Terms & Condition', ToastAndroid.SHORT);
-  //     return null;
-  //   }
-
-  //   if (!accountType) {
-  //     ToastAndroid.show('Please Select Again Account type', ToastAndroid.SHORT);
-  //     return null;
-  //   }
-  //   try {
-  //     console.log(values);
-  //     const payload = {
-  //       name: values?.fullName,
-  //       email: values?.email,
-  //       password: values?.password,
-  //       password_confirmation: values?.confirmPassword,
-  //       role: accountType,
-  //     };
-  //     const response = await dispatch(signup(payload)).unwrap();
-  //     const {user} = response;
-  //     console.log(user, 'user');
-
-  //     if (!response.success) {
-  //       throw new Error('Registration failed');
-  //     }
-
-  //     const data = response;
-  //     await TokenStorage.setUserData(user);
-  //     await TokenStorage.setUserRole(user?.role);
-  //     console.log(data, 'data');
-  //     console.log(user);
-  //     console.log(user?.role);
-  //     // dispatch(setAuthStatus(true));
-
-  //     ToastAndroid.show(
-  //       data?.message || 'Account created successfully!',
-  //       ToastAndroid.SHORT,
-  //     );
-
-  //     setApiErrors({
-  //       name: '',
-  //       email: '',
-  //       password: '',
-  //       confirmPassword: '',
-  //     });
-  //     resetForm();
-
-  //     if (user?.role === 'user') {
-  //       navigation.navigate('HomeScreen');
-  //       console.log('homescreen');
-  //     } else {
-  //       navigation.navigate('CreateShopScreen');
-  //       console.log('shopscreen');
-  //     }
-  //     console.log('bottom');
-  //   } catch (error: any) {
-  //     console.log(error);
-  //     const errorData = error?.errors || {};
-  //     setApiErrors({
-  //       name: errorData.name?.[0] || '',
-  //       email: errorData.email?.[0] || '',
-  //       password: errorData.password?.[0] || '',
-  //       confirmPassword: errorData.confirmPassword?.[0] || '',
-  //     });
-
-  //     ToastAndroid.show(
-  //       error?.message?.message || 'Something went wrong. Please try again.',
-  //       ToastAndroid.SHORT,
-  //     );
-  //   } finally {
-  //     setSubmitting(false);
-  //     setIsSubmitting(false);
-  //   }
-  // };
 
   const handleSignUp = async (values: any, { setSubmitting, resetForm }: any) => {
     setIsSubmitting(true);
-
     if (!isCheck) {
-      ToastAndroid.show('Please accept Terms & Conditions', ToastAndroid.SHORT);
-      setIsSubmitting(false);
-      return;
+      ToastAndroid.show('Account type is required', ToastAndroid.SHORT);
     }
-
-    if (!accountType) {
-      ToastAndroid.show('Account type is required.', ToastAndroid.SHORT);
-      setIsSubmitting(false);
-      return;
-    }
-    const fcmToken = getFcmToken()
-    console.log(fcmToken, "signup")
     try {
+      if (!accountType) {
+        throw new Error('Account type is required');
+      }
+
       const payload = {
         name: values.fullName,
         email: values.email,
         password: values.password,
-        password_confirmation: values.confirmPassword, // Fixed typo in original code
+        password_confirmation: values.confirmPassword,
         role: accountType,
-        
+        fcm_token: await getFcmToken(),
       };
-      console.log('Sending payload:', payload);
 
-      const response: any = await dispatch(signup(payload)).unwrap();
-      console.log('Signup Response:', response);
-      const { success, user } = response;
-
-      if (success) {
+      const response = await dispatch(signup(payload)).unwrap();
+      console.log(response)
+      if (!response.success) {
         throw new Error(response.message || 'Registration failed');
       }
 
       await dispatch(fetchUser()).unwrap();
 
-
-      console.log('User:', user);
-
-      // Store user data and role
-      // await TokenStorage.setUserData(user);
-      // await TokenStorage.setUserRole(user?.role || '');
-      console.log('Stored role:', user?.role);
-
-      ToastAndroid.show(
-        response.message || 'Account created successfully!',
-        ToastAndroid.SHORT,
-      );
-
+      // Clear form and errors
       setApiErrors({
         name: '',
         email: '',
@@ -198,18 +98,15 @@ const SignUpScreen = ({ route }: any) => {
       });
       resetForm();
 
-      // Navigate based on role
-      console.log('Navigating based on role:', user?.role);
-      if (user?.role === 'user') {
-        navigation.navigate('HomeScreen');
-        console.log("homes")
+      ToastAndroid.show(
+        response.message || 'Account created successfully!',
+        ToastAndroid.LONG
+      );
 
-      } else {
-        console.log("shopcreate")
-        navigation.navigate('CreateShopScreen');
-      }
+      // Navigate based on role
+      navigation.navigate(response.user?.role === 'user' ? 'HomeScreen' : 'CreateShopScreen');
     } catch (error: any) {
-      console.log('Signup Error:', error, null, 2);
+      console.log(true, error)
       const errorData = error?.errors || {};
       setApiErrors({
         name: errorData.name?.[0] || '',
@@ -219,14 +116,61 @@ const SignUpScreen = ({ route }: any) => {
       });
 
       ToastAndroid.show(
-        error?.message || 'Registration failed. Please check your details.',
-        ToastAndroid.SHORT,
+        error.message || 'Registration failed. Please try again.',
+        ToastAndroid.LONG
       );
     } finally {
       setSubmitting(false);
       setIsSubmitting(false);
     }
   };
+
+  const handleGoogleSignUp = async () => {
+    setIsSubmitting(true);
+
+    try {
+      if (!accountType) {
+        throw new Error('Account type is required');
+      }
+
+      const payload = {
+        role: accountType,
+      };
+
+      const response = await dispatch(googleAuth(payload)).unwrap();
+
+      if (!response.success) {
+        throw new Error(response.message || 'Google registration failed');
+      }
+
+      await dispatch(fetchUser()).unwrap();
+
+      ToastAndroid.show(
+        response.message || 'Account created successfully!',
+        ToastAndroid.LONG
+      );
+
+      // Navigate based on role
+      navigation.navigate(response.user?.role === 'user' ? 'HomeScreen' : 'CreateShopScreen');
+    } catch (error: any) {
+      console.log(error)
+      const errorData = error?.errors || {};
+      setApiErrors({
+        name: errorData.name?.[0] || '',
+        email: errorData.email?.[0] || '',
+        password: errorData.password?.[0] || '',
+        password_confirmation: errorData.password_confirmation?.[0] || '',
+      });
+
+      ToastAndroid.show(
+        error.message || 'Google registration failed. Please try again.',
+        ToastAndroid.LONG
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -264,7 +208,7 @@ const SignUpScreen = ({ route }: any) => {
               </LinearGradient>
             </MaskedView>
             <Text className="text-center my-2 text-gray-600">
-              Lorem ipsum dolor sit amet, consectetur.
+              Create your account to get started
             </Text>
 
             <Formik
@@ -284,10 +228,10 @@ const SignUpScreen = ({ route }: any) => {
                 values,
                 errors,
                 touched,
-                isSubmitting,
-              }: any) => (
+                isSubmitting: formikSubmitting,
+              }) => (
                 <View className="mt-4">
-                  <View className="mb-3">
+                  <View className="mb-1">
                     <Text className="text-sm font-medium text-gray-700 mb-1">
                       Full Name
                     </Text>
@@ -297,49 +241,41 @@ const SignUpScreen = ({ route }: any) => {
                       onChangeText={handleChange('fullName')}
                       onBlur={handleBlur('fullName')}
                       value={values.fullName}
+                      editable={!isSubmitting}
                     />
-                    {touched.fullName && errors.fullName && apiErrors?.name && (
+                    {(touched.fullName || apiErrors.name) && (
                       <Text className="text-red-500 text-xs mt-1">
-                        {errors.fullName} {apiErrors?.name}
-                      </Text>
-                    )}
-                    {apiErrors?.name && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {apiErrors?.name}
+                        {errors.fullName || apiErrors.name}
                       </Text>
                     )}
                   </View>
 
-                  <View className="mb-3">
+                  <View className="mb-1">
                     <Text className="text-sm font-medium text-gray-700 mb-1">
                       Email Address
                     </Text>
                     <TextInput
-                      className="border border-gray-300 bg-gray-100 dark:text-gray-900 rounded-lg p-3 text-base"
+                      className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base"
                       placeholder="Enter your email"
                       onChangeText={handleChange('email')}
                       onBlur={handleBlur('email')}
                       value={values.email}
                       keyboardType="email-address"
                       autoCapitalize="none"
+                      editable={!isSubmitting}
                     />
-                    {touched.email && errors.email && (
+                    {(touched.email || apiErrors.email) && (
                       <Text className="text-red-500 text-xs mt-1">
-                        {errors.email} {apiErrors?.email}
-                      </Text>
-                    )}
-                    {apiErrors?.email && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {apiErrors?.email}
+                        {errors.email || apiErrors.email}
                       </Text>
                     )}
                   </View>
 
-                  <View className="mb-3">
+                  <View className="mb-1">
                     <Text className="text-sm font-medium text-gray-700 mb-1">
                       Create Password
                     </Text>
-                    <View className="flex-row items-center border border-gray-300 overflow-hidden rounded-lg">
+                    <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
                       <TextInput
                         className="flex-1 p-3 bg-gray-100 text-base"
                         placeholder="Enter your password"
@@ -347,10 +283,12 @@ const SignUpScreen = ({ route }: any) => {
                         onBlur={handleBlur('password')}
                         value={values.password}
                         secureTextEntry={!showPassword}
+                        editable={!isSubmitting}
                       />
                       <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
-                        className="p-3 bg-gray-100">
+                        className="p-3 bg-gray-100"
+                        disabled={isSubmitting}>
                         <Icon
                           name={showPassword ? 'eye-off' : 'eye'}
                           size={20}
@@ -358,36 +296,31 @@ const SignUpScreen = ({ route }: any) => {
                         />
                       </TouchableOpacity>
                     </View>
-                    {touched.password && errors.password && (
+                    {(touched.password || apiErrors.password) && (
                       <Text className="text-red-500 text-xs mt-1">
-                        {errors.password}
-                      </Text>
-                    )}
-                    {apiErrors?.password && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {apiErrors?.password}
+                        {errors.password || apiErrors.password}
                       </Text>
                     )}
                   </View>
 
-                  <View>
+                  <View className="mb-1">
                     <Text className="text-sm font-medium text-gray-700 mb-1">
                       Confirm Password
                     </Text>
-                    <View className="flex-row items-center bg-gray-100 border border-gray-300 overflow-hidden rounded-lg">
+                    <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
                       <TextInput
-                        className="flex-1 p-3 text-base"
+                        className="flex-1 p-3 bg-gray-100 text-base"
                         placeholder="Confirm your password"
                         onChangeText={handleChange('confirmPassword')}
                         onBlur={handleBlur('confirmPassword')}
                         value={values.confirmPassword}
                         secureTextEntry={!showConfirmPassword}
+                        editable={!isSubmitting}
                       />
                       <TouchableOpacity
-                        onPress={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                        className="p-3 bg-gray-100">
+                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="p-3 bg-gray-100"
+                        disabled={isSubmitting}>
                         <Icon
                           name={showConfirmPassword ? 'eye-off' : 'eye'}
                           size={20}
@@ -395,19 +328,14 @@ const SignUpScreen = ({ route }: any) => {
                         />
                       </TouchableOpacity>
                     </View>
-                    {touched.confirmPassword && errors.confirmPassword && (
+                    {(touched.confirmPassword || apiErrors.password_confirmation) && (
                       <Text className="text-red-500 text-xs mt-1">
-                        {errors.confirmPassword}
-                      </Text>
-                    )}
-                    {apiErrors?.confirmPassword && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {apiErrors?.confirmPassword}
+                        {errors.confirmPassword || apiErrors.password_confirmation}
                       </Text>
                     )}
                   </View>
 
-                  <View className="flex-row items-center my-3">
+                  <View className="flex-row items-center mb-3">
                     <CheckBox
                       value={isCheck}
                       onValueChange={va => {
@@ -418,18 +346,19 @@ const SignUpScreen = ({ route }: any) => {
                       tintColors={{ true: '#7248B3', false: '#666' }}
                     />
                     <Text className="ml-2 text-sm text-gray-600">
-                      Agree to all terms & conditions
+                      I agree to the Terms & Conditions
                     </Text>
                   </View>
 
-                  {touched.agreeTerms && !isCheck && (
+                  {/* {!isCheck && (
                     <Text className="text-red-500 text-xs mb-3">
-                      {'Please check agree terms & conditions'}
+                      {"Required to check the Terms & Conditions"}
                     </Text>
-                  )}
+                  )} */}
+
                   <TouchableOpacity
                     onPress={handleSubmit}
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || formikSubmitting}
                     className="mt-4">
                     <LinearGradient
                       colors={['#EE6447', '#7248B3']}
@@ -439,9 +368,10 @@ const SignUpScreen = ({ route }: any) => {
                         padding: 16,
                         borderRadius: 10,
                         alignItems: 'center',
+                        opacity: isSubmitting || formikSubmitting ? 0.7 : 1,
                       }}>
                       <Text className="text-white text-base font-bold">
-                        {isSubmitting ? 'Creating...' : 'Create Account'}
+                        Create Account
                       </Text>
                     </LinearGradient>
                   </TouchableOpacity>
@@ -450,18 +380,23 @@ const SignUpScreen = ({ route }: any) => {
             </Formik>
 
             <Text className="text-center my-4 text-gray-600">
-              --------Or Continue with--------
+              -------- Or Continue with --------
             </Text>
 
             <View className="flex-row justify-center gap-4 mb-4">
-              <TouchableOpacity className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl">
+              <TouchableOpacity
+                className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl"
+                onPress={handleGoogleSignUp}
+                disabled={isSubmitting}>
                 <Image
                   source={ImagePath.google}
                   className="w-8 h-8 m-auto"
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              <TouchableOpacity className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl">
+              <TouchableOpacity
+                className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl hidden"
+                disabled={isSubmitting}>
                 <Image
                   source={ImagePath.facebook}
                   className="w-8 h-8 m-auto"
@@ -475,7 +410,8 @@ const SignUpScreen = ({ route }: any) => {
                 Already have an account?{' '}
               </Text>
               <TouchableOpacity
-                onPress={() => navigation.navigate('LoginScreen')}>
+                onPress={() => navigation.navigate('LoginScreen')}
+                disabled={isSubmitting}>
                 <Text className="text-orange-primary-100 text-sm ml-1 font-bold underline">
                   Login
                 </Text>
@@ -484,6 +420,7 @@ const SignUpScreen = ({ route }: any) => {
           </View>
         </View>
       </ScrollView>
+
       {isSubmitting && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#FFFFFF" />

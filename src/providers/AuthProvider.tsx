@@ -7,10 +7,12 @@ import MainNavigation from '../navigator/MainNavigation';
 import { RootState } from '../store/store';
 import { TokenStorage } from '../utils/apiUtils';
 import { useNavigation } from '@react-navigation/native';
+import { getCurrentLocationWithAddress } from '../utils/tools/locationServices';
 
 const AuthProvider = () => {
   const navigation = useNavigation()
   const dispatch = useDispatch<any>();
+  const [address, setaddress] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true);
 
   const user = useSelector((state: RootState) => state.user);
@@ -27,6 +29,7 @@ const AuthProvider = () => {
       setIsLoading(false);
     };
     console.log(navigation)
+    // getCurrentLocationWithAddress(setaddress, dispatch, user)
 
     checkAuth();
   }, [dispatch]);

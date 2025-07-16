@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -18,7 +18,8 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Picker } from '@react-native-picker/picker';
-import { Post } from '../../utils/apiUtils'; // Adjust if needed
+import { Post } from '../../utils/apiUtils';
+import PaymentComponent from '../../components/PaymentComponent';
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().required('Full name is required'),
@@ -68,45 +69,81 @@ const TableBookingFormScreen = () => {
         return `${hours}:${minutes}`;
     };
 
-    const handleBookTable = async (values: any, { setSubmitting, resetForm }: any) => {
-        try {
-            setIsLoading(true);
-            const payload = {
-                shop_id,
-                name: values.name,
-                phone: values.phone,
-                booking_date: values.booking_date,
-                time_slot: values.time_slot,
-                guests: parseInt(values.guests),
-                description: values.description,
-                table_info,
-            };
+    const handleBookTable = useCallback(
+        async (values: any, resetForm: any) => {
+            try {
+                setIsLoading(true);
+                const payload = {
+                    shop_id,
+                    name: values?.name?.trim() || '',
+                    phone: values?.phone?.trim() || '',
+                    booking_date: values?.booking_date || '',
+                    time_slot: values?.time_slot || '',
+                    guests: parseInt(values?.guests || '0', 10),
+                    description: values?.description?.trim() || '',
+                    table_info,
+                    // payment_id: paymentData?.razorpay_payment_id,
+                };
 
-            const response: any = await Post('/user/table-booking', payload, 5000);
-            console.log(response, payload)
-            if (!response.success) {
-                throw new Error('Failed to book table');
+                const response: any = await Post('/user/table-booking', payload, 5000);
+                console.log('Booking response:', response);
+
+                if (!response?.success) {
+                    ToastAndroid.show('Failed to book table. Please try again.', ToastAndroid.SHORT);
+                    return { success: false };
+                }
+                resetForm()
+                ToastAndroid.show('Table booked successfully!', ToastAndroid.SHORT);
+                return { sucess: true, orderId: response?.data?.id };
+            } catch (error: any) {
+                console.error('Booking error:', error);
+                ToastAndroid.show(
+                    error?.message || 'Something went wrong. Please try again.',
+                    ToastAndroid.SHORT
+                );
+                return { success: false };
+            } finally {
+                setIsLoading(false);
             }
+        },
+        [shop_id, table_info, navigation]
+    );
 
-            ToastAndroid.show('Table booked successfully!', ToastAndroid.SHORT);
-            resetForm();
-            setShowThankYouModal(true);
 
+
+    const orderPayment = async (orderid: any, paymentData: any, totalAmount: any) => {
+        setIsLoading(true)
+        try {
+            const paymentPayload = {
+                order_id: orderid,
+                status: "completed",
+                transaction_data: {
+                    razorpay_order_id: paymentData?.razorpay_order_id,
+                    razorpay_payment_id: paymentData?.razorpay_payment_id,
+                    razorpay_signature: paymentData?.razorpay_signature,
+                    amount: Number(totalAmount)?.toFixed(2),
+                    currency: "INR"
+                }
+            }
+            const response: any = await Post('/user/order-payments-table', paymentPayload, 5000);
+            console.log(response, "dsflkds")
+            if (!response.success) {
+                console.log(response)
+                throw new Error(response.message || 'Failed to payment transection save of order');
+            }
+            setShowThankYouModal(true)
             setTimeout(() => {
                 setShowThankYouModal(false);
-                navigation.navigate('BookedTablesScreen');
+                navigation.replace('BookedTablesScreen');
             }, 2500);
         } catch (error: any) {
-            console.error(error);
-            ToastAndroid.show(
-                error.message || 'Something went wrong. Please try again.',
-                ToastAndroid.SHORT,
-            );
+            console.log(error)
+            throw new Error(error.message || 'Failed to payment transection save of table booking');
+
         } finally {
-            setIsLoading(false);
-            setSubmitting(false);
+            setIsLoading(false)
         }
-    };
+    }
 
     const seatCount = Number(table_info?.[0]?.seats) || 0;
 
@@ -116,6 +153,9 @@ const TableBookingFormScreen = () => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0}
         >
+            {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
+                <ActivityIndicator className='m-auto' size={"large"} color={'#B68AD4'} />
+            </View>}
             <ScrollView
                 contentContainerStyle={{
                     flexGrow: 1,
@@ -125,7 +165,6 @@ const TableBookingFormScreen = () => {
                 showsVerticalScrollIndicator={false}
                 keyboardShouldPersistTaps="handled"
             >
-                {/* Header */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
                     <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
                         <Ionicons name="arrow-back" size={24} color="black" />
@@ -145,7 +184,10 @@ const TableBookingFormScreen = () => {
                         description: '',
                     }}
                     validationSchema={validationSchema}
-                    onSubmit={handleBookTable}
+                    onSubmit={(values) => {
+                        // Pass form values directly to PaymentComponent
+                        // No need to store in state
+                    }}
                 >
                     {({
                         handleChange,
@@ -154,11 +196,11 @@ const TableBookingFormScreen = () => {
                         values,
                         errors,
                         touched,
+                        resetForm,
                         setFieldValue,
                         isSubmitting,
                     }) => (
                         <View>
-                            {/* Full Name */}
                             <InputField
                                 label="Full Name"
                                 placeholder="Enter full name"
@@ -168,7 +210,6 @@ const TableBookingFormScreen = () => {
                                 error={touched.name && errors.name}
                             />
 
-                            {/* Phone */}
                             <InputField
                                 label="Phone Number"
                                 placeholder="Enter phone number"
@@ -180,7 +221,6 @@ const TableBookingFormScreen = () => {
                                 error={touched.phone && errors.phone}
                             />
 
-                            {/* Booking Date */}
                             <DateTimeField
                                 label="Booking Date"
                                 value={values.booking_date}
@@ -201,7 +241,6 @@ const TableBookingFormScreen = () => {
                                 <ErrorText text={errors.booking_date} />
                             )}
 
-                            {/* Time Slot */}
                             <DateTimeField
                                 label="Time Slot"
                                 value={values.time_slot}
@@ -222,7 +261,6 @@ const TableBookingFormScreen = () => {
                                 <ErrorText text={errors.time_slot} />
                             )}
 
-                            {/* Guests Picker */}
                             <View style={{ marginBottom: 12 }}>
                                 <Text style={labelStyle}>Number of Guests</Text>
                                 <View style={pickerContainer}>
@@ -235,12 +273,10 @@ const TableBookingFormScreen = () => {
                                             <Picker.Item key={i + 1} label={`${i + 1}`} value={`${i + 1}`} />
                                         ))}
                                     </Picker>
-
                                 </View>
                                 {touched.guests && errors.guests && <ErrorText text={errors.guests} />}
                             </View>
 
-                            {/* Description */}
                             <InputField
                                 label="Description (Optional)"
                                 placeholder="Enter special requests"
@@ -251,13 +287,12 @@ const TableBookingFormScreen = () => {
                                 minHeight={80}
                             />
 
-                            {/* Table Info */}
                             <View style={{ marginBottom: 12 }}>
                                 <Text style={labelStyle}>Selected Table</Text>
                                 {isLoading ? (
                                     <ActivityIndicator />
                                 ) : (
-                                    table_info.map((table: any, index: number) => (
+                                    table_info.map((table: any, index: any) => (
                                         <View
                                             key={index}
                                             style={{
@@ -277,45 +312,71 @@ const TableBookingFormScreen = () => {
                                 )}
                             </View>
 
-                            {/* Submit Button */}
-                            <TouchableOpacity
-                                onPress={() => handleSubmit()}
-                                disabled={isSubmitting}
-                                style={{
-                                    backgroundColor: isSubmitting ? '#B68AD480' : '#B68AD4',
-                                    padding: 16,
-                                    borderRadius: 10,
-                                    alignItems: 'center',
-                                    marginTop: 16,
+                            <PaymentComponent
+                                amount={Number(table_info[0]?.price) || 0}
+                                customer={{
+                                    name: values.name || 'Guest',
+                                    email: 'guest@example.com',
+                                    phone: values.phone || '1234567890',
                                 }}
-                            >
-                                <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
-                                    {isSubmitting ? 'Booking...' : 'Book Table'}
-                                </Text>
-                            </TouchableOpacity>
+                                config={{
+                                    name: 'WishBox Store',
+                                    currency: 'INR',
+                                    description: `Table reservation for table ${table_info[0]?.table_number}`,
+                                    theme: { color: '#B68AD4' },
+                                }}
+                                buttonLabel={
+                                    isSubmitting
+                                        ? 'Processing...'
+                                        : `Pay ₹ ${table_info[0]?.price || 0}/- & Reserve Now`
+                                }
+                                buttonClassName={`bg-primary-80 rounded-xl p-4 w-full mt-5 ${isSubmitting ? 'opacity-50' : ''
+                                    }`}
+                                onPaymentSuccess={(paymentData, orderId) => {
+                                    console.log(paymentData)
+                                    orderPayment(orderId, paymentData, table_info[0]?.price);
+                                }}
+                                onPaymentFailure={(error) => {
+                                    ToastAndroid.show('Payment failed. Please try again.', ToastAndroid.LONG);
+                                }}
+                                onPaymentCancel={() => {
+                                    ToastAndroid.show('Payment cancelled.', ToastAndroid.LONG);
+                                }}
+                                handleSubmit={() => {
+                                    const data = handleBookTable(values, resetForm)
+                                    return data;
+                                }}
+                            />
                         </View>
                     )}
                 </Formik>
             </ScrollView>
 
-            {/* Thank You Modal */}
             <Modal visible={showThankYouModal} transparent animationType="fade">
-                <View style={{
-                    flex: 1,
-                    backgroundColor: 'rgba(0,0,0,0.6)',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}>
-                    <View style={{
-                        backgroundColor: '#fff',
-                        padding: 24,
-                        borderRadius: 12,
+                <View
+                    style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(0,0,0,0.6)',
+                        justifyContent: 'center',
                         alignItems: 'center',
-                        width: '80%',
-                    }}>
+                    }}
+                >
+                    <View
+                        style={{
+                            backgroundColor: '#fff',
+                            padding: 24,
+                            borderRadius: 12,
+                            alignItems: 'center',
+                            width: '80%',
+                        }}
+                    >
                         <Ionicons name="checkmark-circle" size={60} color="#10B981" />
-                        <Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 10 }}>Thank You!</Text>
-                        <Text style={{ textAlign: 'center' }}>Your table has been booked successfully.</Text>
+                        <Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 10 }}>
+                            Thank You!
+                        </Text>
+                        <Text style={{ textAlign: 'center' }}>
+                            Your table has been booked successfully.
+                        </Text>
                     </View>
                 </View>
             </Modal>
@@ -325,6 +386,7 @@ const TableBookingFormScreen = () => {
 
 export default TableBookingFormScreen;
 
+// InputField, DateTimeField, ErrorText, labelStyle, pickerContainer remain unchanged
 const labelStyle = {
     fontSize: 14,
     fontWeight: '500',
@@ -334,12 +396,12 @@ const labelStyle = {
 
 const pickerContainer = {
     borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: '#D1D5D',
     backgroundColor: '#F3F4F6',
     borderRadius: 8,
 };
 
-const ErrorText = ({ text }: { text: string }) => (
+const ErrorText = ({ text }: any) => (
     <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{text}</Text>
 );
 
@@ -366,6 +428,7 @@ const InputField = ({
                 padding: 12,
                 fontSize: 16,
                 minHeight,
+                verticalAlign: 'top',
             }}
             placeholder={placeholder}
             onChangeText={onChangeText}

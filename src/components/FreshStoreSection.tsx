@@ -167,21 +167,21 @@ const FreshStoreSection = () => {
                 style={{ width: width * 0.8 }}
               >
                 <Shop
-                  id={product.id}
-                  name={product.restaurant_name || 'Unknown'}
-                  description={product.description || 'No description available'}
+                  id={product?.id}
+                  name={product?.restaurant_name || 'Unknown'}
+                  description={product?.about_business || 'No description available'}
                   images={product?.restaurant_images}
-                  address={product.address || 'No address provided'}
-                  phone={product.phone || 'No phone provided'}
+                  address={product?.address || 'No address provided'}
+                  phone={product?.phone || 'No phone provided'}
                   rating={product?.average_rating || 0}
-                  categories={product.categories || []}
-                  isOpen={product.is_open !== false}
+                  categories={product?.categories || []}
+                  isOpen={product?.is_open !== false}
                   featuredItems={
-                    product.featured_items?.map((item: any) => ({
-                      id: item.id,
-                      name: item.name,
-                      price: item.price,
-                      image: item.image ? IMAGE_URL + item.image : ImagePath.item1,
+                    product?.featured_items?.map((item: any) => ({
+                      id: item?.id,
+                      name: item?.name,
+                      price: item?.price,
+                      image: item?.image ? IMAGE_URL + item.image : ImagePath.item1,
                     })) || []
                   }
                   maxImages={5}

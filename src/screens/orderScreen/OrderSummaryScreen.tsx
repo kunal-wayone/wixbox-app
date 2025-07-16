@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ToastAndroid,
   Modal,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Formik } from 'formik';
@@ -26,27 +27,28 @@ import PaymentComponent from '../../components/PaymentComponent';
 const validationSchema = Yup.object().shape({
   discount: Yup.number()
     .min(0, 'Discount cannot be negative')
-    .default(0),
+    .default(0)
+    .test('is-valid-number', 'Invalid discount amount', value => !isNaN(value) && value >= 0),
 });
 
 const OrderSummaryScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const payload = route.params?.payload || null;
+  const item = route.params?.item || null;
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
-  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const cartItems = item?.length > 0 ? item : useSelector((state: RootState) => state.cart.items);
   const user: any = useSelector((state: RootState) => state.user.data);
 
   const [taxInputs, setTaxInputs] = useState([
     { id: 1, label: 'Service Tax', value: '0' },
   ]);
-  purchase: true
   const [showThankYouModal, setShowThankYouModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  console.log(payload)
+
   const sub_total = useMemo(
-    () => cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    () => cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0),
     [cartItems],
   );
 
@@ -55,7 +57,7 @@ const OrderSummaryScreen = () => {
     [taxInputs],
   );
 
-  const addTaxField = () => {
+  const addTaxField = useCallback(() => {
     setTaxInputs(prev => [
       ...prev,
       {
@@ -64,93 +66,183 @@ const OrderSummaryScreen = () => {
         value: '0',
       },
     ]);
-  };
+  }, []);
 
-  const removeTaxField = (id: number) => {
+  const removeTaxField = useCallback((id: number) => {
     setTaxInputs(prev => prev.filter(t => t.id !== id));
-  };
+  }, []);
 
-  const updateTaxValue = (id: number, value: string) => {
-    setTaxInputs(prev => prev.map(t => (t.id === id ? { ...t, value } : t)));
-  };
+  const updateTaxValue = useCallback((id: number, value: string) => {
+    // Ensure only valid numeric input is accepted
+    if (value === '' || !isNaN(parseFloat(value))) {
+      setTaxInputs(prev => prev.map(t => (t.id === id ? { ...t, value } : t)));
+    }
+  }, []);
 
-  const renderCartItem = ({ item }: { item: any }) => {
-    console.log(item)
-    return (
+  const validateInputs = useCallback(() => {
+    if (cartItems.length === 0) {
+      ToastAndroid.show('Cart is empty', ToastAndroid.LONG);
+      return false;
+    }
+    if (!payload?.name?.trim() || !payload?.email?.trim() || !payload?.phone?.trim() || !payload?.arrived_at?.trim()) {
+      ToastAndroid.show('Complete customer details are required', ToastAndroid.LONG);
+      return false;
+    }
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(payload.email)) {
+      ToastAndroid.show('Invalid email format', ToastAndroid.LONG);
+      return false;
+    }
+    // Basic phone validation (assuming 10-digit phone number)
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(payload.phone)) {
+      ToastAndroid.show('Invalid phone number (must be 10 digits)', ToastAndroid.LONG);
+      return false;
+    }
+    return true;
+  }, [cartItems, payload]);
+
+  const renderCartItem = useCallback(
+    ({ item }: { item: any }) => (
       <View className="flex-row bg-gray-100 rounded-xl mb-4 p-3">
         <Image
-          source={item?.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
+          source={item?.image ? item.image : ImagePath.item1}
           className="w-20 h-20 my-auto rounded-lg mr-4"
           resizeMode="cover"
+          onError={() => ToastAndroid.show('Failed to load item image', ToastAndroid.SHORT)}
         />
-        <View className="flex-1">
-          <Text className="text-base font-semibold text-gray-800">{item.name}</Text>
-          <Text className="text-gray-500">Price: ₹{item?.price}</Text>
-          <Text className="text-gray-500">Qty: {item.quantity}</Text>
-          <Text className="text-gray-600 mt-1 font-medium">
-            Sub Total: ₹{(item.price * item.quantity).toFixed(2)}
-          </Text>
+        <View className="flex-row flex-1 justify-between items-center gap-4">
+          <View>
+            <Text className="text-base font-semibold text-gray-800">{item.name || 'Unknown Item'}</Text>
+            <Text className="text-gray-500">Price: ₹{(item.price || 0).toFixed(2)}</Text>
+            <Text className="text-gray-500">Qty: {item.quantity || 0}</Text>
+            <Text className="text-gray-600 mt-1 font-medium">
+              Sub Total: ₹{((item.price || 0) * (item.quantity || 0)).toFixed(2)}
+            </Text>
+          </View>
+          <TouchableOpacity
+            className="p-1 bg-red-100 rounded-md ml-auto w-10"
+            onPress={() => dispatch(removeFromCart(item.id))}
+          >
+            <Ionicons name="trash" size={20} className='m-auto' color="#EF4444" />
+          </TouchableOpacity>
         </View>
       </View>
-    )
-  };
+    ),
+    [dispatch],
+  );
 
-  const handlePlaceOrder = async (values: any, { setSubmitting, resetForm }: any) => {
-    setIsLoading(true);
+  const handlePlaceOrder = useCallback(
+    async (values: any, { setSubmitting, resetForm }: any,) => {
+      if (!validateInputs()) {
+        setSubmitting(false);
+        return false;
+      }
+
+      setIsLoading(true);
+      try {
+        const totalAmount = sub_total - parseFloat(values.discount || '0') + totalTax;
+        if (totalAmount <= 0) {
+          throw new Error('Total amount must be greater than zero');
+        }
+
+        const formData = new FormData();
+        formData.append('name', payload.name.trim());
+        formData.append('email', payload.email.trim());
+        formData.append('phone', payload.phone.trim());
+        formData.append('sub_total', sub_total.toFixed(2));
+        formData.append('discount', String(parseInt(values.discount || 0)));
+        formData.append('total_amount', String(parseInt(totalAmount)));
+        formData.append('arrived_at', payload.arrived_at.trim());
+        // if (paymentData?.razorpay_payment_id) {
+        //   formData.append('payment_id', paymentData.razorpay_payment_id);
+        //   formData.append('payment_status', 'completed');
+        // } else {
+        //   throw new Error('Payment ID is missing');
+        // }
+
+        taxInputs.forEach((tax, index) => {
+          formData.append(`service_tax[${index}]`, parseFloat(tax.value || '0').toFixed(2));
+        });
+        formData.append(`shop_id`, cartItems[0]?.shop_id);
+
+        cartItems.forEach((item: any, index: number) => {
+          if (!item.id || !item.name || !item.quantity || !item.price) {
+            // throw new Error(`Invalid cart item at index ${index}`);
+            return { success: false };
+          }
+          console.log(item)
+          formData.append(`order[${index}][id]`, item.id);
+          formData.append(`order[${index}][quantity]`, item.quantity.toString());
+          formData.append(`order[${index}][price]`, Math.floor(Number(item.price)).toString());
+          formData.append(`order[${index}][sub_total]`, Math.floor(Number(item?.price) * item.quantity).toString());
+          formData.append(`order[${index}][name]`, item.name);
+          formData.append(`order[${index}][shop_id]`, item.shop_id);
+          formData.append(`order[${index}][image]`, item?.image || '');
+        });
+        console.log("i")
+        const response: any = await Post('/user/vendor/place-order', formData, 5000);
+        console.log(response)
+        if (!response.success) {
+          console.log(response.message || 'Failed to place order');
+          return { success: false };
+        }
+        console.log({ orderId: response?.data?.order?.order?.id })
+        dispatch(clearCart());
+        resetForm();
+        // ToastAndroid.show('Order placed successfully!', ToastAndroid.LONG);
+        return { sucess: true, orderId: response?.data?.order?.order?.id };
+      } catch (error: any) {
+        console.log(error)
+        ToastAndroid.show(
+          error.message || 'Failed to place order. Please try again.',
+          ToastAndroid.LONG,
+        );
+        return { success: false };
+      } finally {
+        setIsLoading(false);
+        setSubmitting(false);
+      }
+    },
+    [cartItems, dispatch, payload, sub_total, totalTax, validateInputs],
+  );
+
+  const orderPayment = async (orderid: any, paymentData: any, totalAmount: any) => {
+    setIsLoading(true)
     try {
-      if (cartItems.length === 0) {
-        throw new Error('Cart is empty');
+      const paymentPayload = {
+        order_id: orderid,
+        status: "completed",
+        transaction_data: {
+          razorpay_order_id: paymentData?.razorpay_order_id,
+          razorpay_payment_id: paymentData?.razorpay_payment_id,
+          razorpay_signature: paymentData?.razorpay_signature,
+          amount: totalAmount.toFixed(2),
+          currency: "INR"
+        }
       }
 
-      if (!payload?.name || !payload?.email || !payload?.phone || !payload?.arrived_at) {
-        throw new Error('Customer details are missing');
-      }
-
-      const formData = new FormData();
-      formData.append('name', payload.name);
-      formData.append('email', payload.email);
-      formData.append('phone', payload.phone);
-      formData.append('discount', values.discount || '0');
-      formData.append('sub_total', sub_total.toFixed(2));
-      formData.append('total_amount', Number(sub_total - parseFloat(values.discount || '0') + totalTax));
-      formData.append('arrived_at', payload.arrived_at);
-
-      taxInputs.forEach((tax, index) => {
-        formData.append(`service_tax[${index}]`, tax.value || '0');
-      });
-
-      cartItems.forEach((item: any, index: number) => {
-        formData.append(`order[${index}][id]`, item.id);
-        formData.append(`order[${index}][quantity]`, item.quantity);
-        formData.append(`order[${index}][price]`, Math.floor(Number(item.price)));
-        formData.append(`order[${index}][sub_total]`, Math.floor(Number(item.price) * item.quantity));
-        formData.append(`order[${index}][name]`, item.name);
-        formData.append(`order[${index}][image]`, item?.image);
-      });
-
-      console.log(values, formData)
-      const response: any = await Post('/user/vendor/place-order', formData, 5000);
-
+      const response: any = await Post('/user/order-payments', paymentPayload, 5000);
+      console.log(response)
       if (!response.success) {
-        throw new Error(response.message || 'Failed to place order');
+        throw new Error(response.message || 'Failed to payment transection save of order');
       }
 
       setShowThankYouModal(true);
-      dispatch(clearCart());
-      resetForm();
     } catch (error: any) {
-      ToastAndroid.show(
-        error.message || 'Something went wrong. Please try again.',
-        ToastAndroid.LONG,
-      );
+      throw new Error(error.message || 'Failed to payment transection save of order');
     } finally {
-      setIsLoading(false);
-      setSubmitting(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <View className="flex-1 bg-white">
+
+      {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
+        <ActivityIndicator className='m-auto' size={"large"} color={'#B68AD4'} />
+      </View>}
       {/* Thank You Modal */}
       <Modal
         visible={showThankYouModal}
@@ -170,7 +262,7 @@ const OrderSummaryScreen = () => {
               className="bg-primary-80 py-3 rounded-xl"
               onPress={() => {
                 setShowThankYouModal(false);
-                navigation.navigate('AddCustomerScreen');
+                navigation.replace('AddCustomerScreen');
               }}
             >
               <Text className="text-white text-center font-bold">Continue</Text>
@@ -184,139 +276,176 @@ const OrderSummaryScreen = () => {
           Order Summary
         </Text>
 
-        {/* Customer Details as Text */}
+        {/* Customer Details */}
         <View className="mb-4">
-          <Text className="text-sm font-semibold text-gray-700 mb-1">Customer Details</Text>
-          <View className="bg-gray-100 rounded-lg p-3">
-            <Text className="text-base text-gray-800">
-              Name: {payload?.name || 'N/A'}
-            </Text>
-            <Text className="text-base text-gray-800">
-              Email: {payload?.email || 'N/A'}
-            </Text>
-            <Text className="text-base text-gray-800">
-              Phone: {payload?.phone || 'N/A'}
-            </Text>
+          <Text className="text-lg font-semibold text-gray-700 mb-1">Customer Details</Text>
+          <View className="bg-primary-10 rounded-xl p-3">
+            <Text className="text-base text-gray-800">Name: {payload?.name || 'N/A'}</Text>
+            <Text className="text-base text-gray-800">Email: {payload?.email || 'N/A'}</Text>
+            <Text className="text-base text-gray-800">Phone: {payload?.phone || 'N/A'}</Text>
             <Text className="text-base text-gray-800">
               Arrival Date: {payload?.arrived_at || 'N/A'}
             </Text>
           </View>
         </View>
 
+        {/* Cart Items */}
         <FlatList
           data={cartItems}
           renderItem={renderCartItem}
-          keyExtractor={item => item.id}
+          keyExtractor={item => item.id?.toString() || Math.random().toString()}
           scrollEnabled={false}
+          ListEmptyComponent={
+            <Text className="text-center text-gray-500 my-4">Your cart is empty</Text>
+          }
         />
 
         <Formik
           initialValues={{
             discount: '0',
             sub_total: sub_total.toFixed(2),
-            total_amount: (sub_total - parseFloat('0') + totalTax).toFixed(2),
+            total_amount: sub_total.toFixed(2),
           }}
           validationSchema={validationSchema}
+          enableReinitialize
           onSubmit={handlePlaceOrder}
         >
-          {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
-            <>
-              {/* Sub Total */}
-              <View className="flex-row justify-between my-2">
-                <Text className="text-base font-semibold text-gray-700">Sub Total:</Text>
-                <Text className="text-base text-gray-800">₹ {sub_total.toFixed(2)}</Text>
-              </View>
+          {({
+            handleChange, handleBlur, resetForm, isSubmitting, values, errors, touched, setFieldValue }) => {
+            // Calculate totalAmount inside Formik to access values.discount
+            const totalAmount = useMemo(
+              () => sub_total - parseFloat(values.discount || '0') + totalTax,
+              [sub_total, totalTax, values.discount],
+            );
 
-              {user?.role !== "user" && <View>
-
-                {/* Discount */}
-                <View className="mb-4">
-                  <Text className="text-sm font-semibold text-gray-700 mb-1">Discount (₹)</Text>
-                  <TextInput
-                    className="border border-gray-300 rounded-lg px-4 py-2 text-base"
-                    placeholder="Enter discount"
-                    keyboardType="numeric"
-                    value={values.discount}
-                    onChangeText={handleChange('discount')}
-                    onBlur={handleBlur('discount')}
-                  />
-                  {touched.discount && errors.discount && (
-                    <Text className="text-red-500 text-xs mt-1">{errors.discount}</Text>
-                  )}
+            return (
+              <>
+                {/* Sub Total */}
+                <View className="flex-row justify-between my-2">
+                  <Text className="text-base font-semibold text-gray-700">Sub Total:</Text>
+                  <Text className="text-base text-gray-800">₹ {sub_total.toFixed(2)}</Text>
                 </View>
 
-                {/* Service Tax Inputs */}
-                <View className="mb-4">
-                  <Text className="text-sm font-semibold text-gray-700 mb-2">Service Taxes (₹)</Text>
-                  {taxInputs.map(tax => (
-                    <View key={tax.id} className="mb-3">
-                      <View className="flex-row items-center">
-                        <TextInput
-                          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-base mr-2"
-                          placeholder="Enter tax amount"
-                          keyboardType="numeric"
-                          value={tax.value}
-                          onChangeText={val => updateTaxValue(tax.id, val)}
-                        />
-                        <TouchableOpacity
-                          className="p-2 bg-red-100 rounded-md"
-                          onPress={() => removeTaxField(tax.id)}
-                        >
-                          <Ionicons name="trash" size={20} color="#EF4444" />
-                        </TouchableOpacity>
-                      </View>
-                      <Text className="text-xs text-gray-500 mt-1">{tax.label}</Text>
+                {user?.role !== 'user' && (
+                  <View>
+                    {/* Discount */}
+                    <View className="mb-4">
+                      <Text className="text-sm font-semibold text-gray-700 mb-1">Discount (₹)</Text>
+                      <TextInput
+                        className="border border-gray-300 rounded-lg px-4 py-2 text-base"
+                        placeholder="Enter discount"
+                        keyboardType="numeric"
+                        value={values.discount}
+                        onChangeText={(text) => {
+                          handleChange('discount')(text);
+                          setFieldValue('total_amount', (sub_total - parseFloat(text || '0') + totalTax).toFixed(2));
+                        }}
+                        onBlur={handleBlur('discount')}
+                      />
+                      {touched.discount && errors.discount && (
+                        <Text className="text-red-500 text-xs mt-1">{errors.discount}</Text>
+                      )}
                     </View>
-                  ))}
-                  <TouchableOpacity
-                    className="mt-2 bg-gray-200 rounded-lg py-2 items-center"
-                    onPress={addTaxField}
-                  >
-                    <Text className="text-sm text-gray-700 font-medium">+ Add Tax</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>}
 
-              {/* Total */}
-              <View className="border-t border-gray-200 pt-3 flex-row justify-between mb-6">
-                <Text className="text-lg font-bold text-gray-700">Total:</Text>
-                <Text className="text-lg font-bold text-gray-900">
-                  ₹ {(sub_total - parseFloat(values.discount || '0') + totalTax).toFixed(2)}
-                </Text>
-              </View>
-
-              {/* Checkout Button */}
-              <TouchableOpacity
-                className="bg-primary-80 w-full py-4 rounded-xl items-center"
-                onPress={() => handleSubmit()}
-                disabled={isSubmitting || isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text className="text-white text-base font-bold">Place Order</Text>
+                    {/* Service Tax Inputs */}
+                    <View className="mb-4">
+                      <Text className="text-sm font-semibold text-gray-700 mb-2">Service Taxes (₹)</Text>
+                      {taxInputs.map(tax => (
+                        <View key={tax.id} className="mb-3">
+                          <View className="flex-row items-center">
+                            <TextInput
+                              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-base mr-2"
+                              placeholder="Enter tax amount"
+                              keyboardType="numeric"
+                              value={tax.value}
+                              onChangeText={val => {
+                                updateTaxValue(tax.id, val);
+                                setFieldValue('total_amount', (sub_total - parseFloat(values.discount || '0') + totalTax).toFixed(2));
+                              }}
+                            />
+                            {taxInputs.length > 1 && (
+                              <TouchableOpacity
+                                className="p-2 bg-red-100 rounded-md"
+                                onPress={() => {
+                                  removeTaxField(tax.id);
+                                  setFieldValue('total_amount', (sub_total - parseFloat(values.discount || '0') + totalTax).toFixed(2));
+                                }}
+                              >
+                                <Ionicons name="trash" size={20} color="#EF4444" />
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                          <Text className="text-xs text-gray-500 mt-1">{tax.label}</Text>
+                        </View>
+                      ))}
+                      <TouchableOpacity
+                        className="mt-2 bg-gray-200 rounded-lg py-2 items-center"
+                        onPress={addTaxField}
+                      >
+                        <Text className="text-sm text-gray-700 font-medium">+ Add Tax</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 )}
-              </TouchableOpacity>
-              <PaymentComponent
-                amount={500}
-                customer={{
-                  name: 'Kunal Verma',
-                  email: 'kunal@example.com',
-                  phone: '9876543210',
-                }}
-                config={{
-                  name: 'WishBox Store',
-                  currency: 'INR',
-                  description: 'Premium subscription payment',
-                  theme: {
-                    color: '#F37254',
-                  },
-                }}
-                buttonLabel="Pay ₹500"
-                buttonClassName="bg-amber-600 px-6 py-3 rounded-xl"
-              />
-            </>
-          )}
+
+                {/* Total */}
+                <View className="border-t border-gray-200 pt-3 flex-row justify-between mb-6">
+                  <Text className="text-lg font-bold text-gray-700">Total:</Text>
+                  <Text className="text-lg font-bold text-gray-900">₹ {totalAmount.toFixed(2)}</Text>
+                </View>
+
+                {/* Payment Component */}
+                <PaymentComponent
+                  amount={totalAmount ?? 0} // Provide a fallback to avoid undefined
+                  customer={{
+                    name: payload?.name?.trim() ?? 'Customer',
+                    email: payload?.email?.trim() ?? 'customer@example.com',
+                    phone: payload?.phone?.trim() ?? '0000000000',
+                  }}
+                  config={{
+                    name: 'WishBox Store',
+                    currency: 'INR',
+                    description: 'For Order Booking Payment',
+                    theme: {
+                      color: '#B68AD4',
+                      backdrop_color: '#FFFFFF',
+                      hide_topbar: false,
+                    },
+                  }}
+                  buttonLabel={`Pay ₹${(totalAmount ?? 0).toFixed(2)}`}
+                  buttonClassName="bg-primary-90 px-6 py-4 w-full rounded-xl"
+                  onPaymentSuccess={(paymentData, orderId) => {
+                    console.log('Payment Success:', paymentData);
+                    orderPayment(orderId, paymentData, totalAmount ?? 0);
+                  }}
+                  onPaymentFailure={(error) => {
+                    ToastAndroid.show(
+                      `Payment failed: ${error?.description || 'Unknown error'}`,
+                      ToastAndroid.LONG
+                    );
+                  }}
+                  onPaymentCancel={() => {
+                    ToastAndroid.show('Payment cancelled. Order not placed.', ToastAndroid.LONG);
+                  }}
+                  // handleSubmit={() => {
+                  //   const data = handlePlaceOrder(values, { isSubmitting, resetForm })
+                  //   return data;
+                  // }}
+                  handleSubmit={async () => {
+                    try {
+                      const result = await handlePlaceOrder(
+                        { discount: values.discount },
+                        { setSubmitting: () => { }, resetForm: () => { } }
+                      );
+                      return { success: true, orderId: result.orderId }; // Adjust based on handlePlaceOrder response
+                    } catch (error) {
+                      return { success: false, orderId: '' };
+                    }
+                  }}
+                />
+              </>
+            );
+          }}
         </Formik>
       </ScrollView>
     </View>

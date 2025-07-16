@@ -34,7 +34,7 @@ const PostDetailScreen = () => {
   const fetchPost = async () => {
     try {
       setLoading(true);
-      const response: any = await Fetch(`/user/posts/${postId}`, undefined,5000);
+      const response: any = await Fetch(`/user/posts/${postId}`, undefined, 5000);
       console.log(response)
       if (!response.success) throw new Error(response.message);
       setPost(response.data);
@@ -107,7 +107,7 @@ const PostDetailScreen = () => {
           </Text>
         )}
 
-        <View className="flex-row gap-6 mb-3">
+        <View className="flex-row gap-6 mb-3 hidden ">
           <Text className="text-gray-600 text-sm"><Icon name='eye' /> {post.views} Views</Text>
           <Text className="text-gray-600 text-sm"><Icon name='chatbox-ellipses' /> {post.comments} Comments</Text>
         </View>

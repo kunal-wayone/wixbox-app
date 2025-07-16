@@ -116,9 +116,10 @@ const MenuItemListScreen = () => {
         lastScrollY.current = scrollY;
     };
 
-  
+
     // Add to cart
     const handleAddToCart = (item: any) => {
+        console.log(item)
         try {
             dispatch(
                 addToCart({
@@ -126,6 +127,8 @@ const MenuItemListScreen = () => {
                     name: item.name,
                     price: item.price,
                     quantity: item.quantity,
+                    image: item?.images?.length > 0 ? item?.images[0] : ImagePath.item1,
+                    shop_id: item?.shop?.id
                 }),
             );
         } catch (error) {
@@ -135,7 +138,7 @@ const MenuItemListScreen = () => {
     };
 
     // Place order
-    const handlePlaceOrder = (item: MenuItem) => {
+    const handlePlaceOrder = (item: any) => {
         navigation.navigate('AddCustomerFormScreen', {
             item: [
                 {
@@ -143,7 +146,9 @@ const MenuItemListScreen = () => {
                     quantity: 1,
                     price: Math.floor(Number(item.price)),
                     name: item.item_name,
-                    image: item?.images?.length ? item.images[0] : '',
+                    image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+                    shop_id: item?.shop?.id ?? item?.store_id
+
                 },
             ],
         });

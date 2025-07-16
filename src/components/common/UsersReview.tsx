@@ -166,7 +166,7 @@ const UsersReview = ({ shopId, average_rating }: any) => {
   }, [isLoadingMore, page, lastPage, handleLoadMore]);
 
   return (
-    <View className="mt-5 min-h-[83vh]">
+    <View className="mt-5 min-h-[83vh] px-4">
       {/* Title and Rating */}
       <View className="flex-row justify-between items-center mb-2">
         <Text className="text-lg font-semibold text-gray-700">

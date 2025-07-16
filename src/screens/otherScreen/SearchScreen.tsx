@@ -22,6 +22,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../store/slices/cartSlice';
 import { RootState } from '../../store/store';
+import FoodItem from '../../components/common/FoodItem';
 
 const { width } = Dimensions.get('window');
 
@@ -104,13 +105,15 @@ const SearchScreen = () => {
       price: item.price,
       quantity: 1,
       image: item.images[0] ? IMAGE_URL + item.images[0] : undefined,
+      shop_id: item?.shop?.id ?? item?.store_id
+
     };
     dispatch(addToCart(cartItem));
     ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
   };
 
   useEffect(() => {
-    if (isFocused && query.trim()) {
+    if (isFocused) {
       fetchSearchResults(query, active, 1, false);
       navigation.setParams({ query: '' });
     }
@@ -128,6 +131,49 @@ const SearchScreen = () => {
         {loadingMore && <ActivityIndicator size="small" className="mt-2" />}
       </View>
     )
+  );
+
+
+  // Place order
+  const handlePlaceOrder = (item: any) => {
+    navigation.navigate('AddCustomerFormScreen', {
+      item: [
+        {
+          id: item.id,
+          quantity: 1,
+          price: Math.floor(Number(item.price)),
+          name: item.item_name,
+          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          shop_id: item?.shop?.id ?? item?.store_id
+        },
+      ],
+    });
+  };
+
+
+  const renderItem = ({ item, index }: { item: any, index: any }) => (
+    <View>
+      <FoodItem
+        id={item?.id}
+        name={item.item_name}
+        description={item.description || 'No description available'}
+        restaurent={item?.shop?.restaurant_name || "NA"}
+        price={parseFloat(item.price) || 0}
+        imageUrl={
+          (item.images?.length ?? 0) > 0
+            ? { uri: IMAGE_URL + item.images![0] }
+            : ImagePath.item1
+        }
+        dietaryInfo={item?.dietary_info || []}
+        rating={item.average_rating || 0}
+        isVegetarian={item.is_vegetarian || false}
+        isAvailable={item.is_available !== false}
+        onAddToCart={() => handleAddToCart}
+        handlePlaceOrder={handlePlaceOrder}
+        maxQuantity={10}
+        item={item}
+      />
+    </View>
   );
 
   return (
@@ -242,45 +288,7 @@ const SearchScreen = () => {
           <FlatList
             data={dishes}
             keyExtractor={(item: any) => item.id.toString()}
-            renderItem={({ item }: any) => {
-              const isInCart = cartItems.some((cartItem: any) => cartItem.id == item.id);
-              return (
-                <View className="flex-row bg-primary-10 rounded-xl p-4 mb-4 mx-4 gap-4">
-                  <TouchableOpacity onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.id })}>
-                    <Image
-                      source={item?.images.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
-                      className="w-28 h-28 rounded-xl"
-                      resizeMode="cover"
-                    />
-                  </TouchableOpacity>
-                  <View className="flex-1">
-                    <Text className="text-xl font-bold">{item?.item_name}</Text>
-                    <Text className="text-gray-500">{item?.category?.name}</Text>
-                    <View className="flex-row justify-between items-center mt-1">
-                      <Text className="text-base font-semibold text-gray-700">₹{item?.price}</Text>
-                      <View className="flex-row items-center">
-                        <MaterialIcons name="star" size={16} color="#FFC727" />
-                        <Text className="text-sm text-gray-600">{item?.average_rating || 0}</Text>
-                      </View>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => {
-                        if (isInCart) {
-                          navigation.navigate('CartScreen');
-                        } else {
-                          handleAddToCart(item);
-                        }
-                      }}
-                      className={`mt-2 ${isInCart ? 'bg-green-500' : 'bg-primary-90'} w-full px-3 py-2 rounded-lg`}
-                    >
-                      <Text className="text-white text-center text-md font-medium">
-                        {isInCart ? 'View Cart' : 'Add To Cart'}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )
-            }}
+            renderItem={renderItem}
             refreshing={refreshing}
             onRefresh={handleRefresh}
             onEndReached={handleLoadMore}

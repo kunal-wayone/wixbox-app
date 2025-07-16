@@ -1,198 +1,207 @@
-import {View, Text, Image, TouchableOpacity, ScrollView} from 'react-native';
-import React, {useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
-import {BarChart, PieChart} from 'react-native-gifted-charts';
-import LinearGradient from 'react-native-linear-gradient';
-import {ImagePath} from '../constants/ImagePath';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+  ToastAndroid,
+  Dimensions,
+} from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { BarChart } from 'react-native-gifted-charts';
+import { Fetch } from '../utils/apiUtils';
+
+const screenWidth = Dimensions.get('window').width;
+
+const formatDate = (date: any) => date.toISOString().split('T')[0];
+const displayDate = (date: any) => date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
 const AnalyticsScreen = () => {
-  const navigation = useNavigation<any>();
-  const [selectedPeriod, setSelectedPeriod] = useState('Today');
+  const [loading, setLoading] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [dateRange, setDateRange] = useState({ from: new Date(), to: new Date() });
+  const [showPicker, setShowPicker] = useState({ from: false, to: false });
+  const [selectedTab, setSelectedTab] = useState<'Today' | 'Weekly' | 'Yearly' | 'Custom'>('Today');
 
-  // Sample data for charts
-  const barData = [
-    {value: 50, label: '8 AM'},
-    {value: 80, label: '11 AM'},
-    {value: 120, label: '2 PM'},
-    {value: 90, label: '5 PM'},
-    {value: 70, label: '8 PM'},
-  ];
-
-  const pieData = [
-    {value: 30, color: '#31313180', text: 'Female'},
-    {value: 50, color: '#B68AD4', text: 'Male'},
-    // {value: 10, color: '#45B7D1', text: 'Youth'},
-    // {value: 5, color: '#96CEB4', text: 'Kids'},
-    // {value: 5, color: '#FFEEAD', text: 'Family'},
-  ];
-
-  // Sample stats data
-  const stats: any = {
-    today: {
-      date: '5th June',
-      totalEarnings: '₹1,234',
-      totalOrders: '45',
-      avgOrderValue: '₹27.42',
-      bestSellingItem: 'Product A',
-    },
-    weekly: {
-      date: '1st June to 7th June',
-      totalEarnings: '₹8,765',
-      totalOrders: '320',
-      avgOrderValue: '₹27.39',
-      bestSellingItem: 'Product B',
-    },
-    monthly: {
-      date: 'June-July',
-      totalEarnings: '₹32,456',
-      totalOrders: '1,200',
-      avgOrderValue: '₹27.05',
-      bestSellingItem: 'Product C',
-    },
+  const predefinedRanges = {
+    Today: { from: new Date(), to: new Date() },
+    Weekly: { from: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000), to: new Date() },
+    Yearly: { from: new Date(new Date().getFullYear(), 0, 1), to: new Date() },
   };
 
-  const gridData = [
-    {title: 'People Viewed Ad', value: '1,234'},
-    {title: 'People Clicked Ad', value: '567'},
-    {title: 'Total Store Visits via GeoFence', value: '789'},
-    {title: 'Other', value: '123'},
-  ];
-  const data = stats[selectedPeriod.toLowerCase()];
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const { from, to } = selectedTab !== 'Custom' ? predefinedRanges[selectedTab] : dateRange;
+      const response: any = await Fetch(`/user/vendor/analytics?from=${formatDate(from)}&to=${formatDate(to)}`, {}, 5000);
+      if (response?.success) {
+        setAnalyticsData(response.data);
+      } else {
+        ToastAndroid.show('Failed to load analytics', ToastAndroid.SHORT);
+      }
+    } catch (err) {
+      ToastAndroid.show('Something went wrong', ToastAndroid.SHORT);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const renderStats = () => {
-    const data = stats[selectedPeriod.toLowerCase()];
+  useEffect(() => {
+    if (selectedTab !== 'Custom') {
+      setDateRange(predefinedRanges[selectedTab]);
+    }
+    fetchData();
+  }, [selectedTab]);
+
+  const handleDateChange = (type: 'from' | 'to', event: any, selectedDate: Date) => {
+    if (event.type === 'dismissed') {
+      setShowPicker(prev => ({ ...prev, [type]: false }));
+      return;
+    }
+    setShowPicker(prev => ({ ...prev, [type]: false }));
+    setDateRange(prev => ({ ...prev, [type]: selectedDate || prev[type] }));
+  };
+
+  const renderTabs = () => {
+    const tabs = ['Today', 'Weekly', 'Yearly', 'Custom'];
+    return (
+      <View className="flex-row justify-around mb-4">
+        {tabs.map(tab => (
+          <TouchableOpacity
+            key={tab}
+            onPress={() => setSelectedTab(tab as any)}
+            className={`px-4 py-2 rounded-xl ${selectedTab === tab ? 'bg-primary-90' : 'bg-white'}`}
+          >
+            <Text className={selectedTab === tab ? 'text-white font-bold' : 'text-gray-700'}>{tab}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  const renderInfoCard = (title: string, value: string | number) => (
+    <View className="w-[48%] bg-white shadow-md p-4 rounded-xl mb-4">
+      <Text className="text-gray-700 font-medium text-sm">{title}</Text>
+      <Text className="text-xl font-bold mt-1">{value}</Text>
+    </View>
+  );
+
+  const renderCragData = () => {
+    const cragMetrics = [
+      { label: 'Conversion Rate', value: '12.5%' },
+      { label: 'Avg. Delivery Time', value: '32 mins' },
+      { label: 'New vs Returning Users', value: '68% / 32%' },
+      { label: 'Most Visited Time', value: '2 PM - 5 PM' },
+    ];
+
     return (
       <View className="mt-4">
-        <View className="flex-row justify-between mt-2 bg-primary-10 p-4 rounded-lg">
-          <Text className="text-base">Total Earnings</Text>
-          <Text className="text-base font-semibold">{data.totalEarnings}</Text>
-        </View>
-        <View className="mt-2  bg-primary-10 p-4 rounded-lg">
-          <View className="flex-row justify-between mt-2 ">
-            <Text className="text-base">Total Orders Completed Today:</Text>
-            <Text className="text-base font-semibold">{data.totalOrders}</Text>
-          </View>
-          <View className="flex-row justify-between mt-2 ">
-            <Text className="text-base">Average Order Value:</Text>
-            <Text className="text-base font-semibold">
-              {data.avgOrderValue}
-            </Text>
-          </View>
-        </View>{' '}
-        <View className="flex-col justify-between mt-2  bg-primary-10 p-4 rounded-lg">
-          <Text className="text-base">Best Selling Item Today:</Text>
-          <Text className="text-base font-semibold">
-            {data.bestSellingItem}
-          </Text>
+        <Text className="text-lg font-bold mb-2">Advanced Insights</Text>
+        <View className="flex-row flex-wrap justify-between">
+          {cragMetrics.map((item, index) => (
+            <View
+              key={index}
+              className="w-[48%] bg-white shadow-md p-4 m-1 rounded-xl"
+            >
+              <Text className="text-sm text-gray-600 font-semibold">{item.label}</Text>
+              <Text className="text-xl text-gray-900 font-bold mt-1">{item.value}</Text>
+            </View>
+          ))}
         </View>
       </View>
     );
   };
 
+  const getBarChartData = () => {
+    const now = new Date();
+    const days = [...Array(7).keys()].map(i => {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      return {
+        value: Math.floor(Math.random() * 200),
+        label: `${d.toLocaleDateString('en-GB', { weekday: 'short' })}\n${d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}`,
+      };
+    });
+    return days.reverse();
+  };
+
   return (
-    <ScrollView className="flex-1 bg-gray-100">
-      <View className="p-4 pt-10">
-        <Text className="text-2xl text-center font-bold">Analytics</Text>
+    <ScrollView className="flex-1 bg-gray-100 px-4 pt-10">
+      <Text className="text-2xl font-bold text-center mb-4">Business Analytics Dashboard</Text>
 
-        {/* Badge Buttons */}
-        <View className="flex-row justify-around gap-4 mt-4">
-          {['Today', 'Weekly', 'Monthly'].map(period => (
-            <View className="flex-col justify-center items-center gap-2">
-              <TouchableOpacity
-                key={period}
-                onPress={() => setSelectedPeriod(period)}
-                className={`px-7 py-2 rounded-lg ${
-                  selectedPeriod === period ? 'bg-primary-80' : 'bg-gray-300'
-                }`}>
-                <Text
-                  className={`text-base text-center ${
-                    selectedPeriod === period ? 'text-white' : 'text-black'
-                  }`}>
-                  {period}
-                </Text>
-              </TouchableOpacity>
-              <Text className={`text-base text-center`}>
-                {stats[period.toLowerCase()]?.date}
-              </Text>
-            </View>
-          ))}
+      {renderTabs()}
+
+      {selectedTab === 'Custom' && (
+        <View className="flex-row justify-between mb-4">
+          <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, from: true })} className="flex-1 mr-2 bg-white py-3 px-4 rounded-lg shadow">
+            <Text className="text-base text-gray-700">From: {displayDate(dateRange.from)}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, to: true })} className="flex-1 ml-2 bg-white py-3 px-4 rounded-lg shadow">
+            <Text className="text-base text-gray-700">To: {displayDate(dateRange.to)}</Text>
+          </TouchableOpacity>
         </View>
+      )}
 
-        {/* Stats */}
-        {renderStats()}
-
-        {/* Bar Chart */}
-        <View className="mt-6 bg-primary-10 p-4 rounded-xl">
-          <Text className="text-lg font-bold mb-2">Seles Time Frame</Text>
-
-          <BarChart
-            data={barData}
-            barWidth={10}
-            spacing={20}
-            roundedTop
-            hideRules
-            xAxisThickness={2}
-            yAxisThickness={0}
-            yAxisTextStyle={{color: '#333'}}
-            barBorderRadius={4}
-            width={280}
-            frontColor="#B68AD4"
-            noOfSections={5}
-            isAnimated
-            hideYAxisText
-          />
+      {loading ? (
+        <View className="items-center justify-center mt-10">
+          <ActivityIndicator size="large" color="#B68AD4" />
+          <Text className="text-sm mt-2 text-gray-500">Loading analytics...</Text>
         </View>
-
-        {/* Pie Chart */}
-        <View className="mt-6">
-          <Text className="text-lg font-bold mb-2">
-            Total Customers Served Today
-          </Text>
-          <View className='flex-row items-center bg-primary-10 p-8 rounded-xl'>
-            <PieChart
-              data={pieData}
-              showText
-              textColor="#fff"
-              textSize={13}
-              radius={80}
-              innerRadius={60}
-              showValuesAsLabels
-            />
-            <View className="flex-col flex-wrap justify-center pl-4 mt-4">
-              {pieData.map((item, index) => (
-                <View key={index} className="flex-row items-center mx-2">
-                  <View
-                    className="w-4 h-4 rounded-full"
-                    style={{backgroundColor: item.color}}
-                  />
-                  <Text className="ml-2 text-base">
-                    {item.text}: {item.value}%
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Grid Boxes */}
-        <View className="mt-6">
-          <Text className="text-lg font-bold mb-2">Additional Metrics</Text>
+      ) : analyticsData ? (
+        <>
           <View className="flex-row flex-wrap justify-between">
-            {gridData.map((item, index) => (
-              <View
-                key={index}
-                className="w-[48%] h-24 p-4 bg-primary-10 rounded-xl mb-4">
-                <Text className="text-base font-semibold text-gray-800">
-                  {item.title}
-                </Text>
-                <Text className="text-lg font-bold text-gray-800">
-                  {item.value}
-                </Text>
-              </View>
-            ))}
+            {renderInfoCard('Total Earnings', `₹${analyticsData.total_earnings}`)}
+            {renderInfoCard('Total Orders', analyticsData.total_orders)}
+            {renderInfoCard('Avg. Order Value', `₹${analyticsData.average_order_price}`)}
+            {renderInfoCard('Table Bookings', analyticsData.table_booking_count)}
+            {renderInfoCard('Users', analyticsData.user_count)}
+            {renderInfoCard('Best Selling', `${analyticsData.best_selling_item} (${analyticsData.best_selling_quantity})`)}
           </View>
-        </View>
-      </View>
+
+          <View className="bg-white p-4 mt-4 rounded-xl shadow mb-20">
+            <Text className="text-lg font-bold mb-2">Sales Over Time</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <BarChart
+                data={getBarChartData()}
+                barWidth={10}
+                spacing={30}
+                roundedTop
+                frontColor="#B68AD4"
+                isAnimated
+                xAxisTextStyle={{ color: '#444' }}
+                barBorderRadius={6}
+                yAxisThickness={1}
+                hideYAxisText
+                showValuesOnTopOfBars
+                width={screenWidth * 1.8}
+              />
+            </ScrollView>
+          </View>
+
+          {/* {renderCragData()} */}
+        </>
+      ) : (
+        <Text className="text-center text-gray-500 mt-10">No data found</Text>
+      )}
+
+      {showPicker.from && (
+        <DateTimePicker
+          value={dateRange.from}
+          mode="date"
+          display="calendar"
+          onChange={(e, d) => handleDateChange('from', e, d)}
+        />
+      )}
+      {showPicker.to && (
+        <DateTimePicker
+          value={dateRange.to}
+          mode="date"
+          display="calendar"
+          onChange={(e, d) => handleDateChange('to', e, d)}
+        />
+      )}
     </ScrollView>
   );
 };

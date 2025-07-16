@@ -142,7 +142,7 @@ const BookedTablesScreen = () => {
         <View className="flex-1 bg-gray-100 pt-4">
             {/* Header */}
             <View className="flex-row items-center mb-4 px-4">
-                <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} className="pr-2 absolute left-4 z-10">
+                <TouchableOpacity onPress={() => navigation.goBack()} className="pr-2 absolute left-4 z-10">
                     <Ionicons name="arrow-back" size={24} color="#111827" />
                 </TouchableOpacity>
                 <Text className="text-xl font-bold text-gray-800 text-center flex-1">My Bookings</Text>

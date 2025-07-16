@@ -9,7 +9,6 @@ import {
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
-import { getToken } from '../../utils/notification/firebase';
 
 const GetLocationButton = ({ setLocation }: any) => {
     const [showOptions, setShowOptions] = useState(false);
@@ -41,7 +40,10 @@ const GetLocationButton = ({ setLocation }: any) => {
         <View className="absolute bottom-8 right-8 items-end z-[50000]">
             {/* Floating Button */}
             <TouchableOpacity
-                onPress={() => setShowOptions(!showOptions)}
+                onPress={() => {
+                    setShowOptions(false);
+                    getLiveLocation();
+                }}
                 className="bg-primary-90 w-14 h-14 rounded-full justify-center items-center shadow-lg"
             >
                 {isLocationLoading ? (
@@ -67,11 +69,10 @@ const GetLocationButton = ({ setLocation }: any) => {
 
                     <Pressable
                         onPress={() => {
-                            // setShowOptions(false);
-                            // manualAddLocation();
-                            getToken()
+                            setShowOptions(false);
+                            manualAddLocation();
                         }}
-                        className="flex-row items-center space-x-2 py-2"
+                        className="flex-row items-center space-x-2 py-2 hidden"
                     >
                         <Ionicons name="create-outline" size={20} color="#333" />
                         <Text className="text-sm text-gray-800">Enter Location Manually</Text>

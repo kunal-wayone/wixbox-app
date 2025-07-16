@@ -61,10 +61,10 @@ const AddCustomerFormScreen = () => {
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
   const route = useRoute<any>();
-  const { orderDetails, item } = route.params || null;
+  const orderDetails = route?.params?.orderDetails ?? null;
+  const item = route?.params?.item ?? null;
   const cartItems = useSelector((state: RootState) => state.cart.items);
-  const user: User | null = useSelector((state: RootState) => state.user.data);
-
+  const user: any | null = useSelector((state: RootState) => state.user.data);
   const [orderItems, setOrderItems] = useState<OrderItem[]>(item || cartItems || []);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [selectedOption, setSelectedOption] = useState<'Own' | 'Other'>(
@@ -127,11 +127,11 @@ const AddCustomerFormScreen = () => {
       //   throw new Error('Failed to add customer');
       // }
 
-      ToastAndroid.show('Customer added successfully!', ToastAndroid.SHORT);
-      resetForm();
-      setOrderItems([]);
-      dispatch(removeFromCart('')); // Clear cart
-      navigation.navigate('OrderSummaryScreen', { payload });
+      // ToastAndroid.show('Customer added successfully!', ToastAndroid.SHORT);
+      // resetForm();
+      // setOrderItems([]);
+      // dispatch(removeFromCart('')); // Clear cart
+      navigation.navigate('OrderSummaryScreen', { payload, item });
     } catch (error: any) {
       ToastAndroid.show(
         error.message || 'Something went wrong. Please try again.',
@@ -168,7 +168,7 @@ const AddCustomerFormScreen = () => {
       >
         {/* Header with Back Button and Title */}
         <View className="flex-row items-center border-gray-200">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 absolute">
             <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
           <Text
@@ -181,7 +181,7 @@ const AddCustomerFormScreen = () => {
               color: '#374151',
             }}
           >
-            {user?.role === 'user' ? 'Details' : 'Add Customer'}
+            {user?.role === 'user' ? 'Order Details' : 'Order Details'}
           </Text>
         </View>
 
@@ -208,6 +208,117 @@ const AddCustomerFormScreen = () => {
                   <RadioButton label="Others" value="Other" />
                 </View>
               )}
+
+              {/* Order Items */}
+              <View style={{ marginBottom: 12 }} className='bg-primary-10 p-2 rounded-xl '>
+                <View className="flex-row items-center justify-start gap-10">
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: 4,
+                    }}
+                  >
+                    Item Name
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: 4,
+                    }}
+                  >
+                    Qnt.
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: 4,
+                    }}
+                  >
+                    Price
+                  </Text>
+
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: 4,
+                      textAlign: "right"
+                    }}
+                    className='flex-1 mr-2'
+                  >
+                    Action
+                  </Text>
+                </View>
+                {orderItems?.length === 0 ? (
+                  <Text>No items added</Text>
+                ) : (
+                  <View>
+                    {orderItems.map((item: any, index: any) => (
+                      <View
+                        key={item.id || index}
+                        style={{
+                          marginBottom: 8,
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <View className="flex-1 flex-row items-center justify-start gap-10">
+                          <Text className="w-24">
+                            {item?.name?.length > 10 ? `${item.name.slice(0, 10)}...` : item.name}
+                          </Text>
+                          <Text>{item?.quantity}</Text>
+                          <Text>₹ {item.price}/-</Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => {
+                            dispatch(removeFromCart(item.id));
+                            const updatedItems = orderItems.filter((_, i) => i !== index);
+                            setOrderItems(updatedItems);
+                            setFieldValue('orderItems', updatedItems);
+                          }}
+                          style={{ marginLeft: 8 }}
+                          className='mr-4'
+                        >
+                          <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                    {touched.orderItems && errors.orderItems && (
+                      <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        {errors.orderItems}
+                      </Text>
+                    )}
+                  </View>
+                )}
+                <TouchableOpacity
+                  onPress={() => {
+                    if (user?.role === "user") {
+                      navigation.navigate('SearchScreen')
+                    } else {
+                      navigation.navigate('AddOrderScreen')
+                    }
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: 8,
+                    marginTop: 4,
+                  }}
+                  className='ml-auto'
+                >
+                  <Ionicons name="add-circle-outline" size={20} color="#B68AD4" />
+                  <Text style={{ marginLeft: 8, color: '#B68AD4', fontSize: 14 }}>
+                    Add Item
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
               {/* Customer Name */}
               <View style={{ marginBottom: 12 }}>
@@ -311,95 +422,7 @@ const AddCustomerFormScreen = () => {
                 )}
               </View>
 
-              {/* Order Items */}
-              <View style={{ marginBottom: 12 }}>
-                <View className="flex-row items-center justify-start gap-10">
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Item Name
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Qnt.
-                  </Text>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Price
-                  </Text>
-                </View>
-                {orderItems.length === 0 ? (
-                  <Text>No items added</Text>
-                ) : (
-                  <View>
-                    {orderItems.map((item, index) => (
-                      <View
-                        key={item.id || index}
-                        style={{
-                          marginBottom: 8,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <View className="flex-1 flex-row items-center justify-start gap-10">
-                          <Text className="w-24">
-                            {item.name.length > 10 ? `${item.name.slice(0, 10)}...` : item.name}
-                          </Text>
-                          <Text>{item.quantity}</Text>
-                          <Text>₹ {item.price}/-</Text>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => {
-                            dispatch(removeFromCart(item.id));
-                            const updatedItems = orderItems.filter((_, i) => i !== index);
-                            setOrderItems(updatedItems);
-                            setFieldValue('orderItems', updatedItems);
-                          }}
-                          style={{ marginLeft: 8 }}
-                        >
-                          <Ionicons name="trash-outline" size={18} color="#EF4444" />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                    {touched.orderItems && errors.orderItems && (
-                      <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.orderItems}
-                      </Text>
-                    )}
-                  </View>
-                )}
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('AddOrderScreen')}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    padding: 8,
-                    marginTop: 8,
-                  }}
-                >
-                  <Ionicons name="add-circle-outline" size={20} color="#B68AD4" />
-                  <Text style={{ marginLeft: 8, color: '#B68AD4', fontSize: 14 }}>
-                    Add Item
-                  </Text>
-                </TouchableOpacity>
-              </View>
+
 
               {/* Arrived At */}
               <View style={{ marginBottom: 12 }}>

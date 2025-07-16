@@ -75,6 +75,7 @@ const AddOrderScreen = () => {
   );
 
   const handleAddToCart = (product: any) => {
+    console.log(product)
     dispatch(
       addToCart({
         id: product?.id.toString(),
@@ -82,6 +83,8 @@ const AddOrderScreen = () => {
         price: parseFloat(product?.price),
         quantity: 1,
         image: product?.images[0] ?? '',
+        shop_id: product?.shop?.id ?? '',
+
       })
     );
     ToastAndroid.show(`${product?.item_name} added to cart`, ToastAndroid.SHORT);
@@ -287,6 +290,18 @@ const AddOrderScreen = () => {
           ListFooterComponent={renderFooter}
         />
       )}
+      <TouchableOpacity
+        className='bg-primary-90 p-4 rounded-xl m-2'
+        onPress={() => {
+          setIsCartVisible(false);
+          navigation.navigate('AddCustomerFormScreen', { shopId });
+        }}
+        disabled={cartItems.length === 0}
+      >
+        <Text className='text-center text-white'>
+          {cartItems.length === 0 ? 'Cart is Empty' : 'Proceed to Checkout'}
+        </Text>
+      </TouchableOpacity>
       {/* Cart Modal */}
       <Modal
         isVisible={isCartVisible}

@@ -136,12 +136,12 @@ const wishlistSlice = createSlice({
 
         action.payload.forEach((entry) => {
           if (entry.type === 'Shop' && entry.id && entry.data) {
-            shops.push(entry.id);
+            shops.push(entry?.data);
           } else if (entry.type === 'MenuItem' && entry.data) {
             items.push(entry.data);
           }
         });
-
+        console.log(shops,items,'dfd')
         state.shop_ids = shops;
         state.menu_items = items;
       })

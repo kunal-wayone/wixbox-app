@@ -13,8 +13,7 @@ const CartScreen = () => {
     const route = useRoute<any>();
     const shopId = route.params?.shopId || null;
     const cartItems = useSelector((state: RootState) => state.cart.items);
-
-
+    console.log(cartItems)
     const handleAddToCart = (product: any) => {
         console.log(product)
         dispatch(
@@ -24,12 +23,13 @@ const CartScreen = () => {
                 price: product?.price,
                 quantity: 1,
                 image: product?.images[0],
+                shop_id: product?.images[0],
             })
         );
     };
 
     const updateQuantity = (id: string, change: number) => {
-        const item = cartItems.find(i => i.id === id);
+        const item = cartItems.find((i: any) => i.id === id);
         if (!item) return;
 
         const newQty = item.quantity + change;
@@ -56,7 +56,7 @@ const CartScreen = () => {
                     padding: 12,
                 }}>
                 <Image
-                    source={item.image ? { uri: item.image } : ImagePath.item1}
+                    source={item?.image}
                     style={{ width: 80, height: 80, borderRadius: 10, marginRight: 12 }}
                     resizeMode="cover"
                 />
@@ -108,7 +108,7 @@ const CartScreen = () => {
             <FlatList
                 data={cartItems}
                 renderItem={renderCartItem}
-                keyExtractor={item => item.id}
+                keyExtractor={item => item?.id?.toString()}
                 showsVerticalScrollIndicator={false}
             />
             <TouchableOpacity className='bg-primary-90 p-4 rounded-xl' onPress={() => navigation.navigate("AddCustomerFormScreen")}>

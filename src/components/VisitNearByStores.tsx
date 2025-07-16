@@ -155,15 +155,15 @@ const VisitNearByStores = () => {
           scrollEventThrottle={16}
         >
           {stores.map((store) => (
-            <View key={store.id} style={{ width: CARD_WIDTH }}>
+            <View key={store.id} style={{ width: width * 0.8 }}>
               <Shop
                 id={store.id}
-                name={store.name}
-                description={store.description || 'No description available'}
+                name={store?.restaurant_name}
+                description={store?.about_business || 'No description available'}
                 images={store?.restaurant_images || []}
                 address={store.address || 'No address provided'}
                 phone={store.phone || 'No phone provided'}
-                rating={store.rating || 0}
+                rating={store?.average_rating || 0}
                 categories={store.categories || []}
                 isOpen={store.is_open !== false}
                 featuredItems={
@@ -176,7 +176,6 @@ const VisitNearByStores = () => {
                 }
                 maxImages={5}
                 item={store}
-
               />
             </View>
           ))}

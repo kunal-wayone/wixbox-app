@@ -36,6 +36,11 @@ const ProfileScreen = () => {
     { name: 'Manage Stock', icon: 'cube-outline', link: 'ManageStockScreen' },
     { name: 'Manage Ads', icon: 'cube-outline', link: 'AdsListScreen' },
     { name: 'Manage Orders', icon: 'people-outline', link: 'AddCustomerScreen' },
+    {
+      name: 'My Transection',
+      icon: 'wallet-outline',
+      link: 'ManageTransection',
+    },
   ];
 
   const userTabs = [
@@ -44,12 +49,12 @@ const ProfileScreen = () => {
       icon: 'person-outline',
       link: 'EditProfileScreen',
     },
-    {
-      name: 'Visited Stores',
-      icon: 'storefront-outline',
-      link: 'CreateShopScreen',
-    },
-    { name: 'Order History', icon: 'grid-outline', link: '' },
+    // {
+    //   name: 'Visited Stores',
+    //   icon: 'storefront-outline',
+    //   link: 'CreateShopScreen',
+    // },
+    { name: 'Order History', icon: 'grid-outline', link: 'ManageAllOrders' },
     {
       name: 'Booked Table',
       icon: 'restaurant-outline',
@@ -84,7 +89,7 @@ const ProfileScreen = () => {
           });
           // navigation.navigate('LoginScreen');
         });
-      TokenStorage.removeUser()
+      TokenStorage.removeUser() 
       TokenStorage.removeRole()
       TokenStorage.removeToken();
       googleSignOut()

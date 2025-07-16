@@ -127,14 +127,14 @@ const Review = () => {
         Reviews
       </Text>
       <Text className="text-sm text-gray-600 mb-4">
-        {reviews.length} Reviews
+        {reviews?.length || 0} Reviews
       </Text>
       {/* Review List */}
       {isLoading ? (
         <View className="flex-1 justify-center items-center mt-10">
           <ActivityIndicator size="large" color="#007AFF" />
         </View>
-      ) : reviews.length === 0 ? (
+      ) : reviews?.length === 0 ? (
         <View className="flex-1 justify-center items-center mt-10">
           <Text className="text-gray-500 text-lg mb-auto">No reviews found</Text>
         </View>

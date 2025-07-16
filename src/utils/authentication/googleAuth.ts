@@ -36,15 +36,9 @@ export const googleLogin = async () => {
     try {
         await GoogleSignin.hasPlayServices();
         const userInfo: any = await GoogleSignin.signIn();
-        console.log(userInfo)
-        // Optional: Send token or email to backend for login
-        const response: any = await Post('/api/auth/google', {
-            email: userInfo?.user?.email,
-            name: userInfo?.user?.name,
-            googleId: userInfo?.user?.id,
-        });
 
-        return response?.data; // contains token and user
+        console.log(userInfo)
+        return { token: userInfo?.data?.idToken, user: userInfo?.data?.user } // contains token and user
     } catch (error) {
         console.error('Google Login Error', error);
         throw error;

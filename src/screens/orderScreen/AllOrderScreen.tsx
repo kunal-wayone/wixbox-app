@@ -13,12 +13,14 @@ import {
 } from 'react-native';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { ImagePath } from '../../constants/ImagePath';
-import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
-import { RootState } from '../../store/store';
-import { useSelector } from 'react-redux';
 
-const AddCustomerScreen = () => {
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import { ImagePath } from '../../constants/ImagePath';
+
+
+const AllOrderScreen = () => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const [searchQuery, setSearchQuery] = useState('');
@@ -188,24 +190,19 @@ const AddCustomerScreen = () => {
       </View>
 
       <Text className="text-2xl font-semibold text-center mb-4">
-        {user?.role === 'user' ? 'Orders List' : 'Manage Customer'}
+        {user?.role === 'user' ? 'Orders History' : 'Manage Customer'}
       </Text>
 
-      <View className="flex-row justify-between mb-6">
+      <View className="flex-row justify-between mb-6 hidden">
         <View className="flex-1 flex-row items-center border border-gray-300 rounded-xl mr-3 px-2">
           <Ionicons name="search" size={20} color="#4B5563" />
           <TextInput
             className="flex-1 text-base ml-2"
-            placeholder="Search Customer"
+            placeholder="Search Order"
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
         </View>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('AddOrderScreen')}
-          className="bg-primary-90 py-2.5 px-3 rounded-lg justify-center">
-          <Ionicons name="add" size={20} color="white" />
-        </TouchableOpacity>
       </View>
 
       {isLoading ? (
@@ -230,4 +227,4 @@ const AddCustomerScreen = () => {
   );
 };
 
-export default AddCustomerScreen;
+export default AllOrderScreen;

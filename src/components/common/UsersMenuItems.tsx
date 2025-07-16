@@ -18,6 +18,7 @@ import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../store/slices/cartSlice';
 import { RootState } from '../../store/store';
+import FoodItem from './FoodItem';
 
 const SkeletonLoader = () => (
   <View className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm animate-pulse">
@@ -124,20 +125,20 @@ const UsersMenuItems = ({ shopId }: any) => {
     []
   );
 
-  const handleAddToCart = useCallback(
-    (item: any) => {
-      const cartItem = {
-        id: item.id,
-        name: item.item_name,
-        price: item.price,
-        quantity: 1,
-        image: item.images?.length > 0 ? IMAGE_URL + item.images[0] : ImagePath.item1,
-      };
-      dispatch(addToCart(cartItem));
-      ToastAndroid.show(`${item.item_name} added to cart!`, ToastAndroid.SHORT);
-    },
-    [dispatch]
-  );
+  // const handleAddToCart = useCallback(
+  //   (item: any) => {
+  //     const cartItem = {
+  //       id: item.id,
+  //       name: item.item_name,
+  //       price: item.price,
+  //       quantity: 1,
+  //       image: item.images?.length > 0 ? IMAGE_URL + item.images[0] : ImagePath.item1,
+  //     };
+  //     dispatch(addToCart(cartItem));
+  //     ToastAndroid.show(`${item.item_name} added to cart!`, ToastAndroid.SHORT);
+  //   },
+  //   [dispatch]
+  // );
 
   const handleLoadMore = useCallback(() => {
     if (!isFetchingMore && currentPage < lastPage) {
@@ -159,60 +160,63 @@ const UsersMenuItems = ({ shopId }: any) => {
       item?.item_name?.toLowerCase().includes(search?.toLowerCase())
     ), [products, search]);
 
-  const renderItem = useCallback(
-    ({ item }: { item: any }) => {
-      const isInCart = cartItems.some((cartItem: any) => cartItem.id === item.id);
-      return (
-        <View key={item?.id} className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm">
-          <View className="w-2/5 mr-3 items-center">
-            <Image
-              source={item?.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
-              className="w-full h-40 my-auto rounded-lg mb-2"
-              resizeMode="cover"
-            />
-          </View>
-          <View className="flex-1">
-            {item?.offer && (
-              <View className="self-start bg-primary-80 px-2 py-1 rounded-md mb-2">
-                <Text className="text-white text-xs font-semibold">{item?.offer}</Text>
-              </View>
-            )}
-            <Text numberOfLines={1} ellipsizeMode='tail' className="text-lg font-semibold text-gray-800">{item?.item_name}</Text>
-            <View className="flex-row justify-between items-center">
-              <Text className="text-sm text-gray-500">{item?.category?.name || 'N/A'} •</Text>
-              <Text className="text-md font-bold">
-                {item?.currency || '₹'}{item?.price}
-              </Text>
-            </View>
-            <Text className="text-sm text-gray-600 mt-1">{item?.unit || 'N/A'}</Text>
-            <View className="flex-row items-center mt-1 bg-gray-200 rounded-md px-2 py-1 w-16">
-              <AntDesign name="star" color="#FBBF24" size={16} />
-              <Text className="ml-1 text-sm text-gray-700">{item?.average_rating || '0'}</Text>
-            </View>
-            <View className="flex-row items-center justify-start mt-1">
-              <Text className="text-sm text-gray-600">Stock Count:</Text>
-              <Text className="font-medium text-sm"> {item?.stock_quantity || '0'}</Text>
-            </View>
-            <TouchableOpacity
-              onPress={() => {
-                if (isInCart) {
-                  navigation.navigate('CartScreen');
-                } else {
-                  handleAddToCart(item);
-                }
-              }}
-              className={`mt-2 ${isInCart ? 'bg-green-600' : 'bg-primary-90'} w-full px-3 py-2 rounded-lg`}
-            >
-              <Text className="text-white text-center text-md font-medium">
-                {isInCart ? 'View Cart' : 'Add To Cart'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      );
-    },
-    [toggleLoadingIds, toggleProductStatus, navigation, handleAddToCart, cartItems]
+  const handleAddToCart = (item: any) => {
+    const cartItem = {
+      id: item.id.toString(),
+      name: item.item_name,
+      price: item.price,
+      quantity: 1,
+      image: item.images[0] ? IMAGE_URL + item.images[0] : undefined,
+      shop_id: item?.shop?.id ?? item?.store_id
+
+    };
+    dispatch(addToCart(cartItem));
+    ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
+  };
+
+
+  // Place order
+  const handlePlaceOrder = (item: any) => {
+    navigation.navigate('AddCustomerFormScreen', {
+      item: [
+        {
+          id: item.id,
+          quantity: 1,
+          price: Math.floor(Number(item.price)),
+          name: item.item_name,
+          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          shop_id: item?.shop?.id ?? item?.store_id
+        },
+      ],
+    });
+  };
+
+
+  const renderItem = ({ item, index }: { item: any, index: any }) => (
+    <View className=''>
+      <FoodItem
+        id={item?.id}
+        name={item.item_name}
+        description={item.description || 'No description available'}
+        restaurent={item?.shop?.restaurant_name || "NA"}
+        price={parseFloat(item.price) || 0}
+        imageUrl={
+          (item.images?.length ?? 0) > 0
+            ? { uri: IMAGE_URL + item.images![0] }
+            : ImagePath.item1
+        }
+        dietaryInfo={item?.dietary_info || []}
+        rating={item.average_rating || 0}
+        isVegetarian={item.is_vegetarian || false}
+        isAvailable={item.is_available !== false}
+        onAddToCart={() => handleAddToCart}
+        handlePlaceOrder={handlePlaceOrder}
+        maxQuantity={10}
+        item={item}
+      />
+    </View>
   );
+
 
   const renderFooter = useCallback(() => {
     if (isFetchingMore) {
@@ -239,7 +243,7 @@ const UsersMenuItems = ({ shopId }: any) => {
 
   return (
     <View className="min-h-[85vh]">
-      <View className="flex-row items-center gap-3 mt-4 mb-4">
+      <View className="flex-row items-center gap-3 mt-4 mb-2 px-4">
         <View className="flex-row items-center flex-1 bg-white px-3 py-0.5 border rounded-xl shadow-sm">
           <AntDesign name="search1" color="#6B7280" size={20} />
           <TextInput
@@ -262,13 +266,13 @@ const UsersMenuItems = ({ shopId }: any) => {
       </View>
 
       {isLoading ? (
-        <View className="flex-1 justify-center items-center mt-10">
+        <View className="flex-1 justify-center items-center mt-10 px-4">
           <SkeletonLoader />
           <SkeletonLoader />
           <SkeletonLoader />
         </View>
       ) : filteredProducts.length === 0 ? (
-        <View className="flex-1 justify-center items-center mt-10">
+        <View className="flex-1 justify-center items-center mt-10 px-4">
           <Text className="text-gray-500 text-lg">No products found</Text>
         </View>
       ) : (

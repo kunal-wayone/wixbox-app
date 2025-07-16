@@ -63,6 +63,7 @@ const request = async <T>(
         clearTimeout(timeoutId);
         return response;
     } catch (error: any) {
+        console.log(error)
         clearTimeout(timeoutId);
         const response = error?.response?.data;
         throw response;
@@ -104,7 +105,7 @@ export const Post = async <T>(
             data,
             timeout,
         });
-        console.log("response")
+        console.log("response",response)
         return response.data;
     } catch (error: unknown) {
         console.log(error, "ppst error")

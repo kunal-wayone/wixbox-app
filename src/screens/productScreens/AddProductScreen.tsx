@@ -174,7 +174,9 @@ const AddProductScreen = () => {
       formData.append('unit', units && units?.find(u => u?.id === values.unit)?.short_name);
       formData.append('sub_unit', subUits.length !== 0 && subUits?.find(su => su?.id === values.sub_unit)?.short_name);
       formData.append('category_id', values.category_id);
+      formData.append('isVegetarian', values.isVegetarian);
       formData.append('status', values.status);
+
 
       if (productId) {
         formData.append('_method', 'PUT');
@@ -275,6 +277,7 @@ const AddProductScreen = () => {
                 : '', // Fixed category_id
               status: itemDetails?.status === 0 ? '0' : '1',
               images: images || [],
+              isVegetarian: `${itemDetails?.isVegetarian}` || ''
             }}
             validationSchema={validationSchema}
             onSubmit={handleSaveProduct}
@@ -323,7 +326,7 @@ const AddProductScreen = () => {
                   {/* Image Preview */}
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                     {images.map((image: any, index: any) => {
-                      console.log(image?.uri,"dfd");
+                      console.log(image?.uri, "dfd");
                       return (
                         <View
                           key={index}
@@ -612,6 +615,41 @@ const AddProductScreen = () => {
                     <Text
                       style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.stock_quantity}
+                    </Text>
+                  )}
+                </View>
+
+                {/* Status Picker */}
+                <View style={{ marginBottom: 12 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: '500',
+                      color: '#374151',
+                      marginBottom: 4,
+                    }}>
+                    Food Type
+                  </Text>
+                  <View
+                    style={{
+                      borderWidth: 1,
+                      borderColor: '#D1D5DB',
+                      backgroundColor: '#F3F4F6',
+                      borderRadius: 8,
+                    }}>
+                    <Picker
+                      selectedValue={values.isVegetarian}
+                      onValueChange={value => setFieldValue('isVegetarian', value)}
+                      style={{ fontSize: 16 }}>
+                      <Picker.Item label="Select food type" value="" />
+                      <Picker.Item label="Non Veg" value="1" />
+                      <Picker.Item label="Veg" value="0" />
+                    </Picker>
+                  </View>
+                  {touched.isVegetarian && errors.isVegetarian && (
+                    <Text
+                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                      {errors.isVegetarian}
                     </Text>
                   )}
                 </View>

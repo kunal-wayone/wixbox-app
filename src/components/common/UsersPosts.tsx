@@ -13,6 +13,7 @@ import Icon from 'react-native-vector-icons/Entypo';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useSelector } from 'react-redux';
 import { Delete, Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import { ImagePath } from '../../constants/ImagePath';
 
 interface Post {
   id: string;
@@ -139,7 +140,7 @@ const UsersPost = ({ vendor_id }: any) => {
         activeOpacity={0.8}
       >
         <ImageBackground
-          source={{ uri: item.image ? IMAGE_URL + item.image : ImagePath.placeholder }}
+          source={item.image ? { uri: IMAGE_URL + item.image } : ImagePath.item1}
           className="h-48 w-full justify-between p-3"
           imageStyle={{ borderRadius: 16 }}
         >
@@ -147,7 +148,7 @@ const UsersPost = ({ vendor_id }: any) => {
           <View className="flex-row justify-between items-center z-10">
             <View
               className={`${item?.status?.toUpperCase() === 'DRAFT' ? 'bg-red-500' : 'bg-green-600'
-                } px-3 py-1 rounded-lg`}
+                } px-3 py-1 rounded-lg hidden`}
             >
               <Text className="text-xs font-semibold text-white">
                 {item?.status?.toUpperCase() || 'PUBLISHED'}
@@ -160,7 +161,7 @@ const UsersPost = ({ vendor_id }: any) => {
           <View className="z-10">
             <Text className="text-white font-bold text-lg mb-1">{item.title}</Text>
             <View className="flex-row justify-between items-center">
-              <View className="flex-row gap-4">
+              <View className="flex-row gap-4 hidden">
                 <Text className="text-white text-xs">{item.views || 0} Views</Text>
                 <Text className="text-white text-xs">{item.comments || 0} Comments</Text>
               </View>
@@ -246,7 +247,7 @@ const UsersPost = ({ vendor_id }: any) => {
   }, [isLoadingMore, page, lastPage, handleLoadMore]);
 
   return (
-    <View className="max-h-[85vh] bg-gray-50">
+    <View className="max-h-[85vh] bg-gray-50 px-4">
       {isLoading && posts.length === 0 ? (
         <View className="h-full justify-center items-center">
           <SkeletonLoader />

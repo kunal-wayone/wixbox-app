@@ -19,17 +19,13 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import * as ImagePicker from 'react-native-image-picker';
 import { Post, Put, Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { ImagePath } from '../../constants/ImagePath'; // Assuming ImagePath is defined elsewhere
+import { useSelector } from 'react-redux';
 
 const validationSchema = Yup.object().shape({
   title: Yup.string()
     .required('Title is required')
     .min(3, 'Title must be at least 3 characters')
     .max(100, 'Title cannot exceed 100 characters'),
-  slug: Yup.string()
-    .required('Slug is required')
-    .matches(/^[a-z0-9-]+$/i, 'Slug must contain only alphanumeric characters and hyphens')
-    .min(3, 'Slug must be at least 3 characters')
-    .max(100, 'Slug cannot exceed 100 characters'),
   content: Yup.string()
     .required('Content is required')
     .min(10, 'Content must be at least 10 characters'),
@@ -46,37 +42,39 @@ const PostScreen = () => {
   const navigation = useNavigation();
   const route: any = useRoute();
   const postDetails = route.params?.postDetails || null;
-  const [isFetching, setIsFetching] = React.useState(!!postDetails);
+  const [isFetching, setIsFetching] = React.useState(!!!postDetails);
   const [fetchedPostDetails, setFetchedPostDetails] = React.useState(postDetails);
-  const [image, setImage] = React.useState<string | null>(null);
+  const [image, setImage] = React.useState<string | null>(postDetails ? `${IMAGE_URL + postDetails?.image}` : null);
+  const { data: user }: any = useSelector((state: any) => state.user);
+
   // Fetch post details if editing
-  useEffect(() => {
-    if (postDetails?.id) {
-      const fetchPostDetails = async () => {
-        try {
-          setIsFetching(true);
-          const response: any = await Fetch(`/user/posts/${postDetails.id}`, undefined, 5000);
+  // useEffect(() => {
+  //   if (postDetails?.id) {
+  //     const fetchPostDetails = async () => {
+  //       try {
+  //         setIsFetching(true);
+  //         const response: any = await Fetch(`/user/posts/${postDetails.id}`, undefined, 5000);
 
-          if (!response.success) {
-            throw new Error('Failed to fetch post details');
-          }
+  //         if (!response.success) {
+  //           throw new Error('Failed to fetch post details');
+  //         }
 
-          const data = await response?.data;
-          setFetchedPostDetails(data);
-          setImage(IMAGE_URL + data.image || null);
-        } catch (error: any) {
-          ToastAndroid.show(
-            error.message || 'Failed to load post details',
-            ToastAndroid.LONG,
-          );
-        } finally {
-          setIsFetching(false);
-        }
-      };
+  //         const data = await response?.data;
+  //         setFetchedPostDetails(data);
+  //         setImage(IMAGE_URL + data.image || null);
+  //       } catch (error: any) {
+  //         ToastAndroid.show(
+  //           error.message || 'Failed to load post details',
+  //           ToastAndroid.LONG,
+  //         );
+  //       } finally {
+  //         setIsFetching(false);
+  //       }
+  //     };
 
-      fetchPostDetails();
-    }
-  }, [postDetails?.id]);
+  //     fetchPostDetails();
+  //   }
+  // }, [postDetails?.id]);
 
   // Image picker handler
   const pickImage = async () => {
@@ -213,7 +211,7 @@ const PostScreen = () => {
               slug: fetchedPostDetails?.slug || '',
               content: fetchedPostDetails?.content || '',
               excerpt: fetchedPostDetails?.excerpt || '',
-              status: fetchedPostDetails?.status || 'published',
+              status: fetchedPostDetails?.status || 'draft',
             }}
             enableReinitialize
             validationSchema={validationSchema}
@@ -315,40 +313,7 @@ const PostScreen = () => {
                   )}
                 </View>
 
-                {/* Slug */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Slug
-                  </Text>
-                  <TextInput
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 12,
-                      fontSize: 16,
-                    }}
-                    placeholder="Enter post slug (e.g., post-123)"
-                    onChangeText={handleChange('slug')}
-                    onBlur={handleBlur('slug')}
-                    value={values.slug}
-                  />
-                  {touched.slug && errors.slug && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
-                    >
-                      {errors.slug}
-                    </Text>
-                  )}
-                </View>
+
 
                 {/* Content */}
                 <View style={{ marginBottom: 12 }}>
@@ -441,8 +406,9 @@ const PostScreen = () => {
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <Switch
                       value={values.status === 'published'}
-                      onValueChange={value =>
+                      onValueChange={value => {
                         setFieldValue('status', value ? 'published' : 'draft')
+                      }
                       }
                       trackColor={{ false: '#D1D5DB', true: '#B68AD4' }}
                       thumbColor={values.status === 'published' ? '#fff' : '#f4f3f4'}

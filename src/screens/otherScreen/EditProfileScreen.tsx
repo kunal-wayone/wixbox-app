@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ToastAndroid,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Formik } from 'formik';
@@ -144,9 +145,9 @@ const EditProfileScreen = () => {
     return `${day}/${month}/${year}`;
   };
 
-  if (isLoading) {
-    return <LoadingComponent />;
-  }
+  // if (isLoading) {
+  //   return <LoadingComponent />;
+  // }
 
   return (
     <KeyboardAvoidingView
@@ -154,6 +155,9 @@ const EditProfileScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
     >
+      {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
+        <ActivityIndicator className='m-auto' size={"large"} color={'#B68AD4'} />
+      </View>}
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,

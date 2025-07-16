@@ -48,6 +48,8 @@ import TermsConditionsScreen from '../screens/moreLInkPages/TermsConditionsScree
 import PrivacyPolicyScreen from '../screens/moreLInkPages/PrivecyPolicyScreen';
 import FaqsScreen from '../screens/moreLInkPages/FaqsScreen';
 import AllCategoriesScreen from '../screens/otherScreen/AllCategoriesScreen';
+import WalletScreen from '../screens/walletScreen/WalletScreen';
+import AllOrderScreen from '../screens/orderScreen/AllOrderScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -97,6 +99,11 @@ const MainNavigation = () => {
       <Stack.Screen name="BookedTablesScreen" component={BookedTablesScreen} />
       <Stack.Screen name="MenuItemListScreen" component={MenuItemListScreen} />
       <Stack.Screen name="AllCategoriesScreen" component={AllCategoriesScreen} />
+
+      <Stack.Screen name="ManageTransection" component={WalletScreen} />
+      <Stack.Screen name="ManageAllOrders" component={AllOrderScreen} />
+
+
 
 
       {/* More Links Screens */}

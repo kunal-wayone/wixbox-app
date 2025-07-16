@@ -165,6 +165,11 @@ const HomeScreen = () => {
   // Toggle ads status
   const toggleStoreStatus = useCallback(
     async (id: string, currentStatus: boolean) => {
+
+      if (user?.admin_approved === 0) {
+        ToastAndroid.show("Admin has not approved your shop. Please try again later.", ToastAndroid.SHORT);
+        return;
+      }
       console.log(id)
       try {
         setToggleLoadingIds(true);
@@ -272,7 +277,7 @@ const HomeScreen = () => {
             <TouchableOpacity
               onPress={() => navigaton.navigate('AddOrderScreen')}
               disabled={!shopStatus}
-              className={`${shopStatus ? 'bg-primary-70' : 'bg-primary-50'
+              className={`${shopStatus ? 'bg-primary-90' : 'bg-primary-50'
                 } p-4 w-1/2 rounded-xl justify-center items-center`}>
               <Text className="text-white font-bold font-poppins">
                 Add Orders

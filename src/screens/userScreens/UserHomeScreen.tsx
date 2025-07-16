@@ -39,7 +39,7 @@ const UserHomeScreen = () => {
       id: 1,
       name: 'Near Me',
       image: ImagePath.location,
-      link: '',
+      link: 'Moment',
     },
     {
       id: 2,
@@ -92,9 +92,6 @@ const UserHomeScreen = () => {
     fetchUserData().then(() => setRefreshing(false));
   }, []);
 
-  useEffect(() => {
-    fetchUserData();
-  }, []);
 
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
@@ -106,7 +103,7 @@ const UserHomeScreen = () => {
   const getLiveLocation = async () => {
     try {
       setIsLocation(true); // Start loading
-      await getCurrentLocationWithAddress(setLocationData, dispatch);
+      await getCurrentLocationWithAddress(setLocationData, dispatch, user);
     } catch (error) {
       console.error("Failed to get location:", error);
       // Optionally show an alert or toast
@@ -114,6 +111,14 @@ const UserHomeScreen = () => {
       setIsLocation(false); // Stop loading
     }
   };
+
+
+
+  useEffect(() => {
+    getLiveLocation()
+    fetchUserData();
+  }, []);
+
 
   // Skeleton Loader Component
   const SkeletonLoader = () => (
@@ -177,19 +182,28 @@ const UserHomeScreen = () => {
                   className="w-14 h-14 rounded-full"
                   resizeMode="cover"
                 />
-                <Text>
-                  {user?.name || 'Jaydev Vihar'},{' '}
-                  {(user?.user_addresses[0]?.city || 'Bhuvaneshwar') +
-                    ', ' +
-                    (user?.user_addresses[0]?.state || '')}
-                </Text>
+                <View>
+                  <Text className='text-semibold'>
+                    {user?.name || 'Jaydev Vihar'},{' '}
+                  </Text>
+                  <Text className='text-xs'>
+                    {(user?.user_addresses[0]?.city || '') +
+                      ', ' +
+                      (user?.user_addresses[0]?.state || '') + ", (" + (user?.user_addresses[0]?.pincode || '') + ")"}
+                  </Text>
+                  <Text className='text-xs'>
+                    {(user?.user_addresses[0]?.longitude || '') +
+                      ', ' +
+                      (user?.user_addresses[0]?.latitude || '')}
+                  </Text>
+                </View>
               </View>
               <TouchableOpacity
                 onPress={() => navigation.navigate('NotificationScreen')}
-                className="bg-primary-20 w-7 h-7 rounded-full justify-center items-center">
+                className="bg-primary-20 w-9 h-9 rounded-full justify-center items-center">
                 <Image
                   source={ImagePath.bellIcon}
-                  className="h-3 w-3"
+                  className="h-5 w-5"
                   resizeMode="contain"
                 />
               </TouchableOpacity>
@@ -244,7 +258,7 @@ const UserHomeScreen = () => {
             </View>
             <FreshStoreSection />
             <VisitNearByStores />
-            <PopularAreaSection />
+            {/* <PopularAreaSection /> */}
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>

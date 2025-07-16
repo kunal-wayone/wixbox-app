@@ -28,6 +28,7 @@ export const ImagePath = {
     crown: require('../assets/images/icons/crown.png'),
     cafe: require('../assets/images/icons/cafe.png'),
     home2: require('../assets/images/icons/home2.png'),
+    home3: require('../assets/images/icons/home3.png'),
     item1: require('../assets/images/item1.png'),
     item2: require('../assets/images/item2.png'),
     item3: require('../assets/images/item3.png'),

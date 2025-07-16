@@ -41,7 +41,7 @@ const ShopDetailsScreen = () => {
   const scrollY = useRef<any>(new Animated.Value(0)).current;
   const tabBarRef = useRef<any>(null);
   const [tabBarOffset, setTabBarOffset] = useState(0);
-
+  console.log(shop_info)
   // Parse shift_details safely
   const shiftDetails = shop_info?.shift_details
     ? JSON.parse(shop_info.shift_details)
@@ -99,7 +99,7 @@ const ShopDetailsScreen = () => {
     switch (activeTab) {
       case 'About':
         return (
-          <View className="py-4 flex-1">
+          <View className="p-4 flex-1 ">
             <Text className="text-xl text-gray-600 font-semibold font-poppins mb-2">
               About Us
             </Text>
@@ -187,17 +187,17 @@ const ShopDetailsScreen = () => {
           borderRadius: 6,
           ...(isHorizontal
             ? {
-                width: seatSize,
-                height: seatThickness,
-                left: center - seatSize / 2,
-                [side]: 1,
-              }
+              width: seatSize,
+              height: seatThickness,
+              left: center - seatSize / 2,
+              [side]: 1,
+            }
             : {
-                width: seatThickness,
-                height: seatSize,
-                top: center - seatSize / 2,
-                [side]: -1,
-              }),
+              width: seatThickness,
+              height: seatSize,
+              top: center - seatSize / 2,
+              [side]: -1,
+            }),
         };
 
         lines.push(<View key={`${side}-seat-${i}`} style={style} />);
@@ -221,33 +221,29 @@ const ShopDetailsScreen = () => {
           className={`justify-center items-center ${seats <= 8 ? 'w-24 h-24' : 'w-44 h-24'} rounded-xl`}
         >
           <View
-            className={`w-10/12 h-16 rounded-xl flex-col justify-center items-center ${
-              isSelected ? 'bg-green-500' :
+            className={`w-10/12 h-16 rounded-xl flex-col justify-center items-center ${isSelected ? 'bg-green-500' :
               item.premium === 1 ? 'border border-[#B68AD480] rounded-xl' :
-              !isAvailable ? 'bg-gray-100' : 'border border-green-300 rounded-xl'
-            }`}
+                !isAvailable ? 'bg-gray-100' : 'border border-green-300 rounded-xl'
+              }`}
           >
             <Text
-              className={`text-xs font-semibold ${
-                !isAvailable ? 'text-gray-400' :
+              className={`text-xs font-semibold ${!isAvailable ? 'text-gray-400' :
                 isSelected ? 'text-white' : 'text-black'
-              }`}
+                }`}
             >
               T{item.table_number} ({item.seats})
             </Text>
             <Text
-              className={`text-xs font-semibold ${
-                !isAvailable ? 'text-gray-400' :
+              className={`text-xs font-semibold ${!isAvailable ? 'text-gray-400' :
                 isSelected ? 'text-white' : 'text-black'
-              }`}
+                }`}
             >
               ₹ {item.price}/-
             </Text>
             <Text
-              className={`text-xs font-semibold ${
-                !isAvailable ? 'text-red-500' :
+              className={`text-xs font-semibold ${!isAvailable ? 'text-red-500' :
                 isSelected ? 'text-white' : 'text-green-500'
-              }`}
+                }`}
             >
               {isAvailable ? 'Available' : 'Booked'}
             </Text>
@@ -287,11 +283,11 @@ const ShopDetailsScreen = () => {
   return (
     <View className="flex-1 bg-white">
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
       >
-        <View className="flex-row items-center justify-between mb-6">
+        <View className="flex-row items-center justify-between mb-6 px-4 pt-4">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             className="flex-row items-center gap-4"
@@ -314,7 +310,7 @@ const ShopDetailsScreen = () => {
           </View>
         </View>
 
-        <View className="mb-4">
+        <View className="mb-4 px-4">
           <Image
             source={
               shop_info?.restaurant_images?.[0]
@@ -332,7 +328,7 @@ const ShopDetailsScreen = () => {
               {`${shop_info?.city}, ${shop_info?.state}`}
             </Text>
           </View>
-          <Text className={`mb-2 ${isShopOpen() ? 'text-green-600' : 'text-red-600'}`}>
+          <Text className={`mb-2 ${isShopOpen() && shop_info.status !== 0 ? 'text-green-600' : 'text-red-600'}`}>
             {isShopOpen() ? 'Open Now' : 'Closed'}
           </Text>
           <View className="flex-row items-center gap-4 mb-3">
@@ -351,7 +347,7 @@ const ShopDetailsScreen = () => {
 
         <Animated.View
           ref={tabBarRef}
-          className="flex-row justify-between border-b-2 border-gray-200 mb-4"
+          className="flex-row justify-between border-b-2 border-gray-200 mb-4 px-4"
         >
           {['About', 'Menu', 'Reviews', 'Post'].map((tab) => (
             <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} className="flex-1 items-center">
@@ -452,7 +448,7 @@ const ShopDetailsScreen = () => {
           <TouchableOpacity
             activeOpacity={1}
             className="w-11/12"
-            onPress={() => {}}
+            onPress={() => { }}
           >
             <View className="bg-white rounded-2xl p-4">
               <TouchableOpacity
@@ -461,7 +457,7 @@ const ShopDetailsScreen = () => {
               >
                 <Ionicons name="close" size={30} />
               </TouchableOpacity>
-              <Image
+              {/* <Image
                 source={
                   shop_info?.restaurant_images?.[0]
                     ? { uri: IMAGE_URL + shop_info.restaurant_images[0] }
@@ -469,7 +465,7 @@ const ShopDetailsScreen = () => {
                 }
                 className="w-full h-56 rounded-xl mb-2"
                 resizeMode="cover"
-              />
+              /> */}
               <Text className="text-lg text-center font-bold mb-1">
                 {shop_info?.restaurant_name || 'Restaurant'}
               </Text>
