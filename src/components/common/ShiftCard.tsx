@@ -15,6 +15,7 @@ interface ShiftCardProps {
   shift: 1 | 2;
   data: ShiftData;
   onChange: (updatedData: ShiftData) => void;
+  isSingleShiftMode?: boolean;
 }
 
 const timeOptions = Array.from({length: 24}, (_, i) => {
@@ -24,17 +25,32 @@ const timeOptions = Array.from({length: 24}, (_, i) => {
   return {label: time, value: time};
 });
 
-const ShiftCard: React.FC<ShiftCardProps> = ({shift = 1, data, onChange}) => {
+// Filter To options based on selected From time
+const getFilteredToOptions = (from: string) => {
+  if (!from) return timeOptions;
+  const fromIndex = timeOptions.findIndex(opt => opt.value === from);
+  return fromIndex >= 0 ? timeOptions.slice(fromIndex + 1) : timeOptions;
+};
+
+const ShiftCard: React.FC<ShiftCardProps> = ({
+  shift = 1,
+  data,
+  onChange,
+  isSingleShiftMode = false,
+}) => {
   return (
     <Formik initialValues={data} enableReinitialize onSubmit={() => {}}>
       {({values, setFieldValue}) => (
         <View
           style={styles.container}
           className="flex-row items-center bg-gray-100">
+
           {/* Day */}
-          <View style={styles.dayContainer}>
-            <Text style={styles.dayText}>{values.day}</Text>
-          </View>
+          {!isSingleShiftMode && (
+            <View style={styles.dayContainer}>
+              <Text style={styles.dayText}>{values.day}</Text>
+            </View>
+          )}
 
           {/* Enable Switch */}
           <View style={styles.switchContainer}>
@@ -46,6 +62,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({shift = 1, data, onChange}) => {
               }}
             />
           </View>
+
           <View className="w-auto">
             {/* Shift 1 */}
             <View style={[styles.pickerRow, {marginBottom: 5}]}>
@@ -54,8 +71,8 @@ const ShiftCard: React.FC<ShiftCardProps> = ({shift = 1, data, onChange}) => {
                   selectedValue={values.shift1.from}
                   style={styles.picker}
                   onValueChange={val => {
-                    const updated = {...values.shift1, from: val};
-                    setFieldValue('shift1.from', val);
+                    const updated = {...values.shift1, from: val, to: ''}; // Reset 'to'
+                    setFieldValue('shift1', updated);
                     onChange({...values, shift1: updated});
                   }}>
                   <Picker.Item label="From" value="" />
@@ -79,7 +96,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({shift = 1, data, onChange}) => {
                     onChange({...values, shift1: updated});
                   }}>
                   <Picker.Item label="To" value="" />
-                  {timeOptions.map(opt => (
+                  {getFilteredToOptions(values.shift1.from).map(opt => (
                     <Picker.Item
                       key={opt.value}
                       label={opt.label}
@@ -101,6 +118,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({shift = 1, data, onChange}) => {
                       const updated = {
                         ...(values.shift2 || {from: '', to: ''}),
                         from: val,
+                        to: '', // Reset to when from changes
                       };
                       setFieldValue('shift2', updated);
                       onChange({...values, shift2: updated});
@@ -129,7 +147,7 @@ const ShiftCard: React.FC<ShiftCardProps> = ({shift = 1, data, onChange}) => {
                       onChange({...values, shift2: updated});
                     }}>
                     <Picker.Item label="To" value="" />
-                    {timeOptions.map(opt => (
+                    {getFilteredToOptions(values.shift2?.from || '').map(opt => (
                       <Picker.Item
                         key={opt.value}
                         label={opt.label}
@@ -166,6 +184,7 @@ const styles = StyleSheet.create({
   },
   switchContainer: {
     marginBottom: 8,
+    marginRight: 12,
   },
   pickerRow: {
     flexDirection: 'row',
@@ -178,7 +197,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#ddd',
-    overflow: 'hidden', // Ensures rounded corners are respected
+    overflow: 'hidden',
   },
   picker: {
     width: '100%',

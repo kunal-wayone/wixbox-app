@@ -107,7 +107,7 @@ export const signup = createAsyncThunk(
                 throw new Error(message || 'Signup failed');
             }
         } catch (error: any) {
-            return thunkAPI.rejectWithValue(error?.message || 'Signup error');
+            return thunkAPI.rejectWithValue(error || 'Signup error');
         }
     }
 );

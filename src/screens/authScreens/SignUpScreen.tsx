@@ -63,10 +63,12 @@ const SignUpScreen = ({ route }: any) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSignUp = async (values: any, { setSubmitting, resetForm }: any) => {
-    setIsSubmitting(true);
     if (!isCheck) {
-      ToastAndroid.show('Account type is required', ToastAndroid.SHORT);
+      ToastAndroid.show('Required to check the Terms & Conditions.', ToastAndroid.SHORT);
+      return;
     }
+    setIsSubmitting(true);
+    console.log(isCheck)
     try {
       if (!accountType) {
         throw new Error('Account type is required');
@@ -111,8 +113,8 @@ const SignUpScreen = ({ route }: any) => {
       setApiErrors({
         name: errorData.name?.[0] || '',
         email: errorData.email?.[0] || '',
-        password: errorData.password?.[0] || '',
-        password_confirmation: errorData.password_confirmation?.[0] || '',
+        password: errorData.password?.[0] + errorData.password?.[1] || '',
+        password_confirmation: errorData.password_confirmation?.[0] + errorData.password?.[1] || '',
       });
 
       ToastAndroid.show(
@@ -350,11 +352,11 @@ const SignUpScreen = ({ route }: any) => {
                     </Text>
                   </View>
 
-                  {/* {!isCheck && (
+                  {touched.confirmPassword && !isCheck && (
                     <Text className="text-red-500 text-xs mb-3">
                       {"Required to check the Terms & Conditions"}
                     </Text>
-                  )} */}
+                  )}
 
                   <TouchableOpacity
                     onPress={handleSubmit}

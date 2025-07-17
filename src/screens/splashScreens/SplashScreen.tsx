@@ -15,7 +15,7 @@ const SplashScreen = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const text = 'Welcome to WixBox'.split('');
+  const text = 'Welcome to WishBox'.split('');
   const charAnims = useRef(text.map(() => new Animated.Value(0))).current;
 
   const getUserData = async () => {
@@ -98,12 +98,14 @@ const SplashScreen = () => {
           });
           return
         } else {
+          console.log(user?.role, "dskjfkjjdsk")
+
           if (user?.shopcreated) {
             navigation.replace('HomeScreen', {
               screen: 'Home',
             });
             return
-          } else if (user?.shopcreated) {
+          } else if (!user?.shopcreated) {
             navigation.replace('CreateShopScreen');
             console.log("shor creaetd")
             return

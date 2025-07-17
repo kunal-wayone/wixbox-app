@@ -10,6 +10,7 @@ import {
   Dimensions,
   Switch,
   ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Banner from '../components/common/Banner';
@@ -76,6 +77,7 @@ const HomeScreen = () => {
     (state: RootState) => state.user,
   );
   const [shopStatus, setShopStatus] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('About');
   const scrollY = useRef(new Animated.Value(0)).current;
   const tabBarRef = useRef<any>(null);
@@ -103,7 +105,7 @@ const HomeScreen = () => {
     switch (activeTab) {
       case 'About':
         return (
-          <View className="py-4">
+          <View className="py-4 pb-8">
             <View className=' p-2 rounded-xl shadow-xl'>
               <Text className="text-base text-gray-800 font-semibold font-poppins hidden">
                 About Us
@@ -201,6 +203,18 @@ const HomeScreen = () => {
   );
 
 
+  const onRefresh = useCallback(async () => {
+    try {
+      setRefreshing(true);
+      await getUserData(); // re-fetch user/shop data
+    } catch (error) {
+      console.error("Refresh error:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
+
+
   useEffect(() => {
     if (isFocused) {
       getUserData();
@@ -215,7 +229,15 @@ const HomeScreen = () => {
     <View className="flex-1 bg-white">
       <ScrollView
         className="p-4"
-        scrollEventThrottle={16}>
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#B68AD4']} // optional: for Android
+            tintColor="#B68AD4"   // optional: for iOS
+          />
+        }>
         <Animated.View style={{ transform: [{ translateY }] }}>
           <View className="flex-row items-center justify-between mb-4" >
             <View>

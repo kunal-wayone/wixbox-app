@@ -94,7 +94,7 @@ const TableBookingFormScreen = () => {
                 }
                 resetForm()
                 ToastAndroid.show('Table booked successfully!', ToastAndroid.SHORT);
-                return { sucess: true, orderId: response?.data?.id };
+                return { success: true, orderId: response?.data?.id };
             } catch (error: any) {
                 console.error('Booking error:', error);
                 ToastAndroid.show(

@@ -11,6 +11,7 @@ import {
   Platform,
   ToastAndroid,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
@@ -46,6 +47,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
   const [premium, setPremium] = useState(false);
   const [tables, setTables] = useState<any>(shopId ? (user?.shop?.tables || []) : []);
   const [showForm, setShowForm] = useState(true);
+  const [isLoading, setIsLoading] = useState(false)
   console.log(user?.shop?.tables, tables, shopId)
   const handleAddTable = (values: any, { resetForm }: any) => {
     const newTable = {
@@ -72,7 +74,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
       ToastAndroid.show('Please add at least one table', ToastAndroid.SHORT);
       return;
     }
-
+    setIsLoading(true)
     try {
       const formData = new FormData();
       tables.forEach((table: any, index: any) => {
@@ -110,6 +112,8 @@ const AddDineInServiceScreen = ({ route }: any) => {
       const errorMessage =
         error?.message || 'Something went wrong. Please try again.';
       ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+    } finally {
+      setIsLoading(false)
     }
   };
 
@@ -118,6 +122,9 @@ const AddDineInServiceScreen = ({ route }: any) => {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+      {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
+        <ActivityIndicator className='m-auto' size={"large"} color={'#B68AD4'} />
+      </View>}
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,

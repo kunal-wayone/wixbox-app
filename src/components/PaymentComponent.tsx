@@ -9,6 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { createRazorpayOrder, createRazorpayOptions, openRazorpayCheckout } from '../utils/payments/razorpay';
+import { useNavigation } from '@react-navigation/native';
 
 interface CustomerInfo {
   name: string;
@@ -53,6 +54,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
   onPaymentCancel,
   handleSubmit,
 }) => {
+  const navigation = useNavigation<any>()
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<'success' | 'error' | 'cancelled' | null>(null);
   const [paymentData, setPaymentData] = useState<{ razorpay_payment_id?: string } | null>(null);
@@ -95,6 +97,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
       let orderId: string | undefined;
       if (handleSubmit) {
         const orderResult = await handleSubmit();
+        console.log(orderResult)
         if (!orderResult?.success) {
           showToast('Order not placed');
           throw new Error('Failed to place order: Invalid response');
@@ -155,6 +158,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
     setShowModal(false);
     setPaymentData(null);
     setErrorMessage('');
+    navigation.replace("HomeScreen")
   }, []);
 
   return (

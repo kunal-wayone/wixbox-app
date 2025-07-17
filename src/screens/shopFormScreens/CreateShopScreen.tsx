@@ -51,6 +51,7 @@ const CreateShopScreen = ({ route }: any) => {
   const [viewImageModal, setViewImageModal] = useState<any>(null);
   const [locationData, setLocationData] = useState<any>(null);
   const [isLocation, setIsLocation] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
   const [schedules, setSchedules] = useState<any>(daysOfWeek.map(day => ({
     day, status: false, shift1: { from: '', to: '' }, shift2: { from: '', to: '' }, state: 'active'
@@ -86,6 +87,7 @@ const CreateShopScreen = ({ route }: any) => {
   const getLiveLocation = async (setFieldValue: any) => {
     try {
       setIsLocation(true); // Start loading
+      setApiErrors("")
       const location = await getCurrentLocationWithAddress(setLocationData, dispatch, user);
       console.log(locationData, location)
       if (location?.address) {
@@ -171,6 +173,7 @@ const CreateShopScreen = ({ route }: any) => {
   const handleSubmit = async (values: any, { setSubmitting, resetForm, setErrors }: any) => {
     try {
       setSubmitting(true);
+      setIsLoading(true)
       const formData = new FormData();
 
       formData.append('business_name', values.business_name);
@@ -225,8 +228,10 @@ const CreateShopScreen = ({ route }: any) => {
           formattedErrors[key] = error.errors[key][0];
         }
         setErrors(formattedErrors);
+        setApiErrors(error?.errors?.latitude || "Live location is Requied")
       }
     } finally {
+      setIsLoading(false)
       setSubmitting(false);
     }
   };
@@ -240,7 +245,7 @@ const CreateShopScreen = ({ route }: any) => {
 
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      {isLocation && (
+      {(isLocation || isLoading) && (
         <View className='w-screen h-screen bg-black/50 absolute left-0 top-0 z-[100000] '>
           <ActivityIndicator className='m-auto' color={"#B68AD4"} size={"large"} />
         </View>
@@ -293,7 +298,7 @@ const CreateShopScreen = ({ route }: any) => {
               : 'Set up your shop details to get started.'}
           </Text>
 
-          {loading ? (
+          {loading && shopId ? (
             <View>
               <Text className='text-center'>Loading shop data...</Text>
               <ActivityIndicator size={"large"} color={"#B68AD4"} />

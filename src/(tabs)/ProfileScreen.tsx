@@ -73,6 +73,7 @@ const ProfileScreen = () => {
   ];
 
   const handleAction = (action: string) => {
+    console.log(action)
     setModalAction(action);
     setModalVisible(true);
   };
@@ -89,7 +90,7 @@ const ProfileScreen = () => {
           });
           // navigation.navigate('LoginScreen');
         });
-      TokenStorage.removeUser() 
+      TokenStorage.removeUser()
       TokenStorage.removeRole()
       TokenStorage.removeToken();
       googleSignOut()
@@ -213,29 +214,56 @@ const ProfileScreen = () => {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
-        <View className="flex-1 justify-center items-center bg-black/30 bg-opacity-50">
-          <View className="bg-white p-6 rounded-xl w-4/5">
-            <Text className="text-lg font-bold text-center text-primary-100">
-              {modalAction === 'Logout'
-                ? 'Confirm Logout'
-                : 'Confirm Account Deletion'}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0,0,0,0.3)',
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: 'white',
+              padding: 24,
+              borderRadius: 16,
+              width: '80%',
+            }}
+          >
+            <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#B68AD4' }}>
+              {modalAction === 'Logout' ? 'Confirm Logout' : 'Confirm Account Deletion'}
             </Text>
-            <Text className="text-base text-center mt-2 text-gray-600">
+            <Text style={{ fontSize: 16, textAlign: 'center', marginTop: 8, color: '#666' }}>
               {modalAction === 'Logout'
                 ? 'Are you sure you want to log out?'
                 : 'Are you sure you want to delete your account? This action cannot be undone.'}
             </Text>
-            <View className="flex-row justify-between mt-6">
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 }}>
               <TouchableOpacity
-                className="p-3 bg-gray-300 rounded-xl flex-1 mr-2"
-                onPress={() => setModalVisible(false)}>
-                <Text className="text-base text-center text-black">Cancel</Text>
+                style={{
+                  padding: 12,
+                  backgroundColor: '#e5e5e5',
+                  borderRadius: 12,
+                  flex: 1,
+                  marginRight: 8,
+                }}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={{ fontSize: 16, textAlign: 'center', color: '#000' }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                className="p-3 bg-red-500 rounded-xl flex-1 ml-2"
-                onPress={confirmAction}>
-                <Text className="text-base text-center text-white">
+                style={{
+                  padding: 12,
+                  backgroundColor: 'red',
+                  borderRadius: 12,
+                  flex: 1,
+                  marginLeft: 8,
+                }}
+                onPress={confirmAction}
+              >
+                <Text style={{ fontSize: 16, textAlign: 'center', color: '#fff' }}>
                   {modalAction === 'Logout' ? 'Logout' : 'Delete'}
                 </Text>
               </TouchableOpacity>
@@ -243,6 +271,7 @@ const ProfileScreen = () => {
           </View>
         </View>
       </Modal>
+
     </ScrollView>
   );
 };

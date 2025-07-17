@@ -73,7 +73,7 @@ const Shop = ({
     const todayShift = shiftData?.find(
       (shift: any) => shift.day.toLowerCase() === currentDay && shift.status
     );
-    console.log(shiftData,item)
+    console.log(shiftData, item)
 
     if (!todayShift || !todayShift.first_shift_start) return false;
 
@@ -208,8 +208,8 @@ const Shop = ({
           <Text className="text-sm text-yellow-500">
             {'★'.repeat(Math.floor(rating))} ({rating.toFixed(1)})
           </Text>
-          <Text className={`text-sm font-semibold p-1 rounded-lg px-2 ${isOpen && item?.status !== 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-            {isShopOpen && item?.status !== 0 ? 'Open' : 'Closed'}
+          <Text className={`text-sm font-semibold p-1 rounded-lg px-2 ${isShopOpen() && item?.status !== 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+            {isShopOpen() && item?.status !== 0 ? 'Open' : 'Closed'}
           </Text>
         </View>
 
