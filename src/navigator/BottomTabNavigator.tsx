@@ -16,10 +16,12 @@ import LoadingComponent from '../screens/otherScreen/LoadingComponent';
 import { useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import AddCustomerScreen from '../screens/customersScreens/AddCustomerScreen';
+import DashboardScreen from '../(tabs)/DashboardScreen';
 
 const Tab = createBottomTabNavigator();
 
 const ownerIconMap = {
+  Dashboard: ImagePath.home,
   Home: ImagePath.home,
   Customer: ImagePath.userstar,
   Analytics: ImagePath.analytic,
@@ -95,8 +97,9 @@ export default function BottomTabNavigator() {
   if (user?.role === 'vendor') {
     return (
       <Tab.Navigator
-        initialRouteName="Home"
+        initialRouteName="Dashboard"
         screenOptions={screenOptions(ownerIconMap)}>
+        <Tab.Screen name="Dashboard" component={DashboardScreen} />
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Customer" component={AddCustomerScreen} />
         <Tab.Screen name="Analytics" component={AnalyticsScreen} />

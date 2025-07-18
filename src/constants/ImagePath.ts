@@ -60,6 +60,11 @@ export const ImagePath = {
 
 
 
+    // New Layout
+
+
+    chef: require('../assets/images/icons/chef.png'),
+
 
 
 

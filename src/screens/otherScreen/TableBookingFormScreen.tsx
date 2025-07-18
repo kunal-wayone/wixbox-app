@@ -154,7 +154,7 @@ const TableBookingFormScreen = () => {
             keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0}
         >
             {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
-                <ActivityIndicator className='m-auto' size={"large"} color={'#B68AD4'} />
+                <ActivityIndicator className='m-auto' size={"large"} color={'#ac94f4'} />
             </View>}
             <ScrollView
                 contentContainerStyle={{
@@ -320,10 +320,10 @@ const TableBookingFormScreen = () => {
                                     phone: values.phone || '1234567890',
                                 }}
                                 config={{
-                                    name: 'WishBox Store',
+                                    name: 'WisBox Store',
                                     currency: 'INR',
                                     description: `Table reservation for table ${table_info[0]?.table_number}`,
-                                    theme: { color: '#B68AD4' },
+                                    theme: { color: '#ac94f4' },
                                 }}
                                 buttonLabel={
                                     isSubmitting

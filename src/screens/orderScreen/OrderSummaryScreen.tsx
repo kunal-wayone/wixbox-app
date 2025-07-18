@@ -255,7 +255,7 @@ const OrderSummaryScreen = () => {
     <View className="flex-1 bg-white">
       {isLoading && (
         <View className="absolute bg-black/80 top-0 z-50 h-full w-full">
-          <ActivityIndicator className="m-auto" size="large" color="#B68AD4" />
+          <ActivityIndicator className="m-auto" size="large" color="#ac94f4" />
         </View>
       )}
 
@@ -434,11 +434,11 @@ const OrderSummaryScreen = () => {
                     phone: payload?.phone?.trim() || '0000000000',
                   }}
                   config={{
-                    name: 'WishBox Store',
+                    name: 'WisBox Store',
                     currency: 'INR',
                     description: 'For Order Booking Payment',
                     theme: {
-                      color: '#B68AD4',
+                      color: '#ac94f4',
                       backdrop_color: '#FFFFFF',
                       hide_topbar: false,
                     },

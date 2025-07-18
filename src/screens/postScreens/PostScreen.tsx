@@ -42,11 +42,11 @@ const PostScreen = () => {
   const navigation = useNavigation();
   const route: any = useRoute();
   const postDetails = route.params?.postDetails || null;
-  const [isFetching, setIsFetching] = React.useState(!!!postDetails);
+  const [isFetching, setIsFetching] = React.useState(postDetails);
   const [fetchedPostDetails, setFetchedPostDetails] = React.useState(postDetails);
   const [image, setImage] = React.useState<string | null>(postDetails ? `${IMAGE_URL + postDetails?.image}` : null);
   const { data: user }: any = useSelector((state: any) => state.user);
-
+  console.log(postDetails)
   // Fetch post details if editing
   // useEffect(() => {
   //   if (postDetails?.id) {

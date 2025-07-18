@@ -10,6 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ToastAndroid,
+  StyleSheet,
+  Modal,
 } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -17,119 +19,103 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import { launchImageLibrary } from 'react-native-image-picker';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Feather from 'react-native-vector-icons/Feather';
 import { BASE_URL, Fetch, IMAGE_URL, Post, Put } from '../../utils/apiUtils';
 import LoadingComponent from '../otherScreen/LoadingComponent';
+import Switch from '../../components/common/Switch';
 
 const { width } = Dimensions.get('screen');
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
-  item_name: Yup.string().required('Product name is required'),
-  price: Yup.number()
-    .required('Price is required')
-    .positive('Price must be positive'),
-  description: Yup.string().required('Description is required'),
+  item_name: Yup.string().required('Please enter a product name 😊'),
+  description: Yup.string().required('Please add a description 📝'),
   stock_quantity: Yup.number()
-    .required('Stock is required')
-    .integer('Stock must be an integer')
+    .required('Please specify stock quantity 📦')
+    .integer('Stock must be a whole number')
     .min(0, 'Stock cannot be negative'),
-  unit: Yup.string().required('Unit is required'),
-  category_id: Yup.string().required('Category is required'),
-  status: Yup.string().required('Status is required'),
+  unit: Yup.string().required('Please select a unit ⚖️'),
+  category_id: Yup.string().required('Please choose a category 🏷️'),
+  tags: Yup.array()
+    .min(1, 'Please select at least one tag 🌟')
+    .required('Please select at least one tag 🌟'),
+  status: Yup.boolean().required('Please set the product status 🔄'),
+  variants: Yup.array().of(
+    Yup.object().shape({
+      name: Yup.string().required('Variant name is required 🌈'),
+      additional_price: Yup.number()
+        .required('Additional price is required 💸')
+        .min(0, 'Price cannot be negative'),
+    })
+  ),
 });
+
+// Available tags
+const availableTags = [
+  { id: 'spicy', label: 'Spicy 🌶️' },
+  { id: 'bestseller', label: 'Bestseller ⭐' },
+  { id: 'hot', label: 'Hot 🔥' },
+  { id: 'fresh', label: 'Fresh 🥗' },
+  { id: 'gluten_free', label: 'Gluten-Free 🌾' },
+  { id: 'vegan', label: 'Vegan 🌱' },
+];
 
 const AddProductScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<any>();
   const productId = route.params?.productId || null;
   const [itemDetails, setItemDetails] = useState<any>(null);
-  const [images, setImages] = useState<any>([]); // Store selected images
-  const [categories, setCategories] = useState<any[]>([]); // Store categories from API
-  const [units, setUnits] = useState<any[]>([]); // Store units from API
-  const [subUits, setSubUits] = useState<any[]>([])
+  const [images, setImages] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [newVariant, setNewVariant] = useState({ name: '', additional_price: '' });
 
   // Fetch product details if editing
   const getProductData = async (id: any) => {
-    if (id) {
-      setIsLoading(true);
-      try {
-        const response: any = await Fetch(
-          `/user/menu-items/${id}`,
-          undefined,
-          5000,
-        );
-        if (!response.success) {
-          throw new Error('Failed to fetch product');
-        }
-
-        console.log(response)
-        const data = response?.data?.menu_item; // Fixed typo here
-        const images = response?.data?.menu_item?.images || [];
-        setItemDetails(data);
-        console.log(itemDetails?.status);
-        // Convert API images to match the format expected by the UI
-        setImages(
-          images.map((img: any, index: any) => ({
-            uri: IMAGE_URL + img, // Use the URL from the API
-            id: index,
-          })),
-        );
-      } catch (error) {
-        ToastAndroid.show(
-          'Failed to fetch product details',
-          ToastAndroid.SHORT,
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
-
-  // Fetch categories for picker
-  const fetchCategories = async () => {
+    if (!id) return;
+    setIsLoading(true);
     try {
-      const response: any = await Fetch('/user/categories', undefined, 5000);
-      if (response.success) {
-        setCategories(response.data);
-      }
+      const response: any = await Fetch(`/user/menu-items/${id}`, undefined, 5000);
+      if (!response.success) throw new Error('Failed to fetch product');
+
+      const data = response?.data?.menu_item;
+      setItemDetails({
+        ...data,
+        variants: data.variants || [],
+        tags: data.tags || [],
+      });
+      setImages(
+        (data.images || []).map((img: any, index: any) => ({
+          uri: IMAGE_URL + img,
+          id: index,
+        }))
+      );
     } catch (error) {
-      ToastAndroid.show('Failed to fetch categories', ToastAndroid.SHORT);
+      ToastAndroid.show('Couldn’t load product details 😔', ToastAndroid.SHORT);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Fetch units for picker
-  const fetchUnit = async () => {
-    try {
-      const response: any = await Fetch('/user/menu-units', undefined, 5000);
-      console.log(response)
-      if (response.success) {
-        setUnits(response?.data?.units);
-      }
-    } catch (error) {
-      ToastAndroid.show('Failed to fetch units', ToastAndroid.SHORT);
-    }
-  };
-
-  // const fetchSubUnit = async (unit: any) => {
-  //   console.log(unit)
-  //   const selectedUnit = units.find((u: any) => u.id === unit);
-  //   console.log(selectedUnit)
-  //   try {
-  //     const response: any = await Fetch(`/user/units/${selectedUnit}/subunits`, undefined, 5000);
-  //     console.log(response)
-  //     if (response.success) {
-  //       setSubUits(response?.data?.subunits);
-  //     }
-  //   } catch (error) {
-  //     ToastAndroid.show('Failed to fetch units', ToastAndroid.SHORT);
-  //   }
-  // };
-
+  // Fetch categories and units
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [categoriesRes, unitsRes]: any = await Promise.all([
+          Fetch('/user/categories', undefined, 5000),
+          Fetch('/user/menu-units', undefined, 5000),
+        ]);
+        if (categoriesRes.success) setCategories(categoriesRes.data);
+        if (unitsRes.success) setUnits(unitsRes.data.units);
+      } catch (error) {
+        ToastAndroid.show('Failed to load categories or units 😢', ToastAndroid.SHORT);
+      }
+    };
+    fetchData();
     getProductData(productId);
-    fetchCategories();
-    fetchUnit();
   }, [productId]);
 
   // Handle image selection
@@ -145,47 +131,45 @@ const AddProductScreen = () => {
           type: asset.type,
           name: asset.fileName || `image_${Date.now()}.jpg`,
         }));
-        setImages((prev: any) => [...prev, ...newImages]);
+        setImages(prev => [...prev, ...newImages]);
         setFieldValue('images', [...images, ...newImages]);
       }
     } catch (error) {
-      ToastAndroid.show('Error selecting images', ToastAndroid.SHORT);
+      ToastAndroid.show('Error picking images 📸', ToastAndroid.SHORT);
     }
   };
 
   // Remove selected image
   const removeImage = (index: any, setFieldValue: any) => {
-    const updatedImages = images.filter((_: any, i: any) => i !== index);
+    const updatedImages = images.filter((_, i) => i !== index);
     setImages(updatedImages);
     setFieldValue('images', updatedImages);
   };
 
   // Handle form submission
-  const handleSaveProduct = async (
-    values: any,
-    { setSubmitting, resetForm }: any,
-  ) => {
+  const handleSaveProduct = async (values: any, { setSubmitting, resetForm }: any) => {
     try {
       const formData = new FormData();
       formData.append('item_name', values.item_name);
-      formData.append('price', values.price);
       formData.append('description', values.description);
       formData.append('stock_quantity', values.stock_quantity);
-      formData.append('unit', units && units?.find(u => u?.id === values.unit)?.short_name);
-      formData.append('sub_unit', subUits.length !== 0 && subUits?.find(su => su?.id === values.sub_unit)?.short_name);
+      formData.append('unit', units.find(u => u.id === values.unit)?.short_name || '');
       formData.append('category_id', values.category_id);
       formData.append('isVegetarian', values.isVegetarian);
-      formData.append('status', values.status);
+      formData.append('status', values.status ? '1' : '0');
+      values.tags.forEach((tag: string, index: number) => {
+        formData.append(`tags[${index}]`, tag);
+      });
 
-
-      if (productId) {
-        formData.append('_method', 'PUT');
-      }
+      // Append variants
+      values.variants.forEach((variant: any, index: number) => {
+        formData.append(`variants[${index}][name]`, variant.name);
+        formData.append(`variants[${index}][additional_price]`, variant.additional_price);
+      });
 
       // Append images
       values.images?.forEach((image: any, index: any) => {
         if (image.uri && image.type && image.name) {
-          // Only append locally selected images (not API images)
           formData.append(`images[${index}]`, {
             uri: image.uri,
             type: image.type,
@@ -194,94 +178,81 @@ const AddProductScreen = () => {
         }
       });
 
-      const endpoint = productId
-        ? `/user/menu-items/${productId}`
-        : '/user/menu-items';
-      const Method = productId ? Post : Post;
-      const response: any = await Method(endpoint, formData, 5000);
-      if (!response.success) {
-        throw new Error('Failed to save product');
-      }
+      const endpoint = productId ? `/user/menu-items/${productId}` : '/user/menu-items';
+      const response: any = await (productId ? Put : Post)(endpoint, formData, 5000);
+      if (!response.success) throw new Error('Failed to save product');
 
-      console.log(response, endpoint, values, Method);
       ToastAndroid.show(
-        productId
-          ? 'Product updated successfully!'
-          : 'Product added successfully!',
-        ToastAndroid.SHORT,
+        productId ? 'Product updated successfully! 🎉' : 'Product added successfully! 🎉',
+        ToastAndroid.SHORT
       );
       resetForm();
       setImages([]);
       navigation.goBack();
     } catch (error: any) {
-      ToastAndroid.show(
-        error.message || 'Something went wrong',
-        ToastAndroid.SHORT,
-      );
+      ToastAndroid.show(error.message || 'Something went wrong 😔', ToastAndroid.SHORT);
     } finally {
       setSubmitting(false);
     }
   };
 
-  if (isLoading) {
-    return <LoadingComponent />;
-  }
+  // Handle adding a new variant
+  const handleAddVariant = (setFieldValue: any, values: any) => {
+    if (!newVariant.name || !newVariant.additional_price) {
+      ToastAndroid.show('Please fill in variant name and price 😊', ToastAndroid.SHORT);
+      return;
+    }
+    setFieldValue('variants', [...values.variants, newVariant]);
+    setNewVariant({ name: '', additional_price: '' });
+    setModalVisible(false);
+  };
+
+  if (isLoading) return <LoadingComponent />;
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1 }}
+      className="flex-1 bg-gray-50"
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
       <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: 16,
-          backgroundColor: '#fff',
-        }}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        <View className="flex-row items-center border-gray-200">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-            <Ionicons name="arrow-back" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
-        <View style={{ marginTop: 10 }}>
-          <Text
-            style={{
-              textAlign: 'center',
-              fontSize: 30,
-              fontWeight: 'bold',
-              color: '#374151',
-            }}>
-            {itemDetails ? 'Edit Product' : 'Add Product'}
+        keyboardShouldPersistTaps="handled"
+      >
+        <TouchableOpacity
+          className="absolute top-4 left-4 p-2"
+          onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+        >
+          <Ionicons name="arrow-back" size={24} color="#374151" />
+        </TouchableOpacity>
+
+        <View>
+          <Text className="text-center text-2xl font-bold text-gray-900 mt-12 mb-2">
+            {itemDetails ? 'Edit Product 🍽️' : 'Add New Product 🍽️'}
           </Text>
-          <Text
-            style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
-            {itemDetails
-              ? 'Update the product details below.'
-              : 'Enter the product details to add a new product.'}
+          <Text className="text-center text-sm text-gray-600 mb-4">
+            {itemDetails ? 'Update your menu item' : 'Add a new item to your menu'}
           </Text>
 
           <Formik
             initialValues={{
               item_name: itemDetails?.item_name || '',
-              price: itemDetails?.price ? String(itemDetails.price) : '',
               description: itemDetails?.description || '',
-              stock_quantity: itemDetails?.stock_quantity
-                ? String(itemDetails.stock_quantity)
-                : '',
-              unit: units && units?.find(u => u?.short_name === itemDetails?.unit)?.id || '',
-              sub_unit: subUits.length != 0 && subUits?.find(u => u?.short_name === itemDetails?.sub_unit)?.id || '',
-              category_id: itemDetails?.category?.id
-                ? itemDetails.category.id
-                : '', // Fixed category_id
-              status: itemDetails?.status === 0 ? '0' : '1',
+              stock_quantity: itemDetails?.stock_quantity ? String(itemDetails.stock_quantity) : '',
+              unit: units.find(u => u.short_name === itemDetails?.unit)?.id || '',
+              category_id: itemDetails?.category?.id || '',
+              status: itemDetails?.status === 1 || itemDetails?.status === undefined ? true : false,
               images: images || [],
-              isVegetarian: `${itemDetails?.isVegetarian}` || ''
+              isVegetarian: `${itemDetails?.isVegetarian}` || '',
+              variants: itemDetails?.variants || [],
+              tags: itemDetails?.tags || [],
             }}
             validationSchema={validationSchema}
             onSubmit={handleSaveProduct}
-            enableReinitialize>
+            enableReinitialize
+          >
             {({
               handleChange,
               handleBlur,
@@ -292,432 +263,379 @@ const AddProductScreen = () => {
               isSubmitting,
               setFieldValue,
             }: any) => (
-              <View style={{ marginTop: 16 }}>
+              <View>
                 {/* Image Upload and Preview */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Product Images
+                <View className="bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
+                  <Text className="text-base font-semibold text-gray-900 mb-2">
+                    Product Photos
                   </Text>
                   <TouchableOpacity
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 16,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: 100,
-                      marginBottom: 12,
-                    }}
-                    onPress={() => pickImages(setFieldValue)}>
-                    <Ionicons name="image-outline" size={40} color="#4B5563" />
-                    <Text style={{ color: '#4B5563', marginTop: 8 }}>
-                      Upload Images
-                    </Text>
+                    className="border border-dashed border-gray-300 rounded-lg p-4 items-center justify-center h-36 mb-3"
+                    onPress={() => pickImages(setFieldValue)}
+                    accessibilityLabel="Add product photos"
+                  >
+                    <View className="bg-primary-80 rounded-full p-3">
+                      <Ionicons name="camera-outline" size={40} color="#fff" />
+                    </View>
+                    <Text className="text-gray-600 mt-2">Tap to add photos </Text>
+                    <Text className="text-xs text-gray-500">Up to 5 images from camera or gallery</Text>
                   </TouchableOpacity>
 
-                  {/* Image Preview */}
                   <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {images.map((image: any, index: any) => {
-                      console.log(image?.uri, "dfd");
-                      return (
-                        <View
-                          key={index}
-                          style={{ marginRight: 10, position: 'relative' }}>
-                          <Image
-                            source={{
-                              uri: `${image?.uri}`,
-                            }}
-                            style={{ width: 100, height: 100, borderRadius: 8 }}
-                          />
-                          <TouchableOpacity
-                            style={{
-                              position: 'absolute',
-                              top: 0,
-                              right: 0,
-                              backgroundColor: '#EF4444',
-                              borderRadius: 12,
-                              padding: 2,
-                            }}
-                            onPress={() => removeImage(index, setFieldValue)}>
-                            <Ionicons name="close" size={20} color="#fff" />
-                          </TouchableOpacity>
-                        </View>
-                      );
-                    })}
+                    {images.map((image: any, index: any) => (
+                      <View key={index} className="mr-3 relative">
+                        <Image
+                          source={{ uri: image.uri }}
+                          className="w-24 h-24 rounded-lg"
+                          accessibilityLabel={`Product image ${index + 1}`}
+                        />
+                        <TouchableOpacity
+                          className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
+                          onPress={() => removeImage(index, setFieldValue)}
+                          accessibilityLabel={`Remove image ${index + 1}`}
+                        >
+                          <Ionicons name="close-circle" size={24} color="#fff" />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
                   </ScrollView>
                   {touched.images && errors.images && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.images}
-                    </Text>
+                    <Text className="text-red-500 text-xs mt-1">{errors.images}</Text>
                   )}
                 </View>
 
-                {/* Item Name */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Item Name
-                  </Text>
-                  <TextInput
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 12,
-                      fontSize: 16,
-                    }}
-                    placeholder="Enter item name"
-                    onChangeText={handleChange('item_name')}
-                    onBlur={handleBlur('item_name')}
-                    value={values.item_name}
-                  />
-                  {touched.item_name && errors.item_name && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.item_name}
+                <View className="bg-white rounded-lg p-4 mb-4 shadow-md" style={styles.shadow}>
+                  {/* Product Name */}
+                  <View className="mb-4">
+                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                      Product Name
                     </Text>
-                  )}
-                </View>
+                    <TextInput
+                      className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base text-gray-900"
+                      placeholder="e.g., Butter Chicken"
+                      placeholderTextColor="#6B7280"
+                      onChangeText={handleChange('item_name')}
+                      onBlur={handleBlur('item_name')}
+                      value={values.item_name}
+                      accessibilityLabel="Product name"
+                    />
+                    {touched.item_name && errors.item_name && (
+                      <Text className="text-red-500 text-xs mt-1">{errors.item_name}</Text>
+                    )}
+                  </View>
 
-                {/* Price */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Price
-                  </Text>
-                  <TextInput
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 12,
-                      fontSize: 16,
-                    }}
-                    placeholder="Enter price"
-                    onChangeText={handleChange('price')}
-                    onBlur={handleBlur('price')}
-                    value={values.price}
-                    keyboardType="numeric"
-                  />
-                  {touched.price && errors.price && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.price}
+                  {/* Description */}
+                  <View className="mb-4">
+                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                      Description
                     </Text>
-                  )}
-                </View>
+                    <TextInput
+                      className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base text-gray-900 min-h-[100px]"
+                      placeholder="Describe your product"
+                      placeholderTextColor="#6B7280"
+                      onChangeText={handleChange('description')}
+                      onBlur={handleBlur('description')}
+                      value={values.description}
+                      multiline
+                      textAlignVertical="top"
+                      accessibilityLabel="Product description"
+                    />
+                    {touched.description && errors.description && (
+                      <Text className="text-red-500 text-xs mt-1">{errors.description}</Text>
+                    )}
+                  </View>
 
-                {/* Description */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Description
-                  </Text>
-                  <TextInput
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 12,
-                      fontSize: 16,
-                      minHeight: 100,
-                      textAlignVertical: 'top', // <-- This ensures text starts from the top
-                    }}
-                    placeholder="Enter product description"
-                    onChangeText={handleChange('description')}
-                    onBlur={handleBlur('description')}
-                    value={values.description}
-                    multiline
-                  />
-                  {touched.description && errors.description && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.description}
+                  {/* Stock Quantity */}
+                  <View className="mb-4">
+                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                      Stock Quantity
                     </Text>
-                  )}
-                </View>
+                    <TextInput
+                      className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base text-gray-900"
+                      placeholder="Enter stock quantity"
+                      placeholderTextColor="#6B7280"
+                      onChangeText={handleChange('stock_quantity')}
+                      onBlur={handleBlur('stock_quantity')}
+                      value={values.stock_quantity}
+                      keyboardType="numeric"
+                      accessibilityLabel="Stock quantity"
+                    />
+                    {touched.stock_quantity && errors.stock_quantity && (
+                      <Text className="text-red-500 text-xs mt-1">{errors.stock_quantity}</Text>
+                    )}
+                  </View>
 
-                {/* Category Picker */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Category
-                  </Text>
-                  <View
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                    }}>
-                    <Picker
-                      selectedValue={values.category_id}
-                      onValueChange={value =>
-                        setFieldValue('category_id', value)
-                      }
-                      style={{ fontSize: 16 }}>
-                      <Picker.Item label="Select a category" value="" />
-                      {categories.map((category: any) => (
-                        <Picker.Item
-                          key={category.id}
-                          label={category.name}
-                          value={category.id}
-                        />
+                  {/* Variants Section */}
+                  <View className="mb-4">
+                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                      Product Variants
+                    </Text>
+
+                    {/* Button to open modal */}
+                    <TouchableOpacity
+                      className="bg-primary-100 rounded-lg p-3 items-center mb-3"
+                      onPress={() => setModalVisible(true)}
+                      accessibilityLabel="Add new variant"
+                    >
+                      <Text className="text-white text-sm font-semibold">Add Variant ➕</Text>
+                    </TouchableOpacity>
+
+                    {/* Modal for adding variants */}
+                    <Modal
+                      animationType="slide"
+                      transparent={true}
+                      visible={modalVisible}
+                      onRequestClose={() => setModalVisible(false)}
+                    >
+                      <View className="flex-1 justify-center items-center bg-black/50">
+                        <View className="bg-white rounded-lg p-6 w-11/12" style={styles.shadow}>
+                          <Text className="text-lg font-bold text-gray-900 mb-4">
+                            Add New Variant
+                          </Text>
+
+                          <TextInput
+                            className="border border-gray-300 bg-gray-100 rounded-lg p-3 mb-3 text-base text-gray-900"
+                            placeholder="Variant (e.g., Small)"
+                            placeholderTextColor="#6B7280"
+                            value={newVariant.name}
+                            onChangeText={text => setNewVariant({ ...newVariant, name: text })}
+                            accessibilityLabel="Variant name"
+                          />
+
+                          <TextInput
+                            className="border border-gray-300 bg-gray-100 rounded-lg p-3 mb-3 text-base text-gray-900"
+                            placeholder="Extra price"
+                            placeholderTextColor="#6B7280"
+                            value={newVariant.additional_price}
+                            onChangeText={text => setNewVariant({ ...newVariant, additional_price: text })}
+                            keyboardType="numeric"
+                            accessibilityLabel="Variant additional price"
+                          />
+
+                          <View className="flex-row justify-end gap-3">
+                            <TouchableOpacity
+                              className="bg-gray-300 rounded-lg p-3"
+                              onPress={() => {
+                                setNewVariant({ name: '', additional_price: '' });
+                                setModalVisible(false);
+                              }}
+                              accessibilityLabel="Cancel adding variant"
+                            >
+                              <Text className="text-gray-900 font-semibold">Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              className="bg-primary-100 rounded-lg p-3"
+                              onPress={() => handleAddVariant(setFieldValue, values)}
+                              accessibilityLabel="Save variant"
+                            >
+                              <Text className="text-white font-semibold">Save</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    </Modal>
+
+                    {/* Display added variants */}
+                    {values.variants.length > 0 ? (
+                      <View className="mt-3">
+                        <Text className="text-sm font-semibold text-gray-700 mb-2">
+                          Added Variants:
+                        </Text>
+                        {values.variants.map((variant: any, index: number) => (
+                          <View
+                            key={index}
+                            className="flex-row items-center justify-between bg-gray-100 rounded-lg p-3 mb-2"
+                          >
+                            <View className='flex-row  gap-2 items-center justify-between w-3/4'>
+                              <Text className="text-base text-gray-900">{variant.name}</Text>
+                              <Text className="text-sm text-gray-600">
+                                ${variant.additional_price}
+                              </Text>
+                            </View>
+                            <TouchableOpacity
+                              onPress={() => {
+                                const newVariants = values.variants.filter((_: any, i: number) => i !== index);
+                                setFieldValue('variants', newVariants);
+                              }}
+                              accessibilityLabel={`Remove variant ${variant.name}`}
+                            >
+                              <MaterialIcons name="delete" size={24} color="#EF4444" />
+                            </TouchableOpacity>
+                          </View>
+                        ))}
+                      </View>
+                    ) : (
+                      <Text className="text-sm text-gray-500">No variants added yet.</Text>
+                    )}
+
+                    {touched.variants && errors.variants && (
+                      <Text className="text-red-500 text-xs mt-1">{errors.variants}</Text>
+                    )}
+                  </View>
+
+                  {/* Unit Picker */}
+                  <View className="mb-4">
+                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                      Unit
+                    </Text>
+                    <View className="border border-gray-300 bg-gray-100 rounded-lg">
+                      <Picker
+                        selectedValue={values.unit}
+                        onValueChange={value => setFieldValue('unit', value)}
+                        style={{ color: '#374151' }}
+                        accessibilityLabel="Select unit"
+                        mode="dropdown"
+                      >
+                        <Picker.Item label="Choose a unit" value="" />
+                        {units.map((unit: any) => (
+                          <Picker.Item
+                            key={unit.id}
+                            label={unit.name}
+                            value={unit.id}
+                          />
+                        ))}
+                      </Picker>
+                    </View>
+                    {touched.unit && errors.unit && (
+                      <Text className="text-red-500 text-xs mt-1">{errors.unit}</Text>
+                    )}
+                  </View>
+
+                  {/* Category Picker */}
+                  <View className="mb-4">
+                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                      Category
+                    </Text>
+                    <View className="border border-gray-300 bg-gray-100 rounded-lg">
+                      <Picker
+                        selectedValue={values.category_id}
+                        onValueChange={value => setFieldValue('category_id', value)}
+                        style={{ color: '#374151' }}
+                        accessibilityLabel="Select category"
+                      >
+                        <Picker.Item label="Choose a category" value="" />
+                        {categories.map((category: any) => (
+                          <Picker.Item
+                            key={category.id}
+                            label={category.name}
+                            value={category.id}
+                          />
+                        ))}
+                      </Picker>
+                    </View>
+                    {touched.category_id && errors.category_id && (
+                      <Text className="text-red-500 text-xs mt-1">{errors.category_id}</Text>
+                    )}
+                  </View>
+
+                  {/* Food Type */}
+                  <View className="mb-4">
+                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                      Food Type
+                    </Text>
+                    <View className="border border-gray-300 bg-gray-100 rounded-lg">
+                      <Picker
+                        selectedValue={values.isVegetarian}
+                        onValueChange={value => setFieldValue('isVegetarian', value)}
+                        style={{ color: '#374151' }}
+                        accessibilityLabel="Select food type"
+                      >
+                        <Picker.Item label="Choose food type" value="" />
+                        <Picker.Item label="Non-Veg 🍖" value="1" />
+                        <Picker.Item label="Veg 🥕" value="0" />
+                      </Picker>
+                    </View>
+                    {touched.isVegetarian && errors.isVegetarian && (
+                      <Text className="text-red-500 text-xs mt-1">{errors.isVegetarian}</Text>
+                    )}
+                  </View>
+
+                  {/* Tags */}
+                  <View className="mb-4">
+                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                      Tags
+                    </Text>
+                    <View className="flex-row flex-wrap gap-2">
+                      {availableTags.map(tag => (
+                        <TouchableOpacity
+                          key={tag.id}
+                          className={`rounded-full px-3 py-2 ${values.tags.includes(tag.id) ? 'bg-primary-100' : 'bg-gray-100'}`}
+                          onPress={() => {
+                            const newTags = values.tags.includes(tag.id)
+                              ? values.tags.filter((t: string) => t !== tag.id)
+                              : [...values.tags, tag.id];
+                            setFieldValue('tags', newTags);
+                          }}
+                          accessibilityLabel={`Toggle ${tag.label} tag`}
+                        >
+                          <Text className={`text-sm font-medium ${values.tags.includes(tag.id) ? 'text-white' : 'text-gray-800'}`}>{tag.label}</Text>
+                        </TouchableOpacity>
                       ))}
-                    </Picker>
+                    </View>
+                    {touched.tags && errors.tags && (
+                      <Text className="text-red-500 text-xs mt-1">{errors.tags}</Text>
+                    )}
                   </View>
-                  {touched.category_id && errors.category_id && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.category_id}
-                    </Text>
-                  )}
-                </View>
 
-                {/* Unit Picker */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Unit
-                  </Text>
-                  <View
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                    }}>
-                    <Picker
-                      selectedValue={values.unit}
-                      onValueChange={value => { setFieldValue('unit', value); setSubUits(units.find((u: any) => u.id === value)?.sub_units) }}
-                      style={{ fontSize: 16 }}>
-                      <Picker.Item label="Select a unit" value="" />
-                      {units?.length != 0 && units.map((unit: any) => (
-                        <Picker.Item
-                          key={unit.id}
-                          label={unit.name}
-                          value={unit.id}
-                        />
-                      ))}
-                    </Picker>
+                  {/* Status Switch */}
+                  <View className="mb-4">
+                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                      Status
+                    </Text>
+                    <View className="flex-row items-center justify-between">
+                      <View className='flex-row items-center gap-3'>
+                        <View className={`${values?.status ? "bg-green-500" : "bg-red-400"} w-4 h-4 rounded-full `} />
+                        <Text className='text-lg font-semibold'>{values?.status ? "Live" : "Offline"}</Text>
+                      </View>
+                      <Switch
+                        value={values.status}
+                        onValueChange={(value: any) => setFieldValue('status', value)}
+                        trackColor={{ false: '#EF4444', true: '#10B981' }}
+                        thumbColor="#f4f3f4"
+                        accessibilityLabel="Toggle product status"
+                        size="small"
+                      />
+                    </View>
+                    {touched.status && errors.status && (
+                      <Text className="text-red-500 text-xs mt-1">{errors.status}</Text>
+                    )}
                   </View>
-                  {touched.unit && errors.unit && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.unit}
-                    </Text>
-                  )}
-                </View>
-
-                {subUits.length != 0 && subUits?.length != 0 && <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Sub Unit
-                  </Text>
-                  <View
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                    }}>
-                    <Picker
-                      selectedValue={values.subUits}
-                      onValueChange={value => setFieldValue('sub_unit', value)}
-                      style={{ fontSize: 16 }}>
-                      <Picker.Item label="Select a sub unit" value="" />
-                      {subUits.map((subUnit: any) => (
-                        <Picker.Item
-                          key={subUnit.id}
-                          label={subUnit.name}
-                          value={subUnit.id}
-                        />
-                      ))}
-                    </Picker>
-                  </View>
-                  {touched.unit && errors.unit && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.unit}
-                    </Text>
-                  )}
-                </View>
-                }
-                {/* Stock Quantity */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Stock Quantity
-                  </Text>
-                  <TextInput
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 12,
-                      fontSize: 16,
-                    }}
-                    placeholder="Enter stock quantity"
-                    onChangeText={handleChange('stock_quantity')}
-                    onBlur={handleBlur('stock_quantity')}
-                    value={values.stock_quantity}
-                    keyboardType="numeric"
-                  />
-                  {touched.stock_quantity && errors.stock_quantity && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.stock_quantity}
-                    </Text>
-                  )}
-                </View>
-
-                {/* Status Picker */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Food Type
-                  </Text>
-                  <View
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                    }}>
-                    <Picker
-                      selectedValue={values.isVegetarian}
-                      onValueChange={value => setFieldValue('isVegetarian', value)}
-                      style={{ fontSize: 16 }}>
-                      <Picker.Item label="Select food type" value="" />
-                      <Picker.Item label="Non Veg" value="1" />
-                      <Picker.Item label="Veg" value="0" />
-                    </Picker>
-                  </View>
-                  {touched.isVegetarian && errors.isVegetarian && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.isVegetarian}
-                    </Text>
-                  )}
-                </View>
-
-                {/* Status Picker */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Status
-                  </Text>
-                  <View
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                    }}>
-                    <Picker
-                      selectedValue={values.status}
-                      onValueChange={value => setFieldValue('status', value)}
-                      style={{ fontSize: 16 }}>
-                      <Picker.Item label="Select status" value="" />
-                      <Picker.Item label="Active" value="1" />
-                      <Picker.Item label="Inactive" value="0" />
-                    </Picker>
-                  </View>
-                  {touched.status && errors.status && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.status}
-                    </Text>
-                  )}
                 </View>
 
                 {/* Save Button */}
                 <TouchableOpacity
                   onPress={() => handleSubmit()}
                   disabled={isSubmitting}
-                  style={{
-                    backgroundColor: isSubmitting ? '#B68AD480' : '#B68AD4',
-                    padding: 16,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                    marginTop: 16,
-                  }}>
-                  <Text
-                    style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
-                    {isSubmitting
-                      ? productId
-                        ? 'Saving...'
-                        : 'Saving...'
-                      : productId
-                        ? 'Update Product'
-                        : 'Save Product'}
+                  className={`rounded-lg p-4 items-center my-4 ${isSubmitting ? 'bg-primary-90' : 'bg-primary-100'}`}
+                  accessibilityLabel={productId ? 'Update product' : 'Save product'}
+                >
+                  <Text className="text-white text-base font-bold">
+                    {isSubmitting ? 'Saving... ' : (productId ? 'Update Product ' : 'Save Product ')}
                   </Text>
                 </TouchableOpacity>
               </View>
             )}
           </Formik>
         </View>
-      </ScrollView >
-    </KeyboardAvoidingView >
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
+
+// Tailwind-inspired styles
+const styles = StyleSheet.create({
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.55,
+    shadowRadius: 5.84,
+    elevation: 2,
+    backgroundColor: '#fff',
+  },
+});
 
 export default AddProductScreen;
