@@ -15,6 +15,8 @@ import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { ImagePath } from '../../constants/ImagePath';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import Switch from './Switch';
+import { addToCart } from '../../store/slices/cartSlice';
+import { useDispatch } from 'react-redux';
 
 interface Product {
   id: string;
@@ -33,7 +35,7 @@ interface Product {
 const Menu = () => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
-
+  const dispatch = useDispatch<any>()
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
@@ -103,6 +105,39 @@ const Menu = () => {
       ),
     [products, search]
   );
+
+
+  const handleAddToCart = (item: any) => {
+    const cartItem = {
+      id: item.id.toString(),
+      name: item.item_name,
+      price: item.price,
+      quantity: 1,
+      image: item.images[0] ? IMAGE_URL + item.images[0] : undefined,
+      shop_id: item?.shop?.id ?? item?.store_id
+
+    };
+    dispatch(addToCart(cartItem));
+    ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
+  };
+
+
+  // Place order
+  const handlePlaceOrder = (item: any) => {
+    navigation.navigate('AddCustomerFormScreen', {
+      item: [
+        {
+          id: item.id,
+          quantity: 1,
+          price: Math.floor(Number(item.price)),
+          name: item.item_name,
+          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          shop_id: item?.shop?.id ?? item?.store_id
+        },
+      ],
+    });
+  };
+
 
   const renderItem = ({ item }: { item: Product }) => {
     const isToggling = toggleLoadingIds.includes(item.id);

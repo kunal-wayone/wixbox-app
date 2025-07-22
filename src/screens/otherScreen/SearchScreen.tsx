@@ -12,6 +12,7 @@ import {
   Dimensions,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -23,15 +24,26 @@ import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../store/slices/cartSlice';
 import { RootState } from '../../store/store';
 import FoodItem from '../../components/common/FoodItem';
+import Shop from '../../components/common/Shop';
 
-const { width } = Dimensions.get('window');
+
+
+const availableTags = [
+  { id: 'spicy', label: 'Spicy 🌶️' },
+  { id: 'bestseller', label: 'Bestseller ⭐' },
+  { id: 'hot', label: 'Hot 🔥' },
+  { id: 'fresh', label: 'Fresh 🥗' },
+  { id: 'gluten_free', label: 'Gluten-Free 🌾' },
+  { id: 'vegan', label: 'Vegan 🌱' },
+];
+
 
 const SearchScreen = () => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
   const route = useRoute<any>();
   const query = route.params?.query || '';
-
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState(query);
   const [active, setActive] = useState<'product' | 'shop'>('product');
   const [dishes, setDishes] = useState([]);
@@ -112,6 +124,20 @@ const SearchScreen = () => {
     ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
   };
 
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]
+    );
+  };
+
+  const filteredItems = dishes.filter(item => {
+    const matchesTags = selectedTags.length === 0 || selectedTags.every(tag => item?.tags?.includes(tag));
+    return matchesTags;
+  });
+
+
+
   useEffect(() => {
     if (isFocused) {
       fetchSearchResults(query, active, 1, false);
@@ -180,13 +206,13 @@ const SearchScreen = () => {
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 bg-white">
       <View className="flex-1">
         {/* Back Button */}
-        <TouchableOpacity className="ml-4 mt-4" onPress={() => navigation.goBack()}>
+        <TouchableOpacity className="ml-4 mt-3" onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
 
         {/* Search Bar */}
-        <View className="flex-row items-center mx-4 mt-4 border border-gray-300 bg-gray-100 rounded-xl px-3 py-1">
-          <Ionicons name="search" size={20} color="gray" />
+        <View className="flex-row items-center gap-2 mb-2 mx-2 rounded-xl px-3 mt-4  bg-gray-100 border border-gray-300">
+          <Text>🍝</Text>
           <TextInput
             className="flex-1 ml-2 text-base text-gray-700"
             placeholder="Search for food or restaurants"
@@ -195,23 +221,35 @@ const SearchScreen = () => {
             returnKeyType="search"
             onSubmitEditing={() => handleSearch(active)}
           />
+          <Ionicons name="search" size={20} color="gray" />
         </View>
 
-        {/* View Cart Icon */}
-        <TouchableOpacity
-          className="absolute top-4 right-4 bg-primary-80 rounded-full p-2 hidden "
-          onPress={() => navigation.navigate('CartScreen')}
-        >
-          <Ionicons name="cart" size={24} color="white" />
-          {cartItems.length > 0 && (
-            <View className="absolute -top-1 -right-1 bg-red-500 rounded-full h-5 w-5 items-center justify-center">
-              <Text className="text-white text-xs">{cartItems.length}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
 
+
+        {active === "product" && <ScrollView
+          horizontal
+          className="px-4  "
+          style={{ maxHeight: "6%", minHeight: "6%", }}
+          contentContainerStyle={{ maxHeight: "100%", minHeight: "100%", }}
+
+          showsHorizontalScrollIndicator={false}
+        >
+          {availableTags.map(tag => (
+            <TouchableOpacity
+              key={tag.id}
+              onPress={() => toggleTag(tag.id)}
+              className={`rounded-full px-3 py-1 h-8 mr-2 border border-gray-300 ${selectedTags.includes(tag.id) ? 'bg-green-600' : 'bg-white'
+                }`}
+            >
+              <Text className={`text-sm ${selectedTags.includes(tag.id) ? 'text-white' : 'text-gray-900'}`}>
+                {tag.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+        }
         {/* Tabs */}
-        <View className="flex-row gap-4 mx-4 mt-4 mb-2">
+        <View className="flex-row gap-4 mx-4  mb-2">
           <TouchableOpacity
             onPress={() => handleSearch('product')}
             className={`pb-1 ${active === "product" ? "border-b-2 border-primary-100" : ""}`}
@@ -233,48 +271,30 @@ const SearchScreen = () => {
           <FlatList
             data={restaurants}
             keyExtractor={(item: any) => item.id.toString()}
-            renderItem={({ item }: any) => (
-              <TouchableOpacity onPress={() => navigation.navigate("ShopDetailsScreen", { shop_info: item })}>
-                <View className="flex-row bg-primary-10 rounded-xl p-4 mb-4 mx-4 gap-4">
-                  <TouchableOpacity className='my-auto' >
-                    <Image
-                      source={item?.restaurant_images?.length > 0 ? { uri: IMAGE_URL + item.restaurant_images[0] } : ImagePath.restaurant1}
-                      className="w-28 h-28 rounded-xl"
-                      resizeMode="cover"
-                    />
-                  </TouchableOpacity>
-                  <View className="flex-1">
-                    <Text className="text-lg font-semibold" numberOfLines={1} ellipsizeMode='tail' >{item?.restaurant_name}</Text>
-                    <Text className="text-gray-500 mb-2">{item?.address}</Text>
-                    <View className="flex-row justify-between items-center mt-1">
-                      <View className="flex-row items-center">
-                        <Ionicons name="location-outline" size={16} color="gray" />
-                        <Text className="text-sm text-gray-600"> {item?.distance_km || 0} Km</Text>
-                      </View>
-                      <View className="flex-row items-center">
-                        <MaterialIcons name="access-time" size={16} color="gray" />
-                        <Text className="text-sm text-gray-600"> {item?.travel_time_mins || 0} min</Text>
-                      </View>
-                      <View className="flex-row items-center">
-                        <MaterialIcons name="star" size={16} color="#FFC727" />
-                        <Text className="text-sm text-gray-600"> {item?.average_rating || 0}</Text>
-                      </View>
-                    </View>
-
-                    <TouchableOpacity
-                      // onPress={() => {
-                      //   const url = `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`;
-                      //   Linking.openURL(url).catch(err => console.error("Couldn't load page", err));
-                      // }}
-                      className="mt-2 bg-primary-90 w-full px-3 py-2 rounded-lg"
-                    >
-                      <Text className="text-white text-center text-md font-medium">
-                        Get Direction
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </TouchableOpacity>
+            renderItem={(store: any) => (
+              <View key={store?.item?.id}>
+                <Shop
+                  id={store?.item?.id}
+                  name={store?.item?.restaurant_name}
+                  description={store?.item?.about_business || 'No description available'}
+                  images={store?.item?.restaurant_images || []}
+                  address={store?.item?.address || 'No address provided'}
+                  phone={store?.item?.phone || 'No phone provided'}
+                  rating={store?.item?.average_rating || 0}
+                  categories={store?.item?.categories || []}
+                  isOpen={store?.item?.is_open !== false}
+                  featuredItems={
+                    store?.item?.featured_items?.map((item) => ({
+                      id: item.id,
+                      name: item.name,
+                      price: item.price,
+                      image: item.image || ImagePath.item1,
+                    })) || []
+                  }
+                  maxImages={5}
+                  item={store?.item}
+                />
+              </View>
             )}
             refreshing={refreshing}
             onRefresh={handleRefresh}
@@ -286,7 +306,7 @@ const SearchScreen = () => {
           />
         ) : (
           <FlatList
-            data={dishes}
+            data={filteredItems}
             keyExtractor={(item: any) => item.id.toString()}
             renderItem={renderItem}
             refreshing={refreshing}

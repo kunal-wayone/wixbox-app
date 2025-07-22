@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,22 @@ import {
   TouchableOpacity,
   ToastAndroid,
   ActivityIndicator,
+  Pressable,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Icons from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 import { RootState } from '../../store/store';
 import { addWishlistShop, removeWishlistShop } from '../../store/slices/wishlistSlice';
 import { addToCart } from '../../store/slices/cartSlice';
 import { IMAGE_URL } from '../../utils/apiUtils';
 import { ImagePath } from '../../constants/ImagePath';
+import LinearGradient from 'react-native-linear-gradient';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import CallButton from './CallButton';
+import DirectionButton from './DirectionButton';
 
 interface FeaturedItem {
   id: string;
@@ -40,6 +46,19 @@ interface ShopProps {
   item: any;
 }
 
+
+
+const availableTags = [
+  { id: 'spicy', label: 'Spicy 🌶️' },
+  { id: 'bestseller', label: 'Bestseller ⭐' },
+  { id: 'hot', label: 'Hot 🔥' },
+  { id: 'fresh', label: 'Fresh 🥗' },
+  { id: 'gluten_free', label: 'Gluten-Free 🌾' },
+  { id: 'vegan', label: 'Vegan 🌱' },
+];
+
+
+
 const Shop = ({
   id,
   name = 'Unknown Shop',
@@ -54,12 +73,29 @@ const Shop = ({
   maxImages = 5,
   item,
 }: ShopProps) => {
+  const isFocused = useIsFocused()
   const dispatch = useDispatch<any>();
   const navigation = useNavigation<any>();
+  const [shopStatus, setShopStatus] = useState({
+    isOpen: false,
+    openingTime: null,
+    closingTime: null,
+  });
   const wishlistShopIds = useSelector((state: RootState) => state.wishlist.shop_ids);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-
+  const shiftDetails = item?.shift_details
+    ? JSON.parse(item.shift_details)
+    : [];
   const isWishlisted = wishlistShopIds.includes(id);
+
+  const formatToAMPM = (time24: string) => {
+    const [hourStr, minute] = time24.split(':');
+    let hour = parseInt(hourStr);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    return `${hour}:${minute} ${ampm}`;
+  };
+
   const isShopOpen: any = () => {
     const currentDay = new Date()
       .toLocaleString('en-US', { weekday: 'short' })
@@ -73,7 +109,7 @@ const Shop = ({
     const todayShift = shiftData?.find(
       (shift: any) => shift.day.toLowerCase() === currentDay && shift.status
     );
-    console.log(shiftData, item)
+    // console.log(shiftData, item)
 
     if (!todayShift || !todayShift.first_shift_start) return false;
 
@@ -82,7 +118,56 @@ const Shop = ({
       currentTime <= todayShift.first_shift_end
     );
   };
-  console.log(isShopOpen)
+
+
+
+  const getShopStatus = () => {
+    const currentDay = new Date()
+      .toLocaleString('en-US', { weekday: 'short' })
+      .toLowerCase();
+
+    const currentTime = new Date().toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const todayShift = shiftDetails.find(
+      (shift: any) => shift.day.toLowerCase() === currentDay && shift.status
+    );
+
+    if (!todayShift || !todayShift.first_shift_start) {
+      return {
+        isOpen: false,
+        openingTime: null,
+        closingTime: null,
+      };
+    }
+
+    const isOpen =
+      currentTime >= todayShift.first_shift_start &&
+      currentTime <= todayShift.first_shift_end;
+
+    return {
+      isOpen,
+      openingTime: formatToAMPM(todayShift.first_shift_start),
+      closingTime: formatToAMPM(todayShift.first_shift_end),
+    };
+  };
+
+
+
+  useEffect(() => {
+    if (isFocused) {
+      const status: any = getShopStatus();
+      console.log(isShopOpen(), status)
+      setShopStatus(status);
+    }
+  }, [isFocused]);
+
+console.log(item)
+
+  // console.log(isShopOpen)
   const handleToggleWishlist = async () => {
     try {
       if (isWishlisted) {
@@ -132,6 +217,52 @@ const Shop = ({
       return (
         <View className="w-full h-48 bg-gray-200 rounded-xl justify-center items-center">
           <Text className="text-gray-500">No images available</Text>
+          <View className="absolute bottom-2 flex-row justify-center space-x-2 w-full">
+            {images.slice(0, maxImages).map((_, index) => (
+              <TouchableOpacity
+                key={index}
+                className={`w-2 h-2 rounded-full mx-1 ${index === selectedImageIndex ? 'bg-green-500' : 'bg-gray-300'}`}
+                onPress={() => setSelectedImageIndex(index)}
+              />
+            ))}
+          </View>
+          {/* Gradient Overlay */}
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.8)']}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '85%', // bottom half gradient
+            }}
+          />
+
+          <TouchableOpacity className='absolute top-2 right-2' onPress={handleToggleWishlist}>
+            <Icons name={isWishlisted ? 'heart' : 'heart-outline'} size={24} color={isWishlisted ? 'red' : 'white'} />
+          </TouchableOpacity>
+          <View className="absolute bottom-0 left-4 right-4 mb-4">
+            <Text className="text-white text-lg font-bold" numberOfLines={1}>
+              {name || 'Unknown Restaurant'}
+            </Text>
+            <View className="flex-row items-center mb-1 ">
+              <MaterialIcons name="location-on" size={16} color="white" />
+              <Text className="text-white text-xs ml-1">
+                {`${address}, ${address}`}
+              </Text>
+            </View>
+            <View className="flex-row flex-wrap gap-2 mt-1">
+              {availableTags?.slice(0, 3).map(tag => (
+                <View
+                  key={tag.id}
+                  className={`rounded-full px-3 py-1 bg-primary-80 `}
+                >
+                  <Text className={`text-xs font-medium text-white`}>{tag.label}</Text>
+                </View>
+              ))}
+
+            </View>
+          </View>
         </View>
       );
     }
@@ -153,6 +284,44 @@ const Shop = ({
             />
           ))}
         </View>
+        {/* Gradient Overlay */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.8)']}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: '85%', // bottom half gradient
+          }}
+        />
+
+        <TouchableOpacity className='absolute top-2 right-2' onPress={handleToggleWishlist}>
+          <Icons name={isWishlisted ? 'heart' : 'heart-outline'} size={24} color={isWishlisted ? 'red' : 'white'} />
+        </TouchableOpacity>
+        <View className="absolute bottom-0 left-4 right-4 mb-4">
+          <Text className="text-white text-lg font-bold" numberOfLines={1}>
+            {name || 'Unknown Restaurant'}
+          </Text>
+          <View className="flex-row items-center mb-1 ">
+            <MaterialIcons name="location-on" size={16} color="white" />
+            <Text className="text-white text-xs ml-1">
+              {`${address}, ${address}`}
+            </Text>
+          </View>
+          <View className="flex-row flex-wrap gap-2 mt-1">
+            {availableTags?.slice(0, 3).map(tag => (
+              <View
+                key={tag.id}
+                className={`rounded-full px-3 py-1 bg-primary-80 `}
+              >
+                <Text className={`text-xs font-medium text-white`}>{tag.label}</Text>
+              </View>
+            ))}
+
+          </View>
+        </View>
+
       </View>
     );
   };
@@ -165,46 +334,58 @@ const Shop = ({
     ))
   );
 
-  const renderFeaturedItems = () => (
-    featuredItems.map((fItem) => (
-      <View key={fItem.id} className="flex-row items-center bg-white rounded-xl p-3 mb-2 shadow-sm">
-        <Image
-          source={fItem.image ? { uri: IMAGE_URL + fItem.image } : ImagePath.restaurant1}
-          className="w-20 h-20 rounded-lg mr-3"
-          resizeMode="cover"
-          onError={() => ToastAndroid.show('Failed to load item image', ToastAndroid.SHORT)}
-        />
-        <View className="flex-1">
-          <Text className="text-base font-semibold text-gray-800">{fItem.name}</Text>
-          <Text className="text-sm text-gray-600">₹{fItem.price.toFixed(2)}</Text>
-        </View>
-        <TouchableOpacity
-          className="bg-green-500 rounded-full px-3 py-2"
-          onPress={() => handleAddFeaturedItemToCart(fItem)}
-        >
-          <Text className="text-white font-semibold">Add</Text>
-        </TouchableOpacity>
-      </View>
-    ))
-  );
 
   return (
-    <View className="bg-white rounded-2xl shadow-lg m-2 overflow-hidden border border-gray-300">
+    <Pressable onPress={handleViewShopDetails} className={`bg-white rounded-2xl shadow-lg m-2 overflow-hidden border border-gray-300`}>
+      {!shopStatus.isOpen && (
+        <TouchableOpacity
+          onPress={() => {
+            ToastAndroid.show("Shop temporarily closed now", ToastAndroid.SHORT);
+            handleViewShopDetails();
+          }}
+          className="absolute top-0 left-0 right-0 bottom-0 bg-black/30 z-50"
+          activeOpacity={1}
+        />
+      )}
       {renderImageCarousel()}
 
-      <View className="mt-3 px-2 pb-2">
-        <View className="flex-row justify-between items-center">
-          <Text numberOfLines={1} className="text-xl font-bold text-gray-800 flex-1">{name}</Text>
-          <TouchableOpacity onPress={handleToggleWishlist}>
-            <Icons name="heart" size={24} color={isWishlisted ? 'red' : 'gray'} />
-          </TouchableOpacity>
-        </View>
-
-        <Text className="text-sm text-gray-600 mt-1" numberOfLines={2}>
-          {description}
+      <View className="flex-1 flex-row items-center absolute top-2 left-2 mr-2 bg-white rounded-full px-2">
+        <View
+          className={`w-4 h-4 rounded-full ${shopStatus.isOpen ? "bg-green-500" : "bg-red-400"
+            }`}
+        />
+        <Text className="text-base text-gray-900 ml-2">
+          {shopStatus.openingTime && shopStatus.closingTime ? (
+            shopStatus.isOpen ? (
+              `Open till ${shopStatus.closingTime}`
+            ) : (
+              `Closed now • Opens at ${shopStatus.openingTime}`
+            )
+          ) : (
+            "Closed today"
+          )}
         </Text>
+      </View>
 
-        <View className="flex-row justify-between items-center mt-2">
+
+      <View className="bg-white dark:bg-gray-100 flex-row items-center gap-4 justify-between border border-gray-100 rounded-xl p-2" >
+        <View className='flex-row items-center gap-1  '>
+          <Ionicons name='location-outline' size={22} color={"#ac94f4"} />
+          <View className='' >
+            <Text className='text-xs' numberOfLines={1} ellipsizeMode='tail' >{item?.distance_km} Km away   {`${Math.floor((item?.travel_time_mins || 0) / 60)}h ${(item?.travel_time_mins || 0) % 60}m`}</Text>
+            <Text className='text-xs w-32' numberOfLines={1} ellipsizeMode='tail' >{item?.address + ", " + item?.city}</Text>
+          </View>
+        </View>
+        <View className='flex-row items-center justify-between gap-2 '>
+          <DirectionButton latitude={item?.latitude} longitude={item?.longitude} />
+          <CallButton phone={item?.phone} />
+        </View>
+      </View>
+
+
+      <View className="mt-3 pb-2 hidden">
+
+        <View className="flex-row justify-between items-center mt-2 hidden ">
           <Text className="text-sm text-yellow-500">
             {'★'.repeat(Math.floor(rating))} ({rating.toFixed(1)})
           </Text>
@@ -213,31 +394,11 @@ const Shop = ({
           </Text>
         </View>
 
-        <View className="mt-3">
-          <View className="flex-row items-center">
-            <Icons name="location" size={20} color="black" />
-            <Text numberOfLines={1} className="text-sm text-gray-600 ml-2 flex-1">
-              {address}
-            </Text>
-          </View>
-          {/* {!!phone && (
-            <View className="flex-row items-center mt-1">
-              <Icons name="call" size={20} color="black" />
-              <Text className="text-sm text-gray-600 ml-2">{phone}</Text>
-            </View>
-          )} */}
-        </View>
 
         {!!categories.length && (
           <View className="flex-row mt-3 flex-wrap">{renderCategories()}</View>
         )}
 
-        {!!featuredItems.length && (
-          <View className="mt-4">
-            <Text className="text-lg font-semibold text-gray-800 mb-2">Featured Items</Text>
-            <ScrollView className="max-h-64">{renderFeaturedItems()}</ScrollView>
-          </View>
-        )}
 
         <TouchableOpacity
           className="bg-primary-90 rounded-full px-4 py-3 mt-4"
@@ -246,7 +407,7 @@ const Shop = ({
           <Text className="text-white text-center font-semibold">View Shop Details</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </Pressable>
   );
 };
 

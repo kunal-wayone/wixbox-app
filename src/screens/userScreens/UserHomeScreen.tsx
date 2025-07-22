@@ -29,6 +29,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
 import GetLocationButton from '../../components/common/GetLocationButton';
+import Feather from 'react-native-vector-icons/Feather';
+import LinearGradient from 'react-native-linear-gradient';
+
+const tastyBrightGradients = [
+  ['#fdba74', '#f97316'],
+  ['#fca5a5', '#ef4444'],
+  ['#93c5fd', '#3b82f6'],
+  ['#c084fc', '#9333ea'],
+  ['#fde68a', '#f59e0b'],
+  ['#34d399', '#059669'],
+];
 
 const UserHomeScreen = () => {
   const navigation = useNavigation<any>();
@@ -170,52 +181,52 @@ const UserHomeScreen = () => {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={{ flex: 1 }}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+
           <ScrollView
             contentContainerStyle={{ padding: 16 }}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }>
-            <View className="flex-row items-center justify-between">
-              <View className="flex-row items-center gap-4 w-11/12 overflow-hidden">
-                <Image
-                  source={ImagePath.profile1}
-                  className="w-14 h-14 rounded-full"
-                  resizeMode="cover"
-                />
+            {/* Gradient Overlay */}
+            <View className="flex-row items-center justify-between" >
+              <View className='flex-row items-center gap-2'>
+                <View className='bg-primary-100 p-3 rounded-full'>
+                  <Image source={ImagePath.eater} className='w-7 h-7' style={{ tintColor: "white" }} resizeMode='contain' />
+                </View>
                 <View>
-                  <Text className='text-semibold'>
-                    {user?.name || 'Jaydev Vihar'},{' '}
+                  <Text className="text-lg font-bold font-poppins pl-1" numberOfLines={1} ellipsizeMode='tail'>
+                    {user?.name || 'Guest User'}
                   </Text>
-                  <Text className='text-xs'>
-                    {(user?.user_addresses[0]?.city || '') +
-                      ', ' +
-                      (user?.user_addresses[0]?.state || '') + ", (" + (user?.user_addresses[0]?.pincode || '') + ")"}
-                  </Text>
-                  <Text className='text-xs'>
+                  <View className='flex-row items-center gap-1'>
+                    <Ionicons name='location-outline' size={16} />
+                    <Text className='text-sm ' numberOfLines={1} ellipsizeMode='tail' >
+                      {(user?.user_addresses[0]?.city || '') +
+                        ', ' +
+                        (user?.user_addresses[0]?.state || '') + ", (" + (user?.user_addresses[0]?.pincode || '') + ")"}
+                    </Text>
+                  </View>
+                  <Text className='text-sm hidden'>
                     {(user?.user_addresses[0]?.longitude || '') +
                       ', ' +
                       (user?.user_addresses[0]?.latitude || '')}
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('NotificationScreen')}
-                className="bg-primary-20 w-9 h-9 rounded-full justify-center items-center">
-                <Image
-                  source={ImagePath.bellIcon}
-                  className="h-5 w-5"
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
+              <View className="flex-row items-center gap-2">
+                <TouchableOpacity onPress={() => navigation.navigate("NotificationScreen")} className="rounded-full p-4 justify-center items-center">
+                  <Ionicons name='notifications-outline' size={22} />
+                </TouchableOpacity>
+              </View>
             </View>
             <View>
-              <Text className="text-lg my-4">What’s your plan for today?</Text>
+              <Text className="mb-2 mt-3">What’s your plan for today?</Text>
               <View className="flex-row justify-between mb-6">
                 <View className="flex-1 flex-row items-center px-1.5 border border-gray-300 bg-gray-100 rounded-xl">
                   <Ionicons name="search" size={20} color="#4B5563" className="ml-2" />
                   <TextInput
-                    className="text-lg w-full"
+                    className="w-full text-gray-900"
                     placeholder="Search Food, Restaurants, Dishes"
+                    placeholderTextColor={"#000"}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     onSubmitEditing={handleSearchSubmit}
@@ -237,21 +248,34 @@ const UserHomeScreen = () => {
                   Discover nearby picks tailored for you
                 </Text>
               </View>
-              <View className="flex-row items-center justify-between gap-1 m-auto">
-                {feature.map((cat: any) => (
+              <View className="flex-row flex-wrap justify-between gap-y-3">
+                {feature.map((cat: any, index: number) => (
                   <TouchableOpacity
                     key={cat.id}
                     onPress={() => navigation.navigate(cat?.link)}
-                    style={{ width: "24%" }}
-                    className="flex-col justify-center items-center bg-primary-10 rounded-xl h-24">
-                    <Image
-                      source={cat.image}
-                      className="w-8 h-8 mb-2"
-                      resizeMode="contain"
-                    />
-                    <Text className="text-xs font-poppins font-semibold px-2 text-center text-gray-700">
-                      {cat.name}
-                    </Text>
+                    style={{
+                      width: '24%', // for 2-column responsive layout
+                      borderRadius: 16,
+                      overflow: 'hidden',
+                    }}
+                    className="h-28"
+                  >
+                    <LinearGradient
+                      colors={tastyBrightGradients[index + 20 % tastyBrightGradients.length]}
+                      // start={{ x: 0, y: 0 }}
+                      // end={{ x: 1, y: 1 }}
+                      className="flex-1 justify-center items-center p-3 rounded-xl"
+                    >
+                      <Image
+                        source={cat.image}
+                        resizeMode="contain"
+                        className="w-10 h-10 mb-2"
+                        style={{ tintColor: "#fff" }}
+                      />
+                      <Text className="text-xs font-semibold text-white text-center">
+                        {cat.name}
+                      </Text>
+                    </LinearGradient>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -263,7 +287,7 @@ const UserHomeScreen = () => {
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
       <GetLocationButton />
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 

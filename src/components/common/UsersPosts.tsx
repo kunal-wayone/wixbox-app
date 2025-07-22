@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   ToastAndroid,
   ActivityIndicator,
-  Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Entypo';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
@@ -49,8 +48,6 @@ const UsersPost = ({ vendor_id }: any) => {
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [confirmDeleteVisible, setConfirmDeleteVisible] = useState(false);
-  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const { data: user }: any = useSelector((state: any) => state.user);
 
   const formatDate = (dateString: string) => {
@@ -96,23 +93,7 @@ const UsersPost = ({ vendor_id }: any) => {
     [vendor_id]
   );
 
-  const deletePost = async () => {
-    if (!selectedPostId) return;
 
-    try {
-      setDeletingPostId(selectedPostId);
-      const response: any = await Delete(`/user/posts/${selectedPostId}`, {}, undefined, 5000);
-      if (!response.success) throw new Error(response.message);
-      setPosts((prev) => prev.filter((p) => p.id !== selectedPostId));
-      ToastAndroid.show('Post deleted successfully', ToastAndroid.SHORT);
-    } catch (error: any) {
-      ToastAndroid.show(error?.message || 'Failed to delete post.', ToastAndroid.SHORT);
-    } finally {
-      setDeletingPostId(null);
-      setSelectedPostId(null);
-      setConfirmDeleteVisible(false);
-    }
-  };
 
   const onRefresh = useCallback(() => {
     setIsRefreshing(true);
@@ -173,53 +154,7 @@ const UsersPost = ({ vendor_id }: any) => {
         </ImageBackground>
       </TouchableOpacity>
 
-      {selectedPostId === item.id && (
-        <View className="absolute top-10 right-4 z-20 bg-white rounded-md shadow-lg p-2">
-          <TouchableOpacity
-            onPress={() => {
-              setSelectedPostId(null);
-              navigation.navigate('PostScreen', { postDetails: item });
-            }}
-            className="px-3 py-2"
-          >
-            <Text className="text-sm">
-              <Icon name="edit" color="#000" /> Edit
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setConfirmDeleteVisible(true)} className="px-3 py-2">
-            <Text className="text-sm text-red-600">
-              <Icon name="trash" color="red" /> Delete
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
-      {/* Confirmation Modal */}
-      <Modal
-        transparent
-        visible={confirmDeleteVisible}
-        animationType="fade"
-        onRequestClose={() => setConfirmDeleteVisible(false)}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white p-6 rounded-xl w-[80%]">
-            <Text className="text-lg font-bold mb-4">Confirm Delete</Text>
-            <Text className="mb-6">Are you sure you want to delete this post?</Text>
-            <View className="flex-row justify-end gap-4">
-              <TouchableOpacity onPress={() => setConfirmDeleteVisible(false)}>
-                <Text className="text-base">Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={deletePost} disabled={!!deletingPostId}>
-                {deletingPostId ? (
-                  <ActivityIndicator size="small" color="#FF0000" />
-                ) : (
-                  <Text className="text-base text-red-600 font-bold">Delete</Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 
@@ -247,7 +182,7 @@ const UsersPost = ({ vendor_id }: any) => {
   }, [isLoadingMore, page, lastPage, handleLoadMore]);
 
   return (
-    <View className="max-h-[85vh] bg-gray-50 px-4">
+    <View className="px-4">
       {isLoading && posts.length === 0 ? (
         <View className="h-full justify-center items-center">
           <SkeletonLoader />
@@ -255,8 +190,8 @@ const UsersPost = ({ vendor_id }: any) => {
           <SkeletonLoader />
         </View>
       ) : posts.length === 0 ? (
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-gray-500 text-lg">No posts found</Text>
+        <View className="justify-center items-center">
+          <Text className="text-gray-500">No posts found</Text>
         </View>
       ) : (
         <FlatList

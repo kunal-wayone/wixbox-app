@@ -16,13 +16,11 @@ const SkeletonCard = () => (
     className="bg-gray-100 rounded-xl shadow-md p-3 animate-pulse"
     style={{ width: CARD_WIDTH, marginRight: 16 }}
   >
-    <View className="w-full h-48 bg-gray-300 rounded-xl mb-4" />
+    <View className="w-full h-32 bg-gray-300 rounded-xl mb-4" />
     <View className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
     <View className="h-3 bg-gray-200 rounded w-3/4 mb-2" />
     <View className="flex-row items-center justify-between bg-white p-3 rounded-lg my-4">
-      <View className="h-3 bg-gray-200 rounded w-1/4" />
-      <View className="h-4 w-px bg-gray-300" />
-      <View className="h-3 bg-gray-200 rounded w-1/4" />
+
     </View>
   </View>
 );

@@ -50,6 +50,7 @@ import FaqsScreen from '../screens/moreLInkPages/FaqsScreen';
 import AllCategoriesScreen from '../screens/otherScreen/AllCategoriesScreen';
 import WalletScreen from '../screens/walletScreen/WalletScreen';
 import AllOrderScreen from '../screens/orderScreen/AllOrderScreen';
+import ManageDineInServiceScreen from '../screens/shopFormScreens/ManageDineInServiceScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -68,6 +69,7 @@ const MainNavigation = () => {
 
       <Stack.Screen name="CreateShopScreen" component={CreateShopScreen} />
       <Stack.Screen name="AddDineInServiceScreen" component={AddDineInServiceScreen} />
+      <Stack.Screen name="ManageDineInServiceScreen" component={ManageDineInServiceScreen} />
       <Stack.Screen name="HomeScreen" component={BottomTabNavigator} />
       <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
       <Stack.Screen name="AddProductScreen" component={AddProductScreen} />

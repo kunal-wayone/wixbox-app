@@ -92,7 +92,7 @@ export const signup = createAsyncThunk(
             const fcm_token = await messaging().getToken();
             console.log({ ...payload, fcm_token })
             const response = await Post<AuthResponse>('/auth/signup', { ...payload, fcm_token }, 5000);
-            // console.log(response?.data)
+            console.log(response?.data)
             const { success, message }: any = response;
             const token: any = response?.data?.token;
             const user: any = response?.data?.user;

@@ -8,24 +8,41 @@ import {
   SafeAreaView,
   ScrollView,
   ToastAndroid,
+  StyleSheet,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import IonIcons from 'react-native-vector-icons/Ionicons';
 import { ImagePath } from '../../constants/ImagePath';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import LoadingComponent from '../otherScreen/LoadingComponent';
 import ImageSliderWithBookmark from '../../components/common/ImageSliderWithBookmark';
+import LinearGradient from 'react-native-linear-gradient';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Entypo from 'react-native-vector-icons/Entypo';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
 
 interface showReviewFull {
   id: string;
   show: boolean;
 }
 
+
+const availableTags = [
+  { id: 'spicy', label: 'Spicy 🌶️' },
+  { id: 'bestseller', label: 'Bestseller ⭐' },
+  { id: 'hot', label: 'Hot 🔥' },
+  { id: 'fresh', label: 'Fresh 🥗' },
+  { id: 'gluten_free', label: 'Gluten-Free 🌾' },
+  { id: 'vegan', label: 'Vegan 🌱' },
+];
+
 const ProductDetailsScreen = () => {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
+  const isFocused = useIsFocused()
   const productId = route.params?.productId || null;
   const [modalVisible, setModalVisible] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -34,16 +51,111 @@ const ProductDetailsScreen = () => {
   const [images, setImages] = useState<any>([]); // Store selected images
   const [isLoading, setIsLoading] = useState(false);
   const [showFull, setShowFull] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const wishlistItems = useSelector((state: RootState) => state.wishlist.menu_items);
+  const isFavorite = wishlistItems?.some((i: any) => i.id === itemDetails?.id);
   const [showReviewFull, setShowReviewFull] = useState<{
     [key: string]: { show: boolean };
   }>({});
 
-  const description =
-    itemDetails?.description ||
-    'Our Margherita Pizza is made with hand-tossed dough, fresh ingredients, and baked to perfection in a wood-fired oven. Perfect for a quick meal or a gathering with friends.';
+  const [shopStatus, setShopStatus] = useState({
+    isOpen: false,
+    openingTime: null,
+    closingTime: null,
+  });
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const shiftDetails = itemDetails?.shop?.shift_details
+    ? JSON.parse(itemDetails?.shop?.shift_details)
+    : [];
+
+  const formatToAMPM = (time24: string) => {
+    const [hourStr, minute] = time24.split(':');
+    let hour = parseInt(hourStr);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12 || 12;
+    return `${hour}:${minute} ${ampm}`;
+  };
+
+  const isShopOpen: any = () => {
+    const currentDay = new Date()
+      .toLocaleString('en-US', { weekday: 'short' })
+      .toLowerCase();
+    const currentTime = new Date().toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const shiftData = itemDetails?.shop?.shift_details ? JSON.parse(itemDetails?.shop?.shift_details) : null;
+    const todayShift = shiftData?.find(
+      (shift: any) => shift.day.toLowerCase() === currentDay && shift.status
+    );
+    // console.log(shiftData, item)
+
+    if (!todayShift || !todayShift.first_shift_start) return false;
+
+    return (
+      currentTime >= todayShift.first_shift_start &&
+      currentTime <= todayShift.first_shift_end
+    );
+  };
+
+
+
+  const getShopStatus = () => {
+    const currentDay = new Date()
+      .toLocaleString('en-US', { weekday: 'short' })
+      .toLowerCase();
+
+    const currentTime = new Date().toLocaleTimeString('en-US', {
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    const todayShift = shiftDetails.find(
+      (shift: any) => shift.day.toLowerCase() === currentDay && shift.status
+    );
+
+    if (!todayShift || !todayShift.first_shift_start) {
+      return {
+        isOpen: false,
+        openingTime: null,
+        closingTime: null,
+      };
+    }
+
+    const isOpen =
+      currentTime >= todayShift.first_shift_start &&
+      currentTime <= todayShift.first_shift_end;
+
+    return {
+      isOpen,
+      openingTime: formatToAMPM(todayShift.first_shift_start),
+      closingTime: formatToAMPM(todayShift.first_shift_end),
+    };
+  };
+
+
+
+  useEffect(() => {
+    if (isFocused) {
+      const status: any = getShopStatus();
+      console.log(isShopOpen(), status)
+      setShopStatus(status);
+    }
+  }, [isFocused]);
+
+
+
+  const defaultDescription =
+    'Classic Margherita pizza with fresh tomatoes, mozzarella, and basil on a crispy thin crust.';
+
+  const content = itemDetails?.description || defaultDescription;
+
+  const shouldShowReadMore = content.length > 150; // You can adjust this threshold
 
   const toggleText = () => setShowFull(prev => !prev);
-  const shortDescription = description.slice(0, 120);
+  const shortDescription = itemDetails?.description.slice(0, 120);
 
   // Fetch product details if editing
   const getProductData = async (id: any) => {
@@ -56,15 +168,15 @@ const ProductDetailsScreen = () => {
       setIsLoading(true);
       try {
         const response: any = await Fetch(
-          `/user/menu-items/${id}`,
+          `/user/menu-item/${id}`,
           undefined,
           5000,
         );
         if (!response.success) {
           throw new Error('Failed to fetch product');
         }
-        const data = response?.data?.menu_item; // Fixed typo here
-        const images = response?.data?.menu_item?.images || [];
+        const data = response?.menu_item; // Fixed typo here
+        const images = response?.menu_item?.images || [];
         setItemDetails(data);
         console.log(itemDetails?.status);
         // Convert API images to match the format expected by the UI
@@ -154,59 +266,178 @@ const ProductDetailsScreen = () => {
     return <LoadingComponent />;
   }
 
+
+
+  // Place order
+  const handlePlaceOrder = (item: any) => {
+    navigation.navigate('AddCustomerFormScreen', {
+      item: [
+        {
+          id: item.id,
+          quantity: 1,
+          price: Math.floor(Number(item.price)),
+          name: item.item_name,
+          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          shop_id: item?.shop?.id ?? item?.store_id
+        },
+      ],
+    });
+  };
+
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView className="flex-1">
-        <View className="flex-row items-center justify-between px-4 py-2 pt-4">
+        {/* Gradient Overlay */}
+        <View className="flex-row items-center justify-between mb-6 px-4 pt-4 absolute w-full top09 z-50">
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            className="flex-row items-center gap-4">
-            <Ionicons name={'arrow-back'} size={20} />
+            className="flex-row items-center gap-4 "
+          >
+            <Ionicons name="arrow-back" size={20} color={'white'} />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('NotificationScreen')}
-            className="bg-primary-20 w-7 h-7 rounded-full justify-center items-center">
+          <View className="flex-row items-center gap-4">
+            <TouchableOpacity
+              // onPress={() => navigation.navigate('NotificationScreen')}
+              className="bg-gray-100 w-10 h-10 rounded justify-center items-center"
+            >
+              {!isFavorite ? <Ionicons name='heart-outline' size={22} /> : <Ionicons name='heart' color={"red"} size={22} />}
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('NotificationScreen')}
+              className="bg-gray-100 w-10 h-10 rounded justify-center items-center"
+            >
+              <Image source={ImagePath.share} className="h-4 w-4" resizeMode="contain" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+
+
+
+
+        <View className="mb-4 relative h-72 bg-white">
+          {/* Image with overlay gradient */}
+          <Image
+            source={
+              itemDetails?.images?.[0]
+                ? { uri: IMAGE_URL + itemDetails.images[0] }
+                : ImagePath.item1
+            }
+            style={{ borderRadius: 0 }}
+            className="w-full h-full"
+            resizeMode='stretch'
+          />
+
+          {/* Gradient Overlay */}
+          <LinearGradient
+            colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.8)']}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '50%', // bottom half gradient
+            }}
+          />
+          <View className="absolute bg-white right-5"
+            style={{ top: "60%" }}>
+
+
             <Image
-              source={ImagePath.share}
-              className="h-3 w-3"
+              source={itemDetails?.isVegetarian === 1 ? ImagePath.veg : ImagePath.nonveg}
+              className="w-6 h-6 "
               resizeMode="contain"
             />
-          </TouchableOpacity>
-        </View>
-        {/* Restaurant Name */}
-        <View className=" bg-white shadow-md">
-          <Text className="text-lg text-center font-bold text-gray-800">
-            {itemDetails?.item_name || 'The Gourmet Kitchen'}
-          </Text>
-        </View>
-
-        <ImageSliderWithBookmark
-          images={itemDetails?.images}
-          onBookmarkPress={() =>
-            ToastAndroid.show('Save in list', ToastAndroid.SHORT)
-          }
-        />
-
-        {/* Product Details */}
-        <View className="p-4">
-          {/* Product Name and Price */}
-          <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-xl font-semibold text-gray-800">
-              {itemDetails?.item_name || ' Margherita Pizza'}
-            </Text>
-            <Text className="text-lg font-bold text-green-600">
-              ₹ {itemDetails?.price || '122.99'}
-            </Text>
           </View>
 
-          {/* Description */}
-          <Text className="text-gray-600 mb-4">
-            {itemDetails?.description ||
-              'Classic Margherita pizza with fresh tomatoes, mozzarella, and basil on a crispy thin crust.'}
-          </Text>
+          {/* Info on gradient bottom */}
+          <View className="absolute bottom-0 left-4 right-4 mb-4">
+            <Text className="text-white text-xl font-bold" numberOfLines={1}>
+              {itemDetails?.item_name || 'Unknown Restaurant'}
+            </Text>
+            <View className="flex-row items-center gap-2 mb-1 ">
+              <Entypo name="shop" size={16} color="white" />
+              <Text className='text-white'>
+                {itemDetails?.shop?.restaurant_name || 'The Gourmet Kitchen'}
+              </Text>
+            </View>
+            <View className="flex-row flex-wrap gap-2 mt-1">
+              {availableTags.map(tag => (
+                <View
+                  key={tag.id}
+                  className={`rounded-full px-3 py-1 bg-primary-80 `}
+                >
+                  <Text className={`text-xs font-medium text-white`}>{tag.label}</Text>
+                </View>
+              ))}
 
+            </View>
+          </View>
+
+
+        </View>
+
+
+
+        <View className="bg-white dark:bg-gray-100 p-4 py-2 border border-gray-100 rounded-xl mx-4 mb-4" style={styles.shadow}>
+          <View className="flex-row items-center justify-between gap-8">
+            {/* Row 1 - Column 1 */}
+            <View className="flex-1 mr-2 flex-row items-center gap-2 mb-2">
+              <Ionicons name='star' size={18} color={'#eba834'} />
+              <Text className="text- font-semibold text-gray-900">{itemDetails?.average_rating || 0}</Text>
+              <Text className="text-xs text-gray-600">(1.2K reviews)</Text>
+            </View>
+            <View className="flex-1 flex-row items-center gap-2 ">
+              <Text className="text-lg font-bold text-green-600">
+                ₹ {itemDetails?.price || 'NA'}/-
+              </Text>
+            </View>
+          </View>
+
+          {/* Row 1 - Column 2 */}
+          <View className="flex-row items-center justify-between gap-8 mb-2">
+            <View className="flex-1 flex-row items-center gap-2">
+              <Image source={ImagePath.chef} className='w-5 h-5' style={{ tintColor: "#000" }} resizeMode='contain' />
+              <Text className="text-sm font-medium text-gray-900">12–15 mins</Text>
+            </View>
+            {/* Row 1 - Column 1 */}
+            <View className="flex-1 mr-2 flex-row items-center gap-1 pl-2">
+              <MaterialIcons name='directions-run' size={16} />
+              <Text className="text-sm text-gray-900">{itemDetails?.shop?.distance_km || "NA"} Km</Text>
+            </View>
+          </View>
+
+          <View className="flex-row items-center justify-between gap-8 mb-2">
+            {/* Row 2 - Column 1 */}
+            <View className="flex-1 flex-row items-center ">
+              <View className={`${shopStatus.isOpen ? "bg-green-500" : "bg-red-400"} w-4 h-4 rounded-full`} />
+              <Text className="text-sm text-gray-900 ml-2">
+                {shopStatus.openingTime && shopStatus.closingTime
+                  ? shopStatus.isOpen
+                    ? `Open till ${shopStatus.closingTime}`
+                    : `Opens at ${shopStatus.openingTime}`
+                  : "Closed today"}
+              </Text>
+            </View>
+            <View className="flex-1 flex-row items-center  gap-2">
+              <IonIcons name='timer-outline' size={16} />
+              <Text className="text-gray-600">
+                <Text className='text-sm w-32' numberOfLines={1} ellipsizeMode='tail' >
+                  {`${Math.floor((itemDetails?.travel_time_mins || 0) / 60)}h ${(itemDetails?.travel_time_mins || 0) % 60}m`}
+                  {/* {itemDetails?.shop?.address + ", " + itemDetails?.shop?.city} */}
+                </Text>
+              </Text>
+            </View>
+          </View>
+
+        </View>
+
+
+        {/* Product Details */}
+        <View className="px-4">
           {/* Size Selection */}
-          <Text className="text-gray-700 font-medium mb-2">Size</Text>
+          <Text className="text-gray-700 font-medium mb-2">Variants</Text>
           <View className="flex-row items-center mb-4">
             {['S', 'M', 'XL'].map(size => (
               <TouchableOpacity
@@ -224,8 +455,8 @@ const ProductDetailsScreen = () => {
           </View>
 
           {/* Quantity Selector */}
-          <Text className="text-gray-700 font-medium mb-2">Add Quantity</Text>
-          <View className="flex-row items-center justify-between w-2/6 bg-gray-100 mb-4">
+          <Text className="text-gray-700 font-medium mb-2 hidden">Add Quantity</Text>
+          <View className="flex-row items-center justify-between w-2/6 bg-gray-100 mb-4 hidden">
             <TouchableOpacity
               className="bg-gray-200 p-2 rounded"
               onPress={() => handleQuantityChange('decrease')}>
@@ -239,21 +470,11 @@ const ProductDetailsScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Unit */}
-          <View className="flex-row items-center gap-1 mb-4">
-            <Text className="text-gray-700">Unit:</Text>
-            <Text className="text-gray-700">
-              {itemDetails?.unit
-                ? itemDetails.unit.charAt(0).toUpperCase() +
-                itemDetails.unit.slice(1).toLowerCase()
-                : '1 Pizza (Serves 2-3)'}
-            </Text>
-          </View>
 
           {/* Detailed Description */}
-          <Text className="text-gray-700 text-xl mb-1">Description</Text>
+          <Text className="text-gray-700 text-lg font-semibold mb-1">Description</Text>
           <Text className="text-gray-600 mb-1">
-            {showFull ? description : `${shortDescription}...`}
+            {showFull ? itemDetails?.description : `${shortDescription}...`}
           </Text>
           <TouchableOpacity className="mb-4" onPress={toggleText}>
             <Text className="text-gray-800 text-right">
@@ -263,9 +484,9 @@ const ProductDetailsScreen = () => {
           {/* Review Section */}
           <View className="flex-row justify-between items-center mb-4">
             <Text className="text-lg font-semibold text-gray-800">Reviews</Text>
-            {/* <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <TouchableOpacity onPress={() => setModalVisible(true)}>
               <Text className="text-gray-800">View All</Text>
-            </TouchableOpacity> */}
+            </TouchableOpacity>
           </View>
 
           {reviews?.map((item: any, index: number) => {
@@ -319,19 +540,15 @@ const ProductDetailsScreen = () => {
           })}
         </View>
       </ScrollView>
-      <View className="flex-col justify-between px-4 gap-2">
+      <View className="flex-col justify-between px-4 gap-2 mb-4">
         <TouchableOpacity
-          className="bg-primary-80 py-4 px-6 rounded-xl "
-          onPress={() => setModalVisible(false)}>
+          className="bg-primary-100 py-4 px-6 rounded-xl "
+          onPress={() => handlePlaceOrder(itemDetails)}>
           <Text className="text-white text-center font-semibold">
-            Make It Ready
+            Add To Plate 🍽️
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          className="bg-white border border-gray-700 py-4 px-6 rounded-xl "
-          onPress={() => setModalVisible(false)}>
-          <Text className="text-center font-semibold">Visit Shop</Text>
-        </TouchableOpacity>
+
       </View>
       {/* Modal for Reviews */}
       <Modal
@@ -378,19 +595,12 @@ const ProductDetailsScreen = () => {
                 </View>
               )}
             />
-            <View className="flex-row justify-between mt-4">
+            <View className="flex-row justify-between mb-4">
               <TouchableOpacity
                 className="bg-green-500 py-3 px-6 rounded-full flex-1 mr-2"
                 onPress={() => setModalVisible(false)}>
                 <Text className="text-white text-center font-semibold">
-                  Make It Ready
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="bg-blue-500 py-3 px-6 rounded-full flex-1"
-                onPress={() => setModalVisible(false)}>
-                <Text className="text-white text-center font-semibold">
-                  Visit Shop
+                  Close
                 </Text>
               </TouchableOpacity>
             </View>
@@ -402,3 +612,16 @@ const ProductDetailsScreen = () => {
 };
 
 export default ProductDetailsScreen;
+
+
+
+const styles = StyleSheet.create({
+  shadow: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.55,
+    shadowRadius: 5.84,
+    elevation: 2,
+    backgroundColor: '#fff',
+  },
+})

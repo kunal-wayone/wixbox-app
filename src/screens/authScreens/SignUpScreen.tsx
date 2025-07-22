@@ -188,6 +188,7 @@ const SignUpScreen = ({ route }: any) => {
         <View className="p-4">
           <Image
             source={ImagePath.signBg}
+            style={{ tintColor: '#ac94f4' }}
             className="absolute -top-[2%] -left-[2%] w-52 h-44"
             resizeMode="contain"
           />
@@ -199,7 +200,7 @@ const SignUpScreen = ({ route }: any) => {
                 </Text>
               }>
               <LinearGradient
-                colors={['#EE6447', '#7248B3']}
+                colors={['#ac94f4', '#7248B3']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}>
                 <Text
@@ -238,8 +239,9 @@ const SignUpScreen = ({ route }: any) => {
                       Full Name
                     </Text>
                     <TextInput
-                      className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base"
+                      className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
                       placeholder="Enter your full name"
+                      placeholderTextColor={"#000"}
                       onChangeText={handleChange('fullName')}
                       onBlur={handleBlur('fullName')}
                       value={values.fullName}
@@ -257,8 +259,9 @@ const SignUpScreen = ({ route }: any) => {
                       Email Address
                     </Text>
                     <TextInput
-                      className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base"
+                      className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
                       placeholder="Enter your email"
+                      placeholderTextColor={"#000"}
                       onChangeText={handleChange('email')}
                       onBlur={handleBlur('email')}
                       value={values.email}
@@ -279,8 +282,9 @@ const SignUpScreen = ({ route }: any) => {
                     </Text>
                     <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
                       <TextInput
-                        className="flex-1 p-3 bg-gray-100 text-base"
+                        className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
                         placeholder="Enter your password"
+                        placeholderTextColor={"#000"}
                         onChangeText={handleChange('password')}
                         onBlur={handleBlur('password')}
                         value={values.password}
@@ -311,8 +315,9 @@ const SignUpScreen = ({ route }: any) => {
                     </Text>
                     <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
                       <TextInput
-                        className="flex-1 p-3 bg-gray-100 text-base"
+                        className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
                         placeholder="Confirm your password"
+                        placeholderTextColor={"#000"}
                         onChangeText={handleChange('confirmPassword')}
                         onBlur={handleBlur('confirmPassword')}
                         value={values.confirmPassword}
@@ -359,11 +364,11 @@ const SignUpScreen = ({ route }: any) => {
                   )}
 
                   <TouchableOpacity
-                    onPress={handleSubmit}
+                    onPress={() => handleSubmit()}
                     disabled={isSubmitting || formikSubmitting}
                     className="mt-4">
                     <LinearGradient
-                      colors={['#EE6447', '#7248B3']}
+                      colors={['#ac94f4', '#7248B3']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={{
@@ -387,7 +392,7 @@ const SignUpScreen = ({ route }: any) => {
 
             <View className="flex-row justify-center gap-4 mb-4">
               <TouchableOpacity
-                className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl"
+                className="p-3 w-1/2 bg-primary-10 rounded-2xl"
                 onPress={handleGoogleSignUp}
                 disabled={isSubmitting}>
                 <Image
@@ -397,7 +402,7 @@ const SignUpScreen = ({ route }: any) => {
                 />
               </TouchableOpacity>
               <TouchableOpacity
-                className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl hidden"
+                className="p-3 w-1/2 bg-primary-10 rounded-2xl hidden"
                 disabled={isSubmitting}>
                 <Image
                   source={ImagePath.facebook}
@@ -414,7 +419,7 @@ const SignUpScreen = ({ route }: any) => {
               <TouchableOpacity
                 onPress={() => navigation.navigate('LoginScreen')}
                 disabled={isSubmitting}>
-                <Text className="text-orange-primary-100 text-sm ml-1 font-bold underline">
+                <Text className="text-primary-100 text-sm ml-1 font-bold underline">
                   Login
                 </Text>
               </TouchableOpacity>

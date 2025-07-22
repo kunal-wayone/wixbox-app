@@ -89,7 +89,7 @@ const Banner = ({
   return bannerData.length === 1 ? (
     renderBannerItem(bannerData[0], 0)
   ) : (
-    <View className="w-full h-56 mb-2">
+    <View className="w-full h-56">
       <Swiper
         autoplay
         loop

@@ -59,6 +59,28 @@ const CreateShopScreen = ({ route }: any) => {
   const [paymentMethods, setPaymentMethods] = useState<any>({ cash: false, card: false, upi: false });
   const [apiErrors, setApiErrors] = useState("");
 
+
+
+  const handleSameForAll = (values: any) => {
+    // Find the first filled shift (you can change to pick Monday explicitly if needed)
+    const reference = schedules.find((s: any) => s.shift1.from && s.shift1.to);
+
+    if (!reference) return;
+
+    const updated = schedules.map((s: any) => ({
+      ...s,
+      shift1: { ...reference.shift1 },
+      shift2:
+        values.single_shift !== 'Single Shift'
+          ? { ...reference.shift2 }
+          : { from: '', to: '' },
+      status: reference.status, // ✅ Update status (Switch)
+    }));
+
+    setSchedules(updated);
+  };
+
+
   const fetchCategories = async () => {
     setLoading(true)
     try {
@@ -259,6 +281,7 @@ const CreateShopScreen = ({ route }: any) => {
             left: '-2%',
             width: 208,
             height: 176,
+            tintColor: "#ac94f4"
           }}
           resizeMode="contain"
         />
@@ -276,7 +299,7 @@ const CreateShopScreen = ({ route }: any) => {
               </Text>
             }>
             <LinearGradient
-              colors={['#EE6447', '#7248B3']}
+              colors={['#ac94f4', '#7248B3']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}>
               <Text
@@ -355,7 +378,9 @@ const CreateShopScreen = ({ route }: any) => {
                           paddingLeft: 40,
                           fontSize: 16,
                         }}
+                        className='text-gray-900'
                         placeholder="Shop Name"
+                        placeholderTextColor={"#000"}
                         onChangeText={handleChange('business_name')}
                         onBlur={handleBlur('business_name')}
                         value={values.business_name}
@@ -391,7 +416,7 @@ const CreateShopScreen = ({ route }: any) => {
                       selectedValue={values.shop_category}
                       onValueChange={(value) => setFieldValue("shop_category", value)}
                       onBlur={handleBlur('shop_category')}
-                      style={{ fontSize: 16, height: 50 }}
+                      style={{ fontSize: 16, height: 50, color: "#000" }}
                     >
                       <Picker.Item label="Select shop category" value="" />
                       {categories?.map((cat: any, index: any) => (
@@ -502,6 +527,8 @@ const CreateShopScreen = ({ route }: any) => {
                           paddingLeft: 40,
                           fontSize: 16,
                         }}
+                        className='text-gray-900'
+                        placeholderTextColor={"#000"}
                         placeholder="Enter phone number"
                         onChangeText={handleChange('phone')}
                         onBlur={handleBlur('phone')}
@@ -546,6 +573,8 @@ const CreateShopScreen = ({ route }: any) => {
                         padding: 12,
                         fontSize: 16,
                       }}
+                      className='text-gray-900'
+                      placeholderTextColor={"#000"}
                       placeholder="Enter GST ID"
                       onChangeText={handleChange('gst')}
                       onBlur={handleBlur('gst')}
@@ -585,7 +614,7 @@ const CreateShopScreen = ({ route }: any) => {
                       <Icon name="location-outline" size={20} color="#4B5563" />
                       <Text
                         style={{
-                          color: '#F97316',
+                          color: '#ac94f4',
                           fontSize: 14,
                           marginLeft: 4,
                           textDecorationLine: 'underline',
@@ -610,6 +639,8 @@ const CreateShopScreen = ({ route }: any) => {
                           padding: 12,
                           fontSize: 16,
                         }}
+                        className='text-gray-900'
+                        placeholderTextColor={"#000"}
                         placeholder="Enter your city"
                         onChangeText={handleChange('city')}
                         onBlur={handleBlur('city')}
@@ -636,7 +667,7 @@ const CreateShopScreen = ({ route }: any) => {
                       <Picker
                         selectedValue={values.state}
                         onValueChange={(value) => setFieldValue('state', value)}
-                        style={{ fontSize: 16, height: 50 }}
+                        style={{ fontSize: 16, height: 50, color: "#000" }}
                         accessible
                         accessibilityLabel="Select state">
                         <Picker.Item label="Select State" value="" />
@@ -661,6 +692,8 @@ const CreateShopScreen = ({ route }: any) => {
                         fontSize: 16,
                         marginBottom: 12,
                       }}
+                      className='text-gray-900'
+                      placeholderTextColor={"#000"}
                       placeholder="Enter your address"
                       onChangeText={handleChange('address')}
                       onBlur={handleBlur('address')}
@@ -684,6 +717,8 @@ const CreateShopScreen = ({ route }: any) => {
                         fontSize: 16,
                         marginBottom: 12,
                       }}
+                      className='text-gray-900'
+                      placeholderTextColor={"#000"}
                       placeholder="Enter your zip code"
                       onChangeText={handleChange('zip_code')}
                       onBlur={handleBlur('zip_code')}
@@ -722,6 +757,8 @@ const CreateShopScreen = ({ route }: any) => {
                         height: 100,
                         textAlignVertical: 'top',
                       }}
+                      className='text-gray-900'
+                      placeholderTextColor={"#000"}
                       placeholder="Describe your shop"
                       onChangeText={handleChange('about_business')}
                       onBlur={handleBlur('about_business')}
@@ -796,6 +833,13 @@ const CreateShopScreen = ({ route }: any) => {
                         {errors.single_shift}
                       </Text>
                     )}
+                    <TouchableOpacity
+                      style={styles.sameForAllButton}
+                      onPress={handleSameForAll}
+                    >
+                      <Text style={styles.sameForAllText}> Same Shift for All</Text>
+                    </TouchableOpacity>
+
                     {schedules.map((data: any, index: any) => (
                       <ShiftCard
                         key={data.day}
@@ -827,7 +871,7 @@ const CreateShopScreen = ({ route }: any) => {
                         className="bg-gray-100"
                         style={{
                           borderWidth: 1,
-                          borderColor: values.dine_in_service === 'yes' ? '#F97316' : '#D1D5DB',
+                          borderColor: values.dine_in_service === 'yes' ? '#ac94f4' : '#D1D5DB',
                           borderRadius: 8,
                           paddingHorizontal: 12,
                           paddingVertical: 5,
@@ -844,7 +888,7 @@ const CreateShopScreen = ({ route }: any) => {
                         className="bg-gray-100"
                         style={{
                           borderWidth: 1,
-                          borderColor: values.dine_in_service === 'no' ? '#F97316' : '#D1D5DB',
+                          borderColor: values.dine_in_service === 'no' ? '#ac94f4' : '#D1D5DB',
                           borderRadius: 8,
                           paddingHorizontal: 12,
                           paddingVertical: 5,
@@ -913,7 +957,7 @@ const CreateShopScreen = ({ route }: any) => {
                     accessible
                     accessibilityLabel={shopId ? 'Update shop button' : 'Create shop button'}>
                     <LinearGradient
-                      colors={['#EE6447', '#7248B3']}
+                      colors={['#ac94f4', '#7248B3']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
                       style={{ padding: 16, borderRadius: 10, alignItems: 'center' }}>
@@ -937,46 +981,45 @@ const CreateShopScreen = ({ route }: any) => {
       </ScrollView>
 
       {/* Image View Modal */}
-      {
-        viewImageModal && (
-          <Modal
-            visible={!!viewImageModal}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={() => setViewImageModal(null)}>
+      {viewImageModal && (
+        <Modal
+          visible={!!viewImageModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setViewImageModal(null)}>
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            }}>
             <View
               style={{
-                flex: 1,
-                justifyContent: 'center',
+                backgroundColor: '#fff',
+                borderRadius: 8,
+                padding: 16,
                 alignItems: 'center',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
               }}>
-              <View
+              <Image
+                source={{ uri: viewImageModal }}
                 style={{
-                  backgroundColor: '#fff',
+                  width: width * 0.8,
+                  height: width * 0.8,
                   borderRadius: 8,
-                  padding: 16,
-                  alignItems: 'center',
-                }}>
-                <Image
-                  source={{ uri: viewImageModal }}
-                  style={{
-                    width: width * 0.8,
-                    height: width * 0.8,
-                    borderRadius: 8,
-                  }}
-                />
-                <TouchableOpacity
-                  style={{ position: 'absolute', top: 8, right: 8 }}
-                  onPress={() => setViewImageModal(null)}
-                  accessible
-                  accessibilityLabel="Close image modal">
-                  <Icon name="close-circle" size={24} color="#EF4444" />
-                </TouchableOpacity>
-              </View>
+                }}
+              />
+              <TouchableOpacity
+                style={{ position: 'absolute', top: 8, right: 8 }}
+                onPress={() => setViewImageModal(null)}
+                accessible
+                accessibilityLabel="Close image modal">
+                <Icon name="close-circle" size={24} color="#EF4444" />
+              </TouchableOpacity>
             </View>
-          </Modal>
-        )
+          </View>
+        </Modal>
+      )
       }
     </KeyboardAvoidingView >
   );
@@ -1000,11 +1043,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: '#EE6447',
-    borderColor: '#EE6447',
+    backgroundColor: '#ac94f4',
+    borderColor: '#ac94f4',
   },
   checkboxText: {
     fontSize: 14,
     color: '#374151',
+  },
+  sameForAllButton: {
+    marginTop: 10,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+  },
+  sameForAllText: {
+    padding: 4,
+    textAlign: "center",
+    color: '#000',
+    fontWeight: 'semibold',
   },
 });

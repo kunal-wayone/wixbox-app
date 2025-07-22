@@ -64,7 +64,7 @@ const quickActions = [
     label: 'Dine-in Setup',
     icon: 'coffee',
     emoji: '🪑',
-    screen: 'AddDineInServiceScreen',
+    screen: 'ManageDineInServiceScreen',
     gradient: ['#93c5fd', '#3b82f6'], // blue
   },
   {

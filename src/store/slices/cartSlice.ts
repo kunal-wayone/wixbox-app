@@ -8,7 +8,7 @@ interface CartItem {
   price: number;
   quantity: number;
   image?: string;
-  shop_id: string;
+  shop_id: string | undefined;
 }
 
 interface CartState {
@@ -60,7 +60,7 @@ const cartSlice = createSlice({
     addToCart: (state, action: PayloadAction<CartItem>) => {
       const { id, shop_id, price, quantity, name, image } = action.payload;
 
-      const cartHasItems = state.items.length > 0; 
+      const cartHasItems = state.items.length > 0;
       const isDifferentShop = cartHasItems && state.items[0].shop_id !== shop_id;
 
       // Prevent adding items from different shops

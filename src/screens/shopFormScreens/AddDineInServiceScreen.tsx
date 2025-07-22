@@ -141,6 +141,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
             left: '-2%',
             width: 208,
             height: 176,
+            tintColor: "#ac94f4"
           }}
           resizeMode="contain"
         />
@@ -158,7 +159,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
               </Text>
             }>
             <LinearGradient
-              colors={['#EE6447', '#7248B3']}
+              colors={['#ac94f4', '#7248B3']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}>
               <Text
@@ -211,7 +212,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       <Picker
                         selectedValue={floor}
                         onValueChange={itemValue => setFloor(itemValue)}
-                        style={{ height: 50, width: '100%' }}>
+                        style={{ height: 50, width: '100%', color: "#000" }}>
                         <Picker.Item label="Ground" value="Ground" />
                         <Picker.Item label="1st" value="1st" />
                         <Picker.Item label="2nd" value="2nd" />
@@ -238,7 +239,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       <Picker
                         selectedValue={type}
                         onValueChange={itemValue => setType(itemValue)}
-                        style={{ height: 50, width: '100%' }}>
+                        style={{ height: 50, width: '100%', color: "#000" }}>
                         <Picker.Item label="Standard" value="Standard" />
                         <Picker.Item label="Booth" value="Booth" />
                         <Picker.Item label="Outdoor" value="Outdoor" />
@@ -249,6 +250,8 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       <TextInput
                         style={styles.input}
                         placeholder="Enter table number"
+                        placeholderTextColor={"#000"}
+                        className='text-gray-900'
                         onChangeText={handleChange('table_number')}
                         onBlur={handleBlur('table_number')}
                         value={values.table_number}
@@ -264,6 +267,8 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       <TextInput
                         style={styles.input}
                         placeholder="Enter no of seats"
+                        placeholderTextColor={"#000"}
+                        className='text-gray-900'
                         onChangeText={handleChange('seats')}
                         onBlur={handleBlur('seats')}
                         value={values.seats}
@@ -280,6 +285,8 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       <TextInput
                         style={styles.input}
                         placeholder="Enter table price"
+                        placeholderTextColor={"#000"}
+                        className='text-gray-900'
                         onChangeText={handleChange('price')}
                         onBlur={handleBlur('price')}
                         value={values.price}
@@ -394,7 +401,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
 
           <TouchableOpacity onPress={handleCreateTables} style={{ marginTop: 16 }}>
             <LinearGradient
-              colors={['#EE6447', '#7248B3']}
+              colors={['#ac94f4', '#7248B3']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={{
@@ -450,8 +457,8 @@ const styles = StyleSheet.create({
     borderColor: '#374151',
   },
   radioSelected: {
-    backgroundColor: '#EE6447',
-    borderColor: '#EE6447',
+    backgroundColor: '#ac94f4',
+    borderColor: '#ac94f4',
   },
   radioText: {
     fontSize: 14,

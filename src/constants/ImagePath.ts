@@ -1,5 +1,5 @@
 export const ImagePath = {
-    logo: require('../assets/images/logo.png'),
+    logo: require('../assets/images/icons/logo.png'),
     splash1: require('../assets/images/splash1.png'),
     splash2: require('../assets/images/splash2.png'),
     splash3: require('../assets/images/splash3.png'),
@@ -64,6 +64,8 @@ export const ImagePath = {
 
 
     chef: require('../assets/images/icons/chef.png'),
+    eater: require('../assets/images/icons/eater.png'),
+
 
 
 

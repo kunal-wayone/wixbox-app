@@ -143,18 +143,17 @@ const CategorySection = () => {
   }
 
   return (
-    <View className="pt-6 mb-4">
+    <View className="pt-2 mb-4">
       {/* Header */}
       <View className="flex-row justify-between items-start mb-3 ">
         <View>
-          <Text className="text-lg font-semibold text-gray-900">Categories</Text>
-          <Text className="text-sm text-gray-500">Browse our product categories</Text>
+          <Text className="text-lg font-semibold text-gray-900">🎉 Category</Text>
         </View>
         <TouchableOpacity
-          className="flex-row items-center"
+          className="flex-row items-center mt-1"
           onPress={() => navigation.navigate('AllCategoriesScreen')}
         >
-          <Text className="text-sm font-medium">See More</Text>
+          <Text className="text-sm font-medium">View All</Text>
           <Icon name="chevron-forward-outline" size={16} color="#000" />
         </TouchableOpacity>
       </View>
@@ -188,11 +187,11 @@ const CategorySection = () => {
           >
             <Image
               source={{ uri: category?.image }}
-              className="w-28 h-24 rounded-xl mb-2"
+              className="w-20 h-20 rounded-full mb-2"
               resizeMode="cover"
               onError={() => handleImageError(category?.id)}
             />
-            <Text className="text-xs text-center text-gray-700 max-w-[100px]">
+            <Text numberOfLines={1} ellipsizeMode='tail' className="text-sm text-center text-gray-700 max-w-[100px]">
               {category?.name}
             </Text>
           </TouchableOpacity>

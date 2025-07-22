@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
   Modal,
-  Switch,
   Image,
   ActivityIndicator,
 } from 'react-native';
@@ -19,6 +18,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { Fetch, Post, Delete, IMAGE_URL } from '../../utils/apiUtils';
 import { loadingSpinner } from '../otherScreen/LoadingComponent';
+import Switch from '../../components/common/Switch';
 
 // Define types
 interface Category {
@@ -138,84 +138,6 @@ const ManageStockScreen = () => {
   const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
 
-  // Formik setup
-  const formik = useFormik({
-    initialValues: {
-      categoryName: editingCategory?.name || '',
-      categoryImage: editingCategory?.image
-        ? { uri: `${IMAGE_URL}${editingCategory.image}`, isServerImage: true }
-        : null,
-      status: editingCategory ? !!editingCategory.status : true,
-    },
-    validationSchema: CategorySchema,
-    enableReinitialize: true,
-    onSubmit: async (values, { resetForm }) => {
-      try {
-        setIsSubmitting(true);
-        const formData = new FormData();
-        formData.append('name', values.categoryName);
-        formData.append('status', values.status ? '1' : '0');
-        if (values.categoryImage && !values.categoryImage.isServerImage) {
-          formData.append('image', {
-            uri: values.categoryImage.uri,
-            type: values.categoryImage.type || 'image/jpeg',
-            name: values.categoryImage.fileName || 'category_image.jpg',
-          });
-        }
-        if (editingCategory) {
-          formData.append('_method', 'PUT');
-        }
-
-        const response: any = editingCategory
-          ? await Post(`/user/categories/${editingCategory.id}`, formData, 5000)
-          : await Post('/user/categories', formData, 5000);
-
-        if (!response.success) throw new Error('Failed to save category');
-
-        const updatedCategories = await fetchCategories(setIsLoading);
-        setCategories(updatedCategories);
-        setModalVisible(false);
-        setEditingCategory(null);
-        resetForm();
-        ToastAndroid.show(
-          editingCategory ? 'Category updated successfully' : 'Category added successfully',
-          ToastAndroid.SHORT,
-        );
-      } catch (error: any) {
-        ToastAndroid.show(error?.message || 'Failed to save category.', ToastAndroid.SHORT);
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-  });
-
-  // Image selection
-  const selectImage = useCallback(() => {
-    launchImageLibrary(
-      { mediaType: 'photo', maxHeight: 200, maxWidth: 200, quality: 0.8 },
-      response => {
-        if (response.didCancel || response.errorCode || !response.assets?.[0]) {
-          ToastAndroid.show('Image selection failed', ToastAndroid.SHORT);
-          return;
-        }
-        const asset = response.assets[0];
-        formik.setFieldValue('categoryImage', {
-          uri: asset.uri,
-          type: asset.type,
-          fileName: asset.fileName,
-          fileSize: asset.fileSize,
-          isServerImage: false,
-        });
-        formik.setFieldTouched('categoryImage', true);
-      },
-    );
-  }, [formik]);
-
-  // Remove selected image
-  const removeImage = useCallback(() => {
-    formik.setFieldValue('categoryImage', null);
-    formik.setFieldTouched('categoryImage', false);
-  }, [formik]);
 
   // Load categories
   const loadCategories = useCallback(async () => {
@@ -245,16 +167,6 @@ const ManageStockScreen = () => {
     loadProducts();
   }, [selectedCategory, loadProducts]);
 
-  // Handlers
-  const handleEditCategory = useCallback((category: Category) => {
-    setEditingCategory(category);
-    setModalVisible(true);
-  }, []);
-
-  const handleDeleteCategory = useCallback((categoryId: string, categoryName: string) => {
-    setConfirmAction({ type: 'category', id: categoryId, name: categoryName });
-    setConfirmModalVisible(true);
-  }, []);
 
   const handleToggleStatus = useCallback(
     async (productId: string, currentStatus: boolean) => {
@@ -331,66 +243,142 @@ const ManageStockScreen = () => {
         <Image
           source={{ uri: `${IMAGE_URL}${item.image}` }}
           resizeMode="cover"
-          className="h-32 w-32 rounded-xl"
+          className="h-20 w-20 rounded-xl"
         />
-        <View className="absolute inset-0 bg-black/40 rounded-xl" />
-        <Text className="absolute bottom-2 left-2 right-2 text-white text-lg font-semibold text-center">
+        <View className="absolute inset-0 bg-black/50 rounded-xl" />
+        <Text numberOfLines={1} ellipsizeMode='tail' className="absolute bottom-2 left-2 right-2 text-white text-sm font-semibold text-center">
           {item.name}
         </Text>
       </TouchableOpacity>
     </View>
   );
 
-  const renderProductItem = ({ item }: { item: Product }) => (
-    <View className="flex-row bg-gray-100 rounded-xl p-4 mb-3 mx-4 shadow-sm">
-      <TouchableOpacity
-        className="w-2/5 mr-3"
-        onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.id })}
+  const renderProductItem = ({ item }: { item: Product }) => {
+    const stockQty = item.stock_quantity;
+    const isOutOfStock = stockQty === 0;
+    const isLowStock = stockQty > 60 && stockQty < 10;
+
+    // Icon color and background based on stock
+    let stockColor = "#10b981"; // green
+    let cardBgClass = "bg-white";
+
+    if (isOutOfStock) {
+      stockColor = "#ef4444"; // red
+      cardBgClass = "bg-red-50";
+    } else if (isLowStock) {
+      stockColor = "#f97316"; // orange
+      cardBgClass = "bg-orange-50";
+    }
+
+    return (
+      <View
+        className={`${cardBgClass} rounded-2xl mb-4 mx-4 border border-gray-200 shadow-md`}
+        style={{
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 2,
+        }}
       >
-        <Image
-          source={{ uri: `${IMAGE_URL}${item.images[0]}` }}
-          className="w-full h-36 rounded-xl"
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
-      <View className="flex-1">
-        <Text className="text-lg font-semibold text-gray-800">{item.item_name}</Text>
-        <View className="flex-row justify-between">
-          <Text className="text-sm text-gray-500">{item.category.name}</Text>
-          <Text className="text-md font-bold">${item.price}</Text>
-        </View>
-        <Text className="text-sm text-gray-600 mt-1">{item.stock_quantity} {item.unit}</Text>
-        <View className="flex-row items-center justify-between mt-2">
+        {/* 🔼 TOP SECTION */}
+        <View className="flex-row p-4 pb-2">
+          {/* Left: Image */}
           <TouchableOpacity
-            onPress={() => navigation.navigate('AddProductScreen', { productId: item.id })}
-            className="bg-blue-500 flex-row items-center px-3 py-2 rounded-lg"
+            className="w-16 h-16 rounded-xl overflow-hidden mr-4"
+            onPress={() => navigation.navigate('ProductDetailsScreen', { productId: item.id })}
           >
-            <Icon name="edit" size={16} color="white" />
-            <Text className="text-white font-medium ml-1">Edit</Text>
+            <Image
+              source={{ uri: `${IMAGE_URL}${item.images[0]}` }}
+              className="w-full h-full"
+              resizeMode="cover"
+            />
           </TouchableOpacity>
-          <View className="items-center">
-            <Text className="text-xs text-gray-500">Status</Text>
-            {productLoading[item.id] ? (
-              <ActivityIndicator size="small" color="#0000ff" />
-            ) : (
-              <Switch
-                value={item.status === 1}
-                onValueChange={() => handleToggleStatus(item.id, item.status === 1)}
-                disabled={productLoading[item.id]}
-              />
-            )}
+
+          {/* Right: Info */}
+          <View className="flex-1">
+            <View className="flex-row justify-between">
+              <View>
+                <Text numberOfLines={1} ellipsizeMode='tail' className="text-base font-semibold text-gray-800 flex-1 pr-2">
+                  {item.item_name}
+                </Text>
+                <Text numberOfLines={1} ellipsizeMode='tail' className="text-sm ">{item.category.name}</Text>
+              </View>
+              <View>
+                <Text className="text-sm font-bold text-green-600">${item.price}</Text>
+
+              </View>
+            </View>
+
+
+
+            <View className='flex-row items-center justify-between'>
+
+              {/* ⭐ Rating */}
+              <View className="flex-row mt-1">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Icon
+                    key={i}
+                    name={i < Math.floor(item.average_rating || 0) ? 'star' : 'star-outline'}
+                    size={14}
+                    color="#facc15"
+                  />
+                ))}
+              </View>
+              <View className="flex-row items-center mt-1">
+                <Icon name="production-quantity-limits" size={16} color={stockColor} />
+                <Text className="text-sm text-gray-600 ml-1">
+                  {stockQty} {item.unit}{' '}
+                  {isOutOfStock ? '(Out of stock)' : isLowStock ? '(Low)' : ''}
+                </Text>
+              </View>
+            </View>
           </View>
         </View>
-        <TouchableOpacity
-          onPress={() => handleDeleteProduct(item.id, item.item_name)}
-          className="absolute top-2 right-2"
-          disabled={productLoading[item.id]}
-        >
-          <Icon name="delete" size={20} color="red" />
-        </TouchableOpacity>
+
+        {/* 🔽 BOTTOM SECTION */}
+        <View className="flex-row justify-between items-center px-4 pt-2 pb-2 border-t border-gray-200">
+
+          {/* 🔁 Status */}
+          <View className="items-center flex-row gap-2">
+            <Switch
+              value={item.status === 1}
+              onValueChange={() => handleToggleStatus(item.id, item.status === 1)}
+              disabled={productLoading[item.id]}
+              trackColor={{ false: "#ccc", true: "#22c55e" }}
+              thumbColor={item.status === 1 ? "#10b981" : "#f3f4f6"}
+              size="small"
+            />
+            <Text>{item.status === 1 ? "Live" : "Offline"}</Text>
+
+            <View className={`rounded-full w-3 h-3 ${item.status === 1 ? "bg-green-600" : "bg-red-600"}`} />
+          </View>
+          <View className='flex-row items-center gap-2'>
+
+            {/* ✏️ Edit */}
+            <TouchableOpacity
+              onPress={() => navigation.navigate('AddProductScreen', { productId: item.id })}
+              className="flex-row items-center  px-3 py-1.5"
+            >
+              <Icon name="edit" size={14} color="black" />
+              <Text className="text-sm text-black ml-1">Edit</Text>
+            </TouchableOpacity>
+
+            {/* 🗑️ Delete */}
+            <TouchableOpacity
+              onPress={() => handleDeleteProduct(item.id, item.item_name)}
+              className="px-3 "
+              disabled={productLoading[item.id]}
+            >
+              <Icon name="delete" size={18} color="#dc2626" />
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
-    </View>
-  );
+    );
+  };
+
+
 
   return (
     <View className="flex-1 bg-white">
@@ -514,8 +502,8 @@ const ManageStockScreen = () => {
 
 
       {/* Product List */}
-      <View className="flex-1 px-4">
-        <View className="flex-row justify-between items-center mb-2">
+      <View className="flex-1">
+        <View className="flex-row justify-between items-center mb-3 px-4">
           <Text className="text-xl font-bold">
             Products in {selectedCategory?.name || 'Selected Category'}
           </Text>

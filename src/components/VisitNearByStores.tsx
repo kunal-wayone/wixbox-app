@@ -10,7 +10,6 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { useSelector } from 'react-redux';
-import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { RootState } from '../store/store';
 import { Fetch } from '../utils/apiUtils';
 import { ImagePath } from '../constants/ImagePath';
@@ -107,21 +106,7 @@ const VisitNearByStores = () => {
     }
   };
 
-  // Skeleton loader for stores
-  const SkeletonLoader = () => (
-    <SkeletonPlaceholder>
-      {[...Array(3)].map((_, index) => (
-        <View key={index} className="mr-4" style={{ width: CARD_WIDTH }}>
-          <View className="h-48 rounded-xl" />
-          <View className="mt-3">
-            <View className="h-6 w-3/4 rounded-md mb-2" />
-            <View className="h-4 w-1/2 rounded-md mb-2" />
-            <View className="h-4 w-1/3 rounded-md" />
-          </View>
-        </View>
-      ))}
-    </SkeletonPlaceholder>
-  );
+
 
   return (
     <View className="pt-6">
@@ -155,19 +140,19 @@ const VisitNearByStores = () => {
           scrollEventThrottle={16}
         >
           {stores.map((store) => (
-            <View key={store.id} style={{ width: width * 0.8 }}>
+            <View key={store?.id} style={{ width: width * 0.8 }}>
               <Shop
-                id={store.id}
+                id={store?.id}
                 name={store?.restaurant_name}
                 description={store?.about_business || 'No description available'}
                 images={store?.restaurant_images || []}
-                address={store.address || 'No address provided'}
+                address={store?.address || 'No address provided'}
                 phone={store.phone || 'No phone provided'}
                 rating={store?.average_rating || 0}
-                categories={store.categories || []}
-                isOpen={store.is_open !== false}
+                categories={store?.categories || []}
+                isOpen={store?.is_open !== false}
                 featuredItems={
-                  store.featured_items?.map((item) => ({
+                  store?.featured_items?.map((item) => ({
                     id: item.id,
                     name: item.name,
                     price: item.price,

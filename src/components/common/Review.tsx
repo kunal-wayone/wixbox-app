@@ -121,7 +121,7 @@ const Review = () => {
             {user?.shop?.average_rating || 0}
           </Text>
         </View>
-      </View>
+    </View>
       {/* SubTitle and Total Count */}
       <Text className="text-xl text-gray-900 font-semibold font-poppins mb-1">
         Reviews

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  Dimensions,
   Image,
   TouchableOpacity,
   TextInput,
@@ -12,194 +11,105 @@ import {
   ToastAndroid,
   ActivityIndicator,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { ImagePath } from '../../constants/ImagePath';
 import { useNavigation } from '@react-navigation/native';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
+
+import { ImagePath } from '../../constants/ImagePath';
 import { googleAuth, login } from '../../store/slices/authSlice';
 import { fetchUser } from '../../store/slices/userSlice';
-import { RootState } from '../../store/store';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getFcmToken } from '../../utils/notification/firebase';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 const { width, height } = Dimensions.get('screen');
 
 const validationSchema = Yup.object().shape({
-  email: Yup.string()
-    .email('Invalid email address')
-    .required('Email is required'),
-  password: Yup.string()
-    .min(8, 'Password must be at least 8 characters')
-    .required('Password is required'),
+  email: Yup.string().email('Invalid email').required('Email is required'),
+  password: Yup.string().min(8, 'Min 8 characters').required('Password is required'),
 });
 
-type RootStackParamList = {
-  SplashScreen: undefined;
-  SplashScreen1: undefined;
-  AccountTypeScreen: undefined;
-  SignUpScreen: undefined;
-  LoginScreen: undefined;
-  ForgetPasswordScreen: undefined;
-  VerifyOtpScreen: undefined;
-  ResetPasswordScreen: undefined;
-  CreateShopScreen: undefined;
-  AddDineInServiceScreen: undefined;
-  HomeScreen: { screen?: string };
-  NotificationScreen: undefined;
-  AddProductScreen: undefined;
-  CreateAdScreen: undefined;
-  EditProfileScreen: undefined;
-  DeleteAccountScreen: undefined;
-  DeleteAccountVerifyOtpScreen: undefined;
-  AddCustomerScreen: undefined;
-  CustomerDetailsScreen: undefined;
-  AddCustomerFormScreen: undefined;
-  AddOrderScreen: undefined;
-  OrderSummaryScreen: undefined;
-  HighOnDemandScreen: undefined;
-  BookATableScreen: undefined;
-  LunchAndDinnerScreen: undefined;
-  PaymentScreen: undefined;
-  SearchScreen: undefined;
-  ShopDetailsScreen: undefined;
-  ProductDetailsScreen: undefined;
-  ManageStockScreen: undefined;
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LoginScreen = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<any>();
   const dispatch = useDispatch<any>();
+
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [apiErrors, setApiErrors] = useState({
-    email: '',
-    password: '',
-  });
+  const [apiErrors, setApiErrors] = useState({ email: '', password: '' });
 
-  const handleLogin = async (
-    values: { email: string; password: string },
-    { setSubmitting, resetForm }: any,
-  ) => {
+  const navigateAfterLogin = (user: any) => {
+    const route = user.role === 'user'
+      ? { name: 'HomeScreen', params: { screen: 'Market' } }
+      : { name: user.shopcreated ? 'HomeScreen' : 'CreateShopScreen' };
+
+    navigation.reset({ index: 0, routes: [route as any] });
+  };
+
+  const handleLogin = async (values: { email: string; password: string }, actions: any) => {
     setIsSubmitting(true);
+    setApiErrors({ email: '', password: '' });
 
     try {
-      const payload = {
-        email: values.email,
-        password: values.password,
-        fcm_token: await getFcmToken(),
-      };
-
+      const payload = { ...values, fcm_token: await getFcmToken() };
       const response = await dispatch(login(payload)).unwrap();
-console.log(response)
-      if (!response.success) {
-        throw new Error(response.message || 'Login failed');
-      }
 
+      if (!response.success) throw new Error(response.message || 'Login failed');
       await dispatch(fetchUser()).unwrap();
 
-      // Clear form and errors
-      setApiErrors({
-        email: '',
-        password: '',
-      });
-      resetForm();
+      actions.resetForm();
+      ToastAndroid.show(response.message || 'Login Successful!', ToastAndroid.LONG);
 
-      ToastAndroid.show(
-        response.message || 'Logged in successfully!',
-        ToastAndroid.LONG
-      );
+      if (response.user) navigateAfterLogin(response.user);
+      else throw new Error('User data missing');
 
-      // Navigate based on user role and shopcreated status
-      const userData = response.user;
-      if (userData) {
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: userData.role === 'user'
-                ? 'HomeScreen'
-                : userData.shopcreated ? 'HomeScreen' : 'CreateShopScreen',
-              params: userData.role === 'user' ? { screen: 'Market' } : undefined,
-            },
-          ],
-        });
-      } else {
-        throw new Error('User data not found');
-      }
     } catch (error: any) {
-      console.log(error)
-      const errorData = error?.errors || {};
+      console.error('Login error:', error);
+      const err = error?.errors || {};
       setApiErrors({
-        email: errorData.email?.[0] || '',
-        password: errorData.password?.[0] || '',
+        email: err.email?.[0] || '',
+        password: err.password?.[0] || '',
       });
 
       ToastAndroid.show(
-        error.message || 'Login failed. Please check your credentials.',
+        error.message || 'Login failed. Check credentials.',
         ToastAndroid.LONG
       );
     } finally {
-      setSubmitting(false);
       setIsSubmitting(false);
+      actions.setSubmitting(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     setIsSubmitting(true);
+    setApiErrors({ email: '', password: '' });
 
     try {
-      const payload = {
-        fcm_token: await getFcmToken(),
-      };
+      const response = await dispatch(
+        googleAuth({ fcm_token: await getFcmToken() })
+      ).unwrap();
 
-      const response = await dispatch(googleAuth(payload)).unwrap();
-
-      if (!response.success) {
-        throw new Error(response.message || 'Google login failed');
-      }
-
+      if (!response.success) throw new Error(response.message || 'Google login failed');
       await dispatch(fetchUser()).unwrap();
 
-      ToastAndroid.show(
-        response.message || 'Logged in successfully!',
-        ToastAndroid.LONG
-      );
+      ToastAndroid.show(response.message || 'Login Successful!', ToastAndroid.LONG);
+      if (response.user) navigateAfterLogin(response.user);
 
-      // Navigate based on user role and shopcreated status
-      const userData = response.user;
-      if (userData) {
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: userData.role === 'user'
-                ? 'HomeScreen'
-                : userData.shopcreated ? 'HomeScreen' : 'CreateShopScreen',
-              params: userData.role === 'user' ? { screen: 'Market' } : undefined,
-            },
-          ],
-        });
-      } else {
-        throw new Error('User data not found');
-      }
     } catch (error: any) {
-      const errorData = error?.errors || {};
+      console.error('Google login error:', error);
+      const err = error?.errors || {};
       setApiErrors({
-        email: errorData.email?.[0] || '',
-        password: errorData.password?.[0] || '',
+        email: err.email?.[0] || '',
+        password: err.password?.[0] || '',
       });
 
-      ToastAndroid.show(
-        error.message || 'Google login failed. Please try again.',
-        ToastAndroid.LONG
-      );
+      ToastAndroid.show(error.message || 'Google login failed.', ToastAndroid.LONG);
     } finally {
       setIsSubmitting(false);
     }
@@ -208,35 +118,33 @@ console.log(response)
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+    >
       <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          backgroundColor: '#fff',
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
+        contentContainerStyle={{ flexGrow: 1, backgroundColor: '#fff' }}
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="relative p-4">
           <Image
             source={ImagePath.signBg}
+            style={{ tintColor: "#ac94f4" }}
             className="absolute -top-[2%] -left-[2%] w-52 h-44"
             resizeMode="contain"
           />
+
           <View className="mt-20">
             <MaskedView
               maskElement={
-                <Text className="text-center text-3xl font-bold font-poppins">
-                  Welcome Back!
-                </Text>
-              }>
+                <Text className="text-center text-3xl font-bold">Welcome Back!</Text>
+              }
+            >
               <LinearGradient
-                colors={['#EE6447', '#7248B3']}
+                colors={['#ac94f4', '#7248B3']}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}>
-                <Text
-                  className="text-center text-3xl font-bold font-poppins"
-                  style={{ opacity: 0 }}>
+                end={{ x: 1, y: 0 }}
+              >
+                <Text className="text-center text-3xl font-bold" style={{ opacity: 0 }}>
                   Welcome Back!
                 </Text>
               </LinearGradient>
@@ -249,7 +157,8 @@ console.log(response)
             <Formik
               initialValues={{ email: '', password: '' }}
               validationSchema={validationSchema}
-              onSubmit={handleLogin}>
+              onSubmit={handleLogin}
+            >
               {({
                 handleChange,
                 handleBlur,
@@ -257,23 +166,22 @@ console.log(response)
                 values,
                 errors,
                 touched,
-                isSubmitting: formikSubmitting,
+                isSubmitting: formSubmitting,
               }) => (
                 <View className="mt-4">
+                  {/* Email */}
                   <View className="mb-3">
-                    <Text className="text-sm font-medium text-gray-700 mb-1">
-                      Email
-                    </Text>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
                     <TextInput
-                      className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base"
+                      className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
                       placeholder="Enter your email"
+                      placeholderTextColor={"#000"}
                       onChangeText={handleChange('email')}
                       onBlur={handleBlur('email')}
                       value={values.email}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       editable={!isSubmitting}
-                      accessibilityLabel="Email input"
                     />
                     {(touched.email || apiErrors.email) && (
                       <Text className="text-red-500 text-xs mt-1">
@@ -282,32 +190,25 @@ console.log(response)
                     )}
                   </View>
 
+                  {/* Password */}
                   <View className="mb-3">
-                    <Text className="text-sm font-medium text-gray-700 mb-1">
-                      Password
-                    </Text>
+                    <Text className="text-sm font-medium text-gray-700 mb-1">Password</Text>
                     <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
                       <TextInput
-                        className="flex-1 p-3 bg-gray-100 text-base"
+                        className="flex-1 p-3 bg-gray-100 text-gray-900 text-base"
                         placeholder="Enter your password"
+                        placeholderTextColor={"#000"}
+                        secureTextEntry={!showPassword}
                         onChangeText={handleChange('password')}
                         onBlur={handleBlur('password')}
                         value={values.password}
-                        secureTextEntry={!showPassword}
                         editable={!isSubmitting}
-                        accessibilityLabel="Password input"
                       />
                       <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
                         className="p-3 bg-gray-100"
-                        disabled={isSubmitting}
-                        accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                       >
-                        <Icon
-                          name={showPassword ? 'eye-off' : 'eye'}
-                          size={20}
-                          color="#666"
-                        />
+                        <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color="#666" />
                       </TouchableOpacity>
                     </View>
                     {(touched.password || apiErrors.password) && (
@@ -317,34 +218,33 @@ console.log(response)
                     )}
                   </View>
 
+                  {/* Forgot Password */}
                   <TouchableOpacity
+                    className="my-1"
                     onPress={() => navigation.navigate('ForgetPasswordScreen')}
                     disabled={isSubmitting}
-                    className="my-1"
-                    accessibilityLabel="Forgot password link">
-                    <Text className="ml-2 text-sm text-orange-primary-80 font-poppins font-bold">
+                  >
+                    <Text className="ml-2 text-sm text-primary-90 font-bold">
                       Forgot Password?
                     </Text>
                   </TouchableOpacity>
 
+                  {/* Submit Button */}
                   <TouchableOpacity
-                    onPress={() => handleSubmit()}
-                    disabled={isSubmitting || formikSubmitting}
                     className="mt-4"
-                    accessibilityLabel="Login button">
+                    onPress={() => handleSubmit()}
+                    disabled={isSubmitting || formSubmitting}
+                  >
                     <LinearGradient
-                      colors={['#EE6447', '#7248B3']}
+                      colors={['#ac94f4', '#7248B3']}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
-                      style={{
-                        padding: 16,
-                        borderRadius: 10,
-                        alignItems: 'center',
-                        opacity: isSubmitting || formikSubmitting ? 0.7 : 1,
-                      }}>
-                      <Text className="text-white text-base font-bold">
-                        Login
-                      </Text>
+                      style={[
+                        styles.loginButton,
+                        (isSubmitting || formSubmitting) && { opacity: 0.7 },
+                      ]}
+                    >
+                      <Text className="text-white text-base font-bold">Login</Text>
                     </LinearGradient>
                   </TouchableOpacity>
                 </View>
@@ -357,43 +257,31 @@ console.log(response)
 
             <View className="flex-row justify-center gap-4 mb-10 mt-5">
               <TouchableOpacity
-                className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl"
+                className="p-3 w-1/2 bg-primary-10 rounded-2xl"
                 onPress={handleGoogleLogin}
                 disabled={isSubmitting}
-                accessibilityLabel="Google Sign In">
-                <Image
-                  source={ImagePath.google}
-                  className="w-8 h-8 m-auto"
-                  resizeMode="contain"
-                />
+              >
+                <Image source={ImagePath.google} className="w-8 h-8 m-auto" resizeMode="contain" />
               </TouchableOpacity>
+
+              {/* Facebook (Placeholder) */}
               <TouchableOpacity
-                className="p-3 w-1/2 bg-orange-primary-10 rounded-2xl hidden"
-                onPress={() =>
-                  ToastAndroid.show(
-                    'Facebook Sign-In not implemented yet.',
-                    ToastAndroid.LONG
-                  )
-                }
-                disabled={isSubmitting}
-                accessibilityLabel="Facebook Sign In">
-                <Image
-                  source={ImagePath.facebook}
-                  className="w-8 h-8 m-auto"
-                  resizeMode="contain"
-                />
+                className="p-3 w-1/2 bg-primary-10 rounded-2xl opacity-50 hidden"
+                onPress={() => ToastAndroid.show('Facebook login not implemented', ToastAndroid.SHORT)}
+                disabled
+              >
+                <Image source={ImagePath.facebook} className="w-8 h-8 m-auto" resizeMode="contain" />
               </TouchableOpacity>
             </View>
 
+            {/* Sign Up Link */}
             <View className="flex-row items-center justify-center mb-4">
-              <Text className="text-sm text-gray-600">
-                Don't have an account?{' '}
-              </Text>
+              <Text className="text-sm text-gray-600">Don't have an account?</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('AccountTypeScreen')}
                 disabled={isSubmitting}
-                accessibilityLabel="Sign Up link">
-                <Text className="text-orange-primary-100 text-sm ml-1 underline font-bold">
+              >
+                <Text className="text-primary-100 text-sm ml-1 underline font-bold">
                   Sign Up
                 </Text>
               </TouchableOpacity>
@@ -402,9 +290,10 @@ console.log(response)
         </View>
       </ScrollView>
 
+      {/* Loading Overlay */}
       {isSubmitting && (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#FFFFFF" />
+          <ActivityIndicator size="large" color="#fff" />
           <Text style={styles.loadingText}>Logging In...</Text>
         </View>
       )}
@@ -413,19 +302,21 @@ console.log(response)
 };
 
 const styles = StyleSheet.create({
+  loginButton: {
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
   loadingOverlay: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
   },
   loadingText: {
-    color: '#FFFFFF',
+    color: '#fff',
     fontSize: 16,
     marginTop: 10,
     fontWeight: 'bold',

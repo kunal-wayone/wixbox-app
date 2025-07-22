@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import Icons from 'react-native-vector-icons/Ionicons';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { RootState } from '../../store/store';
 import { ImagePath } from '../../constants/ImagePath';
 import {
@@ -17,6 +17,8 @@ import {
 } from '../../store/slices/wishlistSlice';
 import { IMAGE_URL } from '../../utils/apiUtils';
 import { addToCart } from '../../store/slices/cartSlice';
+import Icon from 'react-native-vector-icons/Ionicons';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 
 const FoodItem = ({
@@ -42,6 +44,69 @@ const FoodItem = ({
     const isFavorite = wishlistItems?.some((i) => i.id === id);
     const inCart = cartItems?.some((i) => i.id === id);
     const [addedToCart, setAddedToCart] = useState(inCart);
+    const isFocused = useIsFocused()
+    const [shopStatus, setShopStatus] = useState({
+        isOpen: false,
+        openingTime: null,
+        closingTime: null,
+    });
+    const shiftDetails = item?.shop?.shift_details
+        ? JSON.parse(item?.shop?.shift_details)
+        : [];
+
+    const formatToAMPM = (time24: string) => {
+        const [hourStr, minute] = time24.split(':');
+        let hour = parseInt(hourStr);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
+        return `${hour}:${minute} ${ampm}`;
+    };
+
+    console.log(item)
+    const getShopStatus = () => {
+        const currentDay = new Date()
+            .toLocaleString('en-US', { weekday: 'short' })
+            .toLowerCase();
+
+        const currentTime = new Date().toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+
+        const todayShift = shiftDetails.find(
+            (shift: any) => shift.day.toLowerCase() === currentDay && shift.status
+        );
+
+        if (!todayShift || !todayShift.first_shift_start) {
+            return {
+                isOpen: false,
+                openingTime: null,
+                closingTime: null,
+            };
+        }
+
+        const isOpen =
+            currentTime >= todayShift.first_shift_start &&
+            currentTime <= todayShift.first_shift_end;
+
+        return {
+            isOpen,
+            openingTime: formatToAMPM(todayShift.first_shift_start),
+            closingTime: formatToAMPM(todayShift.first_shift_end),
+        };
+    };
+
+
+
+    useEffect(() => {
+        if (isFocused) {
+            const status: any = getShopStatus();
+            setShopStatus(status);
+        }
+    }, [isFocused]);
+
+
     const handleQuantityChange = (type: 'increment' | 'decrement') => {
         if (type === 'increment' && quantity < maxQuantity) {
             setQuantity((prev) => prev + 1);
@@ -119,19 +184,23 @@ const FoodItem = ({
         ));
 
     return (
-        <View className="relative bg-white border border-gray-300 rounded-2xl shadow-lg m-2 p-4 flex-row">
-            {item?.shop?.status === 0 && (
+        <TouchableOpacity onPress={() => {
+            navigation.navigate("ProductDetailsScreen", { productId: item?.id })
+        }} className="relative bg-white border border-gray-300 rounded-2xl shadow-lg m-2 p-3 flex-row">
+            {shopStatus?.isOpen && (
                 <TouchableOpacity
-                    onPress={() =>
+                    onPress={() => {
                         ToastAndroid.show("Shop temporarily closed now", ToastAndroid.SHORT)
+                        navigation.navigate("ProductDetailsScreen", { productId: item?.id })
                     }
-                    className="absolute top-0 left-0 right-0 bottom-0 bg-black/30 z-50 rounded-2xl"
+                    }
+                    className="absolute top-0 left-0 right-0 bottom-0 bg-black/20 z-50 rounded-2xl"
                 // activeOpacity={1}
                 />
             )}
 
             {/* Image Section */}
-            <View className="w-1/3">
+            <View className="w-1/3 ">
                 <Image
                     source={typeof imageUrl === 'string' ? { uri: IMAGE_URL + imageUrl } : imageUrl}
                     className="w-full flex-1 h-full rounded-xl"
@@ -141,10 +210,10 @@ const FoodItem = ({
                     }
                 />
                 <TouchableOpacity
-                    className="w-4/5 mx-auto mt-[-5%] bg-green-500 px-4 py-2 rounded-xl"
+                    className="w-4/5 mx-auto mt-[-9%] bg-green-500 px-2 py-1.5 rounded-full"
                     onPress={() => handlePlaceOrder(item)}
                 >
-                    <Text className="text-white text-center">Buy Now</Text>
+                    <Text className="text-white text-sm text-center">Buy Now</Text>
                 </TouchableOpacity>
                 <View className="absolute top-2 left-2 bg-gray-100 rounded p-0.5">
                     <Image
@@ -158,52 +227,61 @@ const FoodItem = ({
             {/* Content Section */}
             <View className="w-2/3 pl-4 flex-1">
                 <View className="flex-row justify-between items-start">
-                    <Text className="text-lg font-bold text-gray-800 flex-1">{name}</Text>
+                    <Text className=" font-bold text-gray-800 flex-1 " numberOfLines={1} ellipsizeMode='tail'>{name}</Text>
                     <TouchableOpacity onPress={handleFavoriteToggle}>
                         <Icons
                             name="heart"
-                            size={24}
+                            size={22}
                             color={isFavorite ? 'red' : 'gray'}
                         />
                     </TouchableOpacity>
                 </View>
-
-                <Text className="text-sm text-gray-600 mb-1" numberOfLines={2} ellipsizeMode='tail'>
-                    {description}
-                </Text>
-                <View className='flex-row items-center gap-1 my-1'>
-                    <Icons
-                        name="storefront-outline"
-                        size={16}
-                        color={'gray'}
-                    />
-                    <Text className="text-sm text-gray-600 " numberOfLines={2}>
-                        {restaurent}
-                    </Text>
+                <View className='flex-row items-center justify-between '>
+                    <View className='flex-row items-center gap-1'>
+                        <Icons
+                            name="storefront-outline"
+                            size={12}
+                            color={'gray'}
+                        />
+                        <Text className="text-xs text-gray-600 w-3/5 " numberOfLines={1} ellipsizeMode='tail'>
+                            {restaurent}
+                        </Text>
+                    </View>
+                    <View className='flex-row items-center mt-1 '>
+                        <MaterialIcons name='directions-run' className='mr-0.5' />
+                        <Text className='text-sm'>{item?.shop?.distance_km || "NA"}</Text>
+                    </View>
                 </View>
                 {/* <View className="flex-row mt-2 flex-wrap">{renderDietaryBadges()}</View> */}
 
-                <View className="flex-row justify-between items-center mt-2">
-                    <Text className="text-sm text-yellow-500">
-                        {'★'.repeat(Math.floor(rating))} ({rating.toFixed(1)})
+                <View className="flex-row justify-between items-center mt-1">
+                    <Text className="text-sm text-yellow-600">
+                        {/* {'★'.repeat(Math.floor(rating))} */}
+                        ★ {rating.toFixed(1)}
                     </Text>
-                    <Text className="text-lg font-semibold text-green-600">
+                    <View className='flex-row items-center'>
+                        <Icon name='timer-outline' className='mr-0.5' />
+                        <Text className="text-sm text-gray-600">
+                            {item?.prepration_time || "10-12"} mins
+                        </Text>
+                    </View>
+                    <Text className=" font-semibold text-green-600">
                         ₹{price.toFixed(2)}
                     </Text>
                 </View>
 
                 {/* Quantity and Cart Controls */}
-                <View className="flex-row justify-between items-center mt-3">
+                <View className="flex-row justify-between items-center mt-3 ">
                     <View className="flex-row items-center bg-gray-100 rounded-full">
                         <TouchableOpacity
-                            className="p-2"
+                            className="p-1"
                             onPress={() => handleQuantityChange('decrement')}
                         >
                             <Icons name="remove-outline" size={20} color="black" />
                         </TouchableOpacity>
                         <Text className="px-3 text-base font-semibold">{quantity}</Text>
                         <TouchableOpacity
-                            className="p-2"
+                            className="p-1"
                             onPress={() => handleQuantityChange('increment')}
                         >
                             <Icons name="add" size={20} color="black" />
@@ -211,7 +289,7 @@ const FoodItem = ({
                     </View>
 
                     <TouchableOpacity
-                        className={`rounded-full px-4 py-2 ${isAvailable
+                        className={`rounded-full px-4 py-1.5 ${isAvailable
                             ? addedToCart
                                 ? 'bg-green-600'
                                 : 'bg-primary-90'
@@ -220,13 +298,13 @@ const FoodItem = ({
                         onPress={() => addedToCart ? navigation.navigate("CartScreen") : handleAddToCart()}
                         disabled={!isAvailable}
                     >
-                        <Text className="text-white font-semibold">
+                        <Text className="text-white text-sm font-semibold">
                             {isAvailable ? (addedToCart ? 'View Cart' : 'Add to Cart') : 'Out of Stock'}
                         </Text>
                     </TouchableOpacity>
                 </View>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 };
 

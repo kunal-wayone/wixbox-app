@@ -69,11 +69,11 @@ function promptEnableLocationServices() {
             'Please enable GPS/location from settings to continue.',
             [
                 {
-                    text: 'Go to Settings',
+                    text: 'Ok',
                     onPress: () => {
-                        Platform.OS === 'ios'
-                            ? Linking.openURL('App-Prefs:Privacy&path=LOCATION')
-                            : Linking.openSettings();
+                        // Platform.OS === 'ios'
+                        //     ? Linking.openURL('App-Prefs:Privacy&path=LOCATION')
+                        //     : Linking.openSettings();
                         resolve(false);
                     },
                 },

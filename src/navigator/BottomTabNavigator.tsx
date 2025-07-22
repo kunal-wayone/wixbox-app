@@ -100,7 +100,7 @@ export default function BottomTabNavigator() {
         initialRouteName="Dashboard"
         screenOptions={screenOptions(ownerIconMap)}>
         <Tab.Screen name="Dashboard" component={DashboardScreen} />
-        <Tab.Screen name="Home" component={HomeScreen} />
+        {/* <Tab.Screen name="Home" component={HomeScreen} /> */}
         <Tab.Screen name="Customer" component={AddCustomerScreen} />
         <Tab.Screen name="Analytics" component={AnalyticsScreen} />
         <Tab.Screen name="Profile" component={ProfileScreen} />

@@ -154,7 +154,7 @@ const SplashScreen = () => {
         {text.map((char, index) => (
           <Animated.Text
             key={index}
-            className="text-lg font-bold text-primary-100"
+            className="text-lg font-bold text-gray-900"
             style={{
               opacity: charAnims[index],
               transform: [

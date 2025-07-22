@@ -23,7 +23,6 @@ const UsersReview = ({ shopId, average_rating }: any) => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
-  const { status: userStatus, data: user }: any = useSelector((state: any) => state.user);
   const [modalVisible, setModalVisible] = useState(false);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -166,42 +165,58 @@ const UsersReview = ({ shopId, average_rating }: any) => {
   }, [isLoadingMore, page, lastPage, handleLoadMore]);
 
   return (
-    <View className="mt-5 min-h-[83vh] px-4">
-      {/* Title and Rating */}
-      <View className="flex-row justify-between items-center mb-2">
-        <Text className="text-lg font-semibold text-gray-700">
-          {user?.shop?.restaurant_name || 'Burger One (Cafe & Bakery)'}
-        </Text>
-        <View className="flex-row items-center px-2 py-1 rounded-md">
-          {Array(Math.round(average_rating || 0))
-            .fill(0)
-            .map((_, index) => (
-              <AntDesign key={index} name="star" color="#FBBF24" size={16} />
+    <View className='w-full'>
+      <View className=" rounded-lg w-full mb-10" style={{ width: "100%" }}>
+        <View className="mb-2 flex-row items-center justify-between gap-4">
+          <Text className="text-sm">Add Your Rating</Text>
+          <View className="flex-row">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                <AntDesign
+                  name={star <= rating ? 'star' : 'staro'}
+                  color="#FBBF24"
+                  size={20}
+                />
+              </TouchableOpacity>
             ))}
-          <Text className="ml-1 text-base text-gray-800 font-medium">
-            {average_rating || 0}
-          </Text>
+          </View>
+        </View>
+        <View className="mb-4">
+          <TextInput
+            className="border border-gray-300 rounded-md p-2 h-24"
+            placeholder="Enter your comment"
+            placeholderTextColor={"gray"}
+            value={comment}
+            onChangeText={setComment}
+            style={{ textAlignVertical: 'top' }}
+            multiline
+          />
+        </View>
+        <View className="flex-row justify-end">
+          <TouchableOpacity
+            onPress={() => setModalVisible(false)}
+            className="px-4 py-2 mr-2"
+          >
+            <Text className="text-gray-600">Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleSubmitReview}
+            disabled={isSubmitting}
+            className={`px-4 py-2 rounded-full ${isSubmitting ? 'bg-gray-400' : 'bg-primary-80'}`}
+          >
+            <Text className="text-white">Submit</Text>
+          </TouchableOpacity>
         </View>
       </View>
-      {/* SubTitle, Button, and Total Count */}
-      <View className="flex-row justify-between items-center">
-        <Text className="text-xl text-gray-900 font-semibold font-poppins">Reviews</Text>
-        <TouchableOpacity
-          onPress={() => setModalVisible(true)}
-          className="bg-primary-80 px-4 py-2 rounded-md"
-        >
-          <Text className="text-white font-medium">Add Review</Text>
-        </TouchableOpacity>
-      </View>
-      <Text className="text-sm text-gray-600 mb-4">{reviews.length} Reviews</Text>
+
       {/* Review List */}
       {isLoading && page === 1 ? (
-        <View className="flex-1 justify-center items-center mt-10">
+        <View className="justify-center items-center mt-10">
           <ActivityIndicator size="large" color="#007AFF" />
         </View>
       ) : reviews.length === 0 ? (
-        <View className="flex-1 justify-center items-center mt-10">
-          <Text className="text-gray-500 text-lg mb-auto">No reviews found</Text>
+        <View className="justify-center items-center mt-10">
+          <Text className="text-gray-500 mb-auto">No reviews found</Text>
         </View>
       ) : (
         <FlatList
@@ -214,59 +229,7 @@ const UsersReview = ({ shopId, average_rating }: any) => {
           ListFooterComponent={renderFooter}
         />
       )}
-      {/* Review Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white p-6 rounded-lg w-11/12 max-w-md">
-            <Text className="text-xl font-semibold mb-4">Write a Review</Text>
-            <View className="mb-4">
-              <Text className="text-sm font-medium mb-2">Rating</Text>
-              <View className="flex-row">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                    <AntDesign
-                      name={star <= rating ? 'star' : 'staro'}
-                      color="#FBBF24"
-                      size={24}
-                    />
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-            <View className="mb-4">
-              <Text className="text-sm font-medium mb-2">Comment</Text>
-              <TextInput
-                className="border border-gray-300 rounded-md p-2 h-24"
-                placeholder="Enter your comment"
-                value={comment}
-                onChangeText={setComment}
-                style={{ textAlignVertical: 'top' }}
-                multiline
-              />
-            </View>
-            <View className="flex-row justify-end">
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                className="px-4 py-2 mr-2"
-              >
-                <Text className="text-gray-600">Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleSubmitReview}
-                disabled={isSubmitting}
-                className={`px-4 py-2 rounded-md ${isSubmitting ? 'bg-gray-400' : 'bg-primary-80'}`}
-              >
-                <Text className="text-white">Submit</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+
     </View>
   );
 };
