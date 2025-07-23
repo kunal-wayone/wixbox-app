@@ -16,6 +16,7 @@ import Modal from 'react-native-modal'; // Import Modal
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { ImagePath } from '../../constants/ImagePath';
 import { Delete, Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AdsListScreen = () => {
     const navigation = useNavigation<any>();
@@ -173,85 +174,87 @@ const AdsListScreen = () => {
     );
 
     return (
-        <View className="p-4 pb-20 h-full bg-gray-50">
-            <View>
-                <TouchableOpacity onPress={() => navigation.goBack()} className='absolute z-50' >
-                    <Icon name="arrow-back" className="" size={20} color="black" />
-                </TouchableOpacity>
-                <Text className="text-2xl font-semibold text-center">Created Ads List</Text>
-            </View>
-
-            {/* Search & Add Button */}
-            <View className="flex-row items-center gap-3 mt-4 mb-4">
-                <View className="flex-row items-center flex-1 bg-white px-3 py-0.5 border rounded-xl shadow-sm">
-                    <AntDesign name="search1" color="#6B7280" size={20} />
-                    <TextInput
-                        value={search}
-                        onChangeText={setSearch}
-                        placeholder="Search ads..."
-                        className="ml-2 flex-1 text-sm text-gray-700"
-                        autoCapitalize="none"
-                    />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <View className="p-4 pb-20 h-full bg-gray-50">
+                <View>
+                    <TouchableOpacity onPress={() => navigation.goBack()} className='absolute z-50' >
+                        <Icon name="arrow-back" className="" size={20} color="black" />
+                    </TouchableOpacity>
+                    <Text className="text-2xl font-semibold text-center">Created Ads List</Text>
                 </View>
-                <TouchableOpacity
-                    onPress={() => navigation.navigate('CreateAdScreen')}
-                    className="bg-primary-90 p-3 rounded-lg"
-                >
-                    <Icon name="add" size={20} color="white" />
-                </TouchableOpacity>
-            </View>
 
-            {/* Confirmation Modal */}
-            <Modal isVisible={confirmModalVisible} onBackdropPress={() => setConfirmModalVisible(false)}>
-                <View className="bg-white p-6 rounded-lg">
-                    <Text className="text-lg font-semibold mb-4">
-                        Are you sure you want to delete "{confirmAction?.name}"?
-                    </Text>
-                    <View className="flex-row justify-end gap-4">
-                        <TouchableOpacity
-                            onPress={() => {
-                                setConfirmModalVisible(false);
-                                setConfirmAction(null);
-                            }}
-                            className="px-4 py-2 bg-gray-200 rounded-lg"
-                        >
-                            <Text className="text-gray-800 font-medium">Cancel</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={confirmDelete}
-                            className="px-4 py-2 bg-red-500 rounded-lg"
-                            disabled={deleteLoading}
-                        >
-                            {deleteLoading ? (
-                                <ActivityIndicator size="small" color="white" />
-                            ) : (
-                                <Text className="text-white font-medium">Delete</Text>
-                            )}
-                        </TouchableOpacity>
+                {/* Search & Add Button */}
+                <View className="flex-row items-center gap-3 mt-4 mb-4">
+                    <View className="flex-row items-center flex-1 bg-white px-3 py-0.5 border rounded-xl shadow-sm">
+                        <AntDesign name="search1" color="#6B7280" size={20} />
+                        <TextInput
+                            value={search}
+                            onChangeText={setSearch}
+                            placeholder="Search ads..."
+                            className="ml-2 flex-1 text-sm text-gray-700"
+                            autoCapitalize="none"
+                        />
                     </View>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('CreateAdScreen')}
+                        className="bg-primary-90 p-3 rounded-lg"
+                    >
+                        <Icon name="add" size={20} color="white" />
+                    </TouchableOpacity>
                 </View>
-            </Modal>
 
-            {/* Ads List */}
-            {isLoading ? (
-                <View className="flex-1 justify-center items-center mt-10">
-                    <ActivityIndicator size="large" color="#007AFF" />
-                </View>
-            ) : filteredAds.length === 0 ? (
-                <View className="flex-1 justify-center items-center mt-10">
-                    <Text className="text-gray-500 text-lg">No ads found</Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={filteredAds}
-                    renderItem={renderItem}
-                    keyExtractor={(item) => item.id.toString()}
-                    contentContainerStyle={{ paddingBottom: 20 }}
-                    showsVerticalScrollIndicator={false}
-                    initialNumToRender={10}
-                />
-            )}
-        </View>
+                {/* Confirmation Modal */}
+                <Modal isVisible={confirmModalVisible} onBackdropPress={() => setConfirmModalVisible(false)}>
+                    <View className="bg-white p-6 rounded-lg">
+                        <Text className="text-lg font-semibold mb-4">
+                            Are you sure you want to delete "{confirmAction?.name}"?
+                        </Text>
+                        <View className="flex-row justify-end gap-4">
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setConfirmModalVisible(false);
+                                    setConfirmAction(null);
+                                }}
+                                className="px-4 py-2 bg-gray-200 rounded-lg"
+                            >
+                                <Text className="text-gray-800 font-medium">Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={confirmDelete}
+                                className="px-4 py-2 bg-red-500 rounded-lg"
+                                disabled={deleteLoading}
+                            >
+                                {deleteLoading ? (
+                                    <ActivityIndicator size="small" color="white" />
+                                ) : (
+                                    <Text className="text-white font-medium">Delete</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
+                {/* Ads List */}
+                {isLoading ? (
+                    <View className="flex-1 justify-center items-center mt-10">
+                        <ActivityIndicator size="large" color="#007AFF" />
+                    </View>
+                ) : filteredAds.length === 0 ? (
+                    <View className="flex-1 justify-center items-center mt-10">
+                        <Text className="text-gray-500 text-lg">No ads found</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={filteredAds}
+                        renderItem={renderItem}
+                        keyExtractor={(item) => item.id.toString()}
+                        contentContainerStyle={{ paddingBottom: 20 }}
+                        showsVerticalScrollIndicator={false}
+                        initialNumToRender={10}
+                    />
+                )}
+            </View>
+        </SafeAreaView>
     );
 };
 

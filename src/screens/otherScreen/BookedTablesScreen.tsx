@@ -13,6 +13,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Fetch, Post } from '../../utils/apiUtils';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const LIMIT = 5;
 
@@ -139,74 +140,76 @@ const BookedTablesScreen = () => {
     );
 
     return (
-        <View className="flex-1 bg-gray-100 pt-4">
-            {/* Header */}
-            <View className="flex-row items-center mb-4 px-4">
-                <TouchableOpacity onPress={() => navigation.goBack()} className="pr-2 absolute left-4 z-10">
-                    <Ionicons name="arrow-back" size={24} color="#111827" />
-                </TouchableOpacity>
-                <Text className="text-xl font-bold text-gray-800 text-center flex-1">My Bookings</Text>
-            </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <View className="flex-1 bg-gray-100 pt-4">
+                {/* Header */}
+                <View className="flex-row items-center mb-4 px-4">
+                    <TouchableOpacity onPress={() => navigation.goBack()} className="pr-2 absolute left-4 z-10">
+                        <Ionicons name="arrow-back" size={24} color="#111827" />
+                    </TouchableOpacity>
+                    <Text className="text-xl font-bold text-gray-800 text-center flex-1">My Bookings</Text>
+                </View>
 
-            {loading ? (
-                <ActivityIndicator size="large" color="#6366f1" />
-            ) : (
-                <FlatList
-                    data={bookings}
-                    keyExtractor={(item: any) => item.id.toString()}
-                    renderItem={renderBooking}
-                    onEndReached={loadMore}
-                    onEndReachedThreshold={0.3}
-                    refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#6366f1']} />
-                    }
-                    ListFooterComponent={
-                        isLoadingMore ? <ActivityIndicator size="small" className="my-4" /> : null
-                    }
-                />
-            )}
-            <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} className="p-3 rounded-xl w-11/12 m-auto mb-0   bg-primary-80  z-10">
-                <Text className='text-center text-white font-semibold'>
-                    Go To Home
-                </Text>
-            </TouchableOpacity>
-            {/* Cancel Modal */}
-            <Modal
-                visible={cancelModalVisible}
-                transparent
-                animationType="slide"
-                onRequestClose={() => setCancelModalVisible(false)}
-            >
-                <View className="flex-1 bg-black/40 justify-center items-center">
-                    <View className="bg-white rounded-xl w-11/12 p-4">
-                        <Text className="text-lg font-bold mb-2">Cancel Booking</Text>
-                        <Text className="text-gray-600 mb-2">Please enter a reason:</Text>
-                        <TextInput
-                            multiline
-                            numberOfLines={4}
-                            placeholder="Write your reason..."
-                            className="border border-gray-300 rounded-md p-2 text-gray-800 text-sm mb-4"
-                            value={cancelReason}
-                            onChangeText={setCancelReason}
-                        />
-                        <View className="flex-row justify-between space-x-3">
-                            <TouchableOpacity
-                                onPress={() => setCancelModalVisible(false)}
-                                className="flex-1 bg-gray-400 py-2 rounded-md"
-                            >
-                                <Text className="text-white text-center font-medium">Close</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={handleCancelBooking}
-                                className="flex-1 bg-red-500 py-2 rounded-md"
-                            >
-                                <Text className="text-white text-center font-medium">Submit</Text>
-                            </TouchableOpacity>
+                {loading ? (
+                    <ActivityIndicator size="large" color="#6366f1" />
+                ) : (
+                    <FlatList
+                        data={bookings}
+                        keyExtractor={(item: any) => item.id.toString()}
+                        renderItem={renderBooking}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.3}
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={['#6366f1']} />
+                        }
+                        ListFooterComponent={
+                            isLoadingMore ? <ActivityIndicator size="small" className="my-4" /> : null
+                        }
+                    />
+                )}
+                <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} className="p-3 rounded-xl w-11/12 m-auto mb-0   bg-primary-80  z-10">
+                    <Text className='text-center text-white font-semibold'>
+                        Go To Home
+                    </Text>
+                </TouchableOpacity>
+                {/* Cancel Modal */}
+                <Modal
+                    visible={cancelModalVisible}
+                    transparent
+                    animationType="slide"
+                    onRequestClose={() => setCancelModalVisible(false)}
+                >
+                    <View className="flex-1 bg-black/40 justify-center items-center">
+                        <View className="bg-white rounded-xl w-11/12 p-4">
+                            <Text className="text-lg font-bold mb-2">Cancel Booking</Text>
+                            <Text className="text-gray-600 mb-2">Please enter a reason:</Text>
+                            <TextInput
+                                multiline
+                                numberOfLines={4}
+                                placeholder="Write your reason..."
+                                className="border border-gray-300 rounded-md p-2 text-gray-800 text-sm mb-4"
+                                value={cancelReason}
+                                onChangeText={setCancelReason}
+                            />
+                            <View className="flex-row justify-between space-x-3">
+                                <TouchableOpacity
+                                    onPress={() => setCancelModalVisible(false)}
+                                    className="flex-1 bg-gray-400 py-2 rounded-md"
+                                >
+                                    <Text className="text-white text-center font-medium">Close</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={handleCancelBooking}
+                                    className="flex-1 bg-red-500 py-2 rounded-md"
+                                >
+                                    <Text className="text-white text-center font-medium">Submit</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
                     </View>
-                </View>
-            </Modal>
-        </View>
+                </Modal>
+            </View>
+        </SafeAreaView>
     );
 };
 

@@ -22,6 +22,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { clearCart, removeFromCart } from '../../store/slices/cartSlice';
 import PaymentComponent from '../../components/PaymentComponent';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Validation schema
 const validationSchema = Yup.object().shape({
@@ -252,219 +253,221 @@ const OrderSummaryScreen = () => {
   );
 
   return (
-    <View className="flex-1 bg-white">
-      {isLoading && (
-        <View className="absolute bg-black/80 top-0 z-50 h-full w-full">
-          <ActivityIndicator className="m-auto" size="large" color="#ac94f4" />
-        </View>
-      )}
-
-      <Modal
-        visible={showThankYouModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowThankYouModal(false)}
-      >
-        <View className="flex-1 bg-black/50 justify-center items-center">
-          <View className="bg-white p-6 rounded-xl w-4/5">
-            <Text className="text-xl font-bold text-center text-gray-800 mb-4">
-              Thank You!
-            </Text>
-            <Text className="text-base text-gray-600 text-center mb-6">
-              Your order has been placed successfully.
-            </Text>
-            <TouchableOpacity
-              className="bg-primary-80 py-3 rounded-xl"
-              onPress={() => {
-                setShowThankYouModal(false);
-                navigation.replace('AddCustomerScreen');
-              }}
-            >
-              <Text className="text-white text-center font-bold">Continue</Text>
-            </TouchableOpacity>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View className="flex-1 bg-white">
+        {isLoading && (
+          <View className="absolute bg-black/80 top-0 z-50 h-full w-full">
+            <ActivityIndicator className="m-auto" size="large" color="#ac94f4" />
           </View>
-        </View>
-      </Modal>
+        )}
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }} className="px-4">
-        <Text className="text-xl font-bold text-center text-gray-700 my-4">
-          Order Summary
-        </Text>
-
-        <View className="mb-4">
-          <Text className="text-lg font-semibold text-gray-700 mb-1">Customer Details</Text>
-          <View className="bg-primary-10 rounded-xl p-3">
-            <Text className="text-base text-gray-800">Name: {payload?.name || 'N/A'}</Text>
-            <Text className="text-base text-gray-800">Email: {payload?.email || 'N/A'}</Text>
-            <Text className="text-base text-gray-800">Phone: {payload?.phone || 'N/A'}</Text>
-            <Text className="text-base text-gray-800">
-              Arrival Date: {payload?.arrived_at || 'N/A'}
-            </Text>
-          </View>
-        </View>
-
-        <FlatList
-          data={cartItems}
-          renderItem={renderCartItem}
-          keyExtractor={item => item.id?.toString() || Math.random().toString()}
-          scrollEnabled={false}
-          ListEmptyComponent={
-            <Text className="text-center text-gray-500 my-4">Your cart is empty</Text>
-          }
-        />
-
-        <Formik
-          initialValues={{
-            discount: '0',
-            sub_total: sub_total.toFixed(2),
-            total_amount: sub_total.toFixed(2),
-          }}
-          validationSchema={validationSchema}
-          enableReinitialize
-          onSubmit={handlePlaceOrder} // Empty onSubmit as handleSubmit is passed to PaymentComponent
+        <Modal
+          visible={showThankYouModal}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowThankYouModal(false)}
         >
-          {({
-            handleChange,
-            handleBlur,
-            resetForm,
-            handleSubmit,
-            values,
-            errors,
-            touched,
-            setFieldValue,
-          }) => {
-            const totalAmount = useMemo(
-              () => sub_total - parseFloat(values.discount || '0') + totalTax,
-              [sub_total, totalTax, values.discount]
-            );
+          <View className="flex-1 bg-black/50 justify-center items-center">
+            <View className="bg-white p-6 rounded-xl w-4/5">
+              <Text className="text-xl font-bold text-center text-gray-800 mb-4">
+                Thank You!
+              </Text>
+              <Text className="text-base text-gray-600 text-center mb-6">
+                Your order has been placed successfully.
+              </Text>
+              <TouchableOpacity
+                className="bg-primary-80 py-3 rounded-xl"
+                onPress={() => {
+                  setShowThankYouModal(false);
+                  navigation.replace('AddCustomerScreen');
+                }}
+              >
+                <Text className="text-white text-center font-bold">Continue</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
 
-            return (
-              <>
-                <View className="flex-row justify-between my-2">
-                  <Text className="text-base font-semibold text-gray-700">Sub Total:</Text>
-                  <Text className="text-base text-gray-800">₹ {sub_total.toFixed(2)}</Text>
-                </View>
+        <ScrollView contentContainerStyle={{ paddingBottom: 120 }} className="px-4">
+          <Text className="text-xl font-bold text-center text-gray-700 my-4">
+            Order Summary
+          </Text>
 
-                {user?.role !== 'user' && (
-                  <View>
-                    <View className="mb-4">
-                      <Text className="text-sm font-semibold text-gray-700 mb-1">Discount (₹)</Text>
-                      <TextInput
-                        className="border border-gray-300 rounded-lg px-4 py-2 text-base"
-                        placeholder="Enter discount"
-                        keyboardType="numeric"
-                        value={values.discount}
-                        onChangeText={(text) => {
-                          handleChange('discount')(text);
-                          setFieldValue(
-                            'total_amount',
-                            (sub_total - parseFloat(text || '0') + totalTax).toFixed(2)
-                          );
-                        }}
-                        onBlur={handleBlur('discount')}
-                      />
-                      {touched.discount && errors.discount && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.discount}</Text>
-                      )}
-                    </View>
+          <View className="mb-4">
+            <Text className="text-lg font-semibold text-gray-700 mb-1">Customer Details</Text>
+            <View className="bg-primary-10 rounded-xl p-3">
+              <Text className="text-base text-gray-800">Name: {payload?.name || 'N/A'}</Text>
+              <Text className="text-base text-gray-800">Email: {payload?.email || 'N/A'}</Text>
+              <Text className="text-base text-gray-800">Phone: {payload?.phone || 'N/A'}</Text>
+              <Text className="text-base text-gray-800">
+                Arrival Date: {payload?.arrived_at || 'N/A'}
+              </Text>
+            </View>
+          </View>
 
-                    <View className="mb-4">
-                      <Text className="text-sm font-semibold text-gray-700 mb-2">
-                        Service Taxes (₹)
-                      </Text>
-                      {taxInputs.map(tax => (
-                        <View key={tax.id} className="mb-3">
-                          <View className="flex-row items-center">
-                            <TextInput
-                              className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-base mr-2"
-                              placeholder="Enter tax amount"
-                              keyboardType="numeric"
-                              value={tax.value}
-                              onChangeText={val => {
-                                updateTaxValue(tax.id, val);
-                                setFieldValue(
-                                  'total_amount',
-                                  (sub_total - parseFloat(values.discount || '0') + totalTax).toFixed(2)
-                                );
-                              }}
-                            />
-                            {taxInputs.length > 1 && (
-                              <TouchableOpacity
-                                className="p-2 bg-red-100 rounded-md"
-                                onPress={() => {
-                                  removeTaxField(tax.id);
+          <FlatList
+            data={cartItems}
+            renderItem={renderCartItem}
+            keyExtractor={item => item.id?.toString() || Math.random().toString()}
+            scrollEnabled={false}
+            ListEmptyComponent={
+              <Text className="text-center text-gray-500 my-4">Your cart is empty</Text>
+            }
+          />
+
+          <Formik
+            initialValues={{
+              discount: '0',
+              sub_total: sub_total.toFixed(2),
+              total_amount: sub_total.toFixed(2),
+            }}
+            validationSchema={validationSchema}
+            enableReinitialize
+            onSubmit={handlePlaceOrder} // Empty onSubmit as handleSubmit is passed to PaymentComponent
+          >
+            {({
+              handleChange,
+              handleBlur,
+              resetForm,
+              handleSubmit,
+              values,
+              errors,
+              touched,
+              setFieldValue,
+            }) => {
+              const totalAmount = useMemo(
+                () => sub_total - parseFloat(values.discount || '0') + totalTax,
+                [sub_total, totalTax, values.discount]
+              );
+
+              return (
+                <>
+                  <View className="flex-row justify-between my-2">
+                    <Text className="text-base font-semibold text-gray-700">Sub Total:</Text>
+                    <Text className="text-base text-gray-800">₹ {sub_total.toFixed(2)}</Text>
+                  </View>
+
+                  {user?.role !== 'user' && (
+                    <View>
+                      <View className="mb-4">
+                        <Text className="text-sm font-semibold text-gray-700 mb-1">Discount (₹)</Text>
+                        <TextInput
+                          className="border border-gray-300 rounded-lg px-4 py-2 text-base"
+                          placeholder="Enter discount"
+                          keyboardType="numeric"
+                          value={values.discount}
+                          onChangeText={(text) => {
+                            handleChange('discount')(text);
+                            setFieldValue(
+                              'total_amount',
+                              (sub_total - parseFloat(text || '0') + totalTax).toFixed(2)
+                            );
+                          }}
+                          onBlur={handleBlur('discount')}
+                        />
+                        {touched.discount && errors.discount && (
+                          <Text className="text-red-500 text-xs mt-1">{errors.discount}</Text>
+                        )}
+                      </View>
+
+                      <View className="mb-4">
+                        <Text className="text-sm font-semibold text-gray-700 mb-2">
+                          Service Taxes (₹)
+                        </Text>
+                        {taxInputs.map(tax => (
+                          <View key={tax.id} className="mb-3">
+                            <View className="flex-row items-center">
+                              <TextInput
+                                className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-base mr-2"
+                                placeholder="Enter tax amount"
+                                keyboardType="numeric"
+                                value={tax.value}
+                                onChangeText={val => {
+                                  updateTaxValue(tax.id, val);
                                   setFieldValue(
                                     'total_amount',
                                     (sub_total - parseFloat(values.discount || '0') + totalTax).toFixed(2)
                                   );
                                 }}
-                              >
-                                <Ionicons name="trash" size={20} color="#EF4444" />
-                              </TouchableOpacity>
-                            )}
+                              />
+                              {taxInputs.length > 1 && (
+                                <TouchableOpacity
+                                  className="p-2 bg-red-100 rounded-md"
+                                  onPress={() => {
+                                    removeTaxField(tax.id);
+                                    setFieldValue(
+                                      'total_amount',
+                                      (sub_total - parseFloat(values.discount || '0') + totalTax).toFixed(2)
+                                    );
+                                  }}
+                                >
+                                  <Ionicons name="trash" size={20} color="#EF4444" />
+                                </TouchableOpacity>
+                              )}
+                            </View>
+                            <Text className="text-xs text-gray-500 mt-1">{tax.label}</Text>
                           </View>
-                          <Text className="text-xs text-gray-500 mt-1">{tax.label}</Text>
-                        </View>
-                      ))}
-                      <TouchableOpacity
-                        className="mt-2 bg-gray-200 rounded-lg py-2 items-center"
-                        onPress={addTaxField}
-                      >
-                        <Text className="text-sm text-gray-700 font-medium">+ Add Tax</Text>
-                      </TouchableOpacity>
+                        ))}
+                        <TouchableOpacity
+                          className="mt-2 bg-gray-200 rounded-lg py-2 items-center"
+                          onPress={addTaxField}
+                        >
+                          <Text className="text-sm text-gray-700 font-medium">+ Add Tax</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
+                  )}
+
+                  <View className="border-t border-gray-200 pt-3 flex-row justify-between mb-6">
+                    <Text className="text-lg font-bold text-gray-700">Total:</Text>
+                    <Text className="text-lg font-bold text-gray-900">₹ {totalAmount.toFixed(2)}</Text>
                   </View>
-                )}
 
-                <View className="border-t border-gray-200 pt-3 flex-row justify-between mb-6">
-                  <Text className="text-lg font-bold text-gray-700">Total:</Text>
-                  <Text className="text-lg font-bold text-gray-900">₹ {totalAmount.toFixed(2)}</Text>
-                </View>
-
-                <TouchableOpacity className='p-4 ' onPress={handleSubmit}>
-                  <Text>
-                    Submit
-                  </Text>
-                </TouchableOpacity>
-                <PaymentComponent
-                  amount={totalAmount || 0}
-                  customer={{
-                    name: payload?.name?.trim() || 'Customer',
-                    email: payload?.email?.trim() || 'customer@example.com',
-                    phone: payload?.phone?.trim() || '0000000000',
-                  }}
-                  config={{
-                    name: 'WisBox Store',
-                    currency: 'INR',
-                    description: 'For Order Booking Payment',
-                    theme: {
-                      color: '#ac94f4',
-                      backdrop_color: '#FFFFFF',
-                      hide_topbar: false,
-                    },
-                  }}
-                  buttonLabel={`Pay ₹${(totalAmount || 0).toFixed(2)}`}
-                  buttonClassName="bg-primary-90 px-6 py-4 w-full rounded-xl"
-                  onPaymentSuccess={(paymentData, orderId) => {
-                    orderPayment(orderId, paymentData, totalAmount || 0);
-                  }}
-                  onPaymentFailure={(error) => {
-                    ToastAndroid.show(
-                      `Payment failed: ${error?.description || 'Unknown error'}`,
-                      ToastAndroid.LONG
-                    );
-                  }}
-                  onPaymentCancel={() => {
-                    ToastAndroid.show('Payment cancelled. Order not placed.', ToastAndroid.LONG);
-                  }}
-                  handleSubmit={() => handlePlaceOrder(values, resetForm)}
-                />
-              </>
-            );
-          }}
-        </Formik>
-      </ScrollView>
-    </View>
+                  <TouchableOpacity className='p-4 ' onPress={handleSubmit}>
+                    <Text>
+                      Submit
+                    </Text>
+                  </TouchableOpacity>
+                  <PaymentComponent
+                    amount={totalAmount || 0}
+                    customer={{
+                      name: payload?.name?.trim() || 'Customer',
+                      email: payload?.email?.trim() || 'customer@example.com',
+                      phone: payload?.phone?.trim() || '0000000000',
+                    }}
+                    config={{
+                      name: 'WisBox Store',
+                      currency: 'INR',
+                      description: 'For Order Booking Payment',
+                      theme: {
+                        color: '#ac94f4',
+                        backdrop_color: '#FFFFFF',
+                        hide_topbar: false,
+                      },
+                    }}
+                    buttonLabel={`Pay ₹${(totalAmount || 0).toFixed(2)}`}
+                    buttonClassName="bg-primary-90 px-6 py-4 w-full rounded-xl"
+                    onPaymentSuccess={(paymentData, orderId) => {
+                      orderPayment(orderId, paymentData, totalAmount || 0);
+                    }}
+                    onPaymentFailure={(error) => {
+                      ToastAndroid.show(
+                        `Payment failed: ${error?.description || 'Unknown error'}`,
+                        ToastAndroid.LONG
+                      );
+                    }}
+                    onPaymentCancel={() => {
+                      ToastAndroid.show('Payment cancelled. Order not placed.', ToastAndroid.LONG);
+                    }}
+                    handleSubmit={() => handlePlaceOrder(values, resetForm)}
+                  />
+                </>
+              );
+            }}
+          </Formik>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 };
 

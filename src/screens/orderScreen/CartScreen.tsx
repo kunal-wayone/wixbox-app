@@ -6,6 +6,7 @@ import { ImagePath } from '../../constants/ImagePath';
 import { addToCart, removeFromCart } from '../../store/slices/cartSlice';
 import { IMAGE_URL } from '../../utils/apiUtils';
 import { RootState } from '../../store/store';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CartScreen = () => {
     const navigation = useNavigation<any>();
@@ -96,25 +97,27 @@ const CartScreen = () => {
     };
 
     return (
-        <View
-            style={{
-                height: Dimensions.get('window').height,
-                backgroundColor: '#fff',
-                borderTopLeftRadius: 20,
-                borderTopRightRadius: 20,
-                padding: 16,
-            }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 5 }}>Your Cart</Text>
-            <FlatList
-                data={cartItems}
-                renderItem={renderCartItem}
-                keyExtractor={item => item?.id?.toString()}
-                showsVerticalScrollIndicator={false}
-            />
-            <TouchableOpacity className='bg-primary-90 p-4 rounded-xl' onPress={() => navigation.navigate("AddCustomerFormScreen")}>
-                <Text className='text-center text-white'>Place Order</Text>
-            </TouchableOpacity>
-        </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <View
+                style={{
+                    height: Dimensions.get('window').height,
+                    backgroundColor: '#fff',
+                    borderTopLeftRadius: 20,
+                    borderTopRightRadius: 20,
+                    padding: 16,
+                }}>
+                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 5 }}>Your Cart</Text>
+                <FlatList
+                    data={cartItems}
+                    renderItem={renderCartItem}
+                    keyExtractor={item => item?.id?.toString()}
+                    showsVerticalScrollIndicator={false}
+                />
+                <TouchableOpacity className='bg-primary-90 p-4 rounded-xl' onPress={() => navigation.navigate("AddCustomerFormScreen")}>
+                    <Text className='text-center text-white'>Place Order</Text>
+                </TouchableOpacity>
+            </View>
+            </SafeAreaView>
     )
 }
 

@@ -20,6 +20,7 @@ import { RootState } from '../../store/store';
 import { ImagePath } from '../../constants/ImagePath';
 import FoodItem from '../../components/common/FoodItem';
 import LinearGradient from 'react-native-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface MenuItem {
     id: string;
@@ -208,82 +209,84 @@ const MenuItemListScreen = () => {
     );
 
     return (
-        <View className="flex-1 bg-gray-100">
-            <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                className="absolute left-4 top-2 z-10"
-            >
-                <Ionicons name="arrow-back" size={22} color="#111827" />
-            </TouchableOpacity>
-            <LinearGradient
-                colors={['#fff5fb', '#ffeef2', '#f6efff', '#e7f5ff', '#e6fff5', '#fff7e6']}
-                start={{ x: 1, y: 1 }}
-                end={{ x: 0, y: 0 }}
-                className="h-40 justify-center"
-            >
-                <View className="px-6">
-                    <Text className="text-2xl font-bold text-gray-800">{categoryName || 'Uncategorized'}</Text>
-                    <Text>Crunchy, tangy & fresh from the street! 🌶️✨</Text>
-                </View>
-            </LinearGradient>
-
-            <View className="flex-row items-center gap-2 mb-2 px-4">
-                <View className="flex-row items-center flex-1 bg-white px-3 border border-gray-300 rounded-xl shadow-sm">
-                    <Text>🍝</Text>
-                    <TextInput
-                        value={search}
-                        onChangeText={setSearch}
-                        placeholder="Search Item..."
-                        className="ml-2 flex-1 text-sm text-gray-700"
-                    />
-                </View>
-            </View>
-
-            <ScrollView
-                horizontal
-                className="px-4  "
-                style={{ maxHeight: "6%", minHeight: "6%", }}
-                contentContainerStyle={{ maxHeight: "100%", minHeight: "100%", }}
-
-                showsHorizontalScrollIndicator={false}
-            >
-                {availableTags.map(tag => (
-                    <TouchableOpacity
-                        key={tag.id}
-                        onPress={() => toggleTag(tag.id)}
-                        className={`rounded-full px-3 py-1 h-8 mr-2 border border-gray-300 ${selectedTags.includes(tag.id) ? 'bg-green-600' : 'bg-white'
-                            }`}
-                    >
-                        <Text className={`text-sm ${selectedTags.includes(tag.id) ? 'text-white' : 'text-gray-900'}`}>
-                            {tag.label}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
-
-
-            {error || items.length === 0 ? (
-                loading || refreshing ? (
-                    <SkeletonLoader />
-                ) : (
-                    <View className="flex-1 justify-center items-center">
-                        <Text className="text-gray-500 text-base">{error || 'No items found'}</Text>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <View className="flex-1 bg-gray-100">
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    className="absolute left-4 top-2 z-10"
+                >
+                    <Ionicons name="arrow-back" size={22} color="#111827" />
+                </TouchableOpacity>
+                <LinearGradient
+                    colors={['#fff5fb', '#ffeef2', '#f6efff', '#e7f5ff', '#e6fff5', '#fff7e6']}
+                    start={{ x: 1, y: 1 }}
+                    end={{ x: 0, y: 0 }}
+                    className="h-40 justify-center"
+                >
+                    <View className="px-6">
+                        <Text className="text-2xl font-bold text-gray-800">{categoryName || 'Uncategorized'}</Text>
+                        <Text>Crunchy, tangy & fresh from the street! 🌶️✨</Text>
                     </View>
-                )
-            ) : (
-                <FlatList
-                    ref={flatListRef}
-                    data={filteredItems}
-                    keyExtractor={item => item.id}
-                    renderItem={renderItem}
-                    onEndReached={loadMore}
-                    onEndReachedThreshold={0.3}
-                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-                    ListFooterComponent={loading && !refreshing ? <ActivityIndicator className="my-4" /> : null}
-                    ListHeaderComponent={refreshing ? <SkeletonLoader /> : null}
-                />
-            )}
-        </View>
+                </LinearGradient>
+
+                <View className="flex-row items-center gap-2 mb-2 px-4">
+                    <View className="flex-row items-center flex-1 bg-white px-3 border border-gray-300 rounded-xl shadow-sm">
+                        <Text>🍝</Text>
+                        <TextInput
+                            value={search}
+                            onChangeText={setSearch}
+                            placeholder="Search Item..."
+                            className="ml-2 flex-1 text-sm text-gray-700"
+                        />
+                    </View>
+                </View>
+
+                <ScrollView
+                    horizontal
+                    className="px-4  "
+                    style={{ maxHeight: "6%", minHeight: "6%", }}
+                    contentContainerStyle={{ maxHeight: "100%", minHeight: "100%", }}
+
+                    showsHorizontalScrollIndicator={false}
+                >
+                    {availableTags.map(tag => (
+                        <TouchableOpacity
+                            key={tag.id}
+                            onPress={() => toggleTag(tag.id)}
+                            className={`rounded-full px-3 py-1 h-8 mr-2 border border-gray-300 ${selectedTags.includes(tag.id) ? 'bg-green-600' : 'bg-white'
+                                }`}
+                        >
+                            <Text className={`text-sm ${selectedTags.includes(tag.id) ? 'text-white' : 'text-gray-900'}`}>
+                                {tag.label}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+
+
+                {error || items.length === 0 ? (
+                    loading || refreshing ? (
+                        <SkeletonLoader />
+                    ) : (
+                        <View className="flex-1 justify-center items-center">
+                            <Text className="text-gray-500 text-base">{error || 'No items found'}</Text>
+                        </View>
+                    )
+                ) : (
+                    <FlatList
+                        ref={flatListRef}
+                        data={filteredItems}
+                        keyExtractor={item => item.id}
+                        renderItem={renderItem}
+                        onEndReached={loadMore}
+                        onEndReachedThreshold={0.3}
+                        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                        ListFooterComponent={loading && !refreshing ? <ActivityIndicator className="my-4" /> : null}
+                        ListHeaderComponent={refreshing ? <SkeletonLoader /> : null}
+                    />
+                )}
+            </View>
+        </SafeAreaView>
     );
 };
 

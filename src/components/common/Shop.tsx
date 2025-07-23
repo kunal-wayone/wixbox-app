@@ -160,12 +160,10 @@ const Shop = ({
   useEffect(() => {
     if (isFocused) {
       const status: any = getShopStatus();
-      console.log(isShopOpen(), status)
       setShopStatus(status);
     }
   }, [isFocused]);
 
-console.log(item)
 
   // console.log(isShopOpen)
   const handleToggleWishlist = async () => {

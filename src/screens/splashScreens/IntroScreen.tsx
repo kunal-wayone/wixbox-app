@@ -12,6 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import Feather from 'react-native-vector-icons/Feather';
 import { ImagePath } from '../../constants/ImagePath';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -352,71 +353,73 @@ const IntroScreen = () => {
   }
 
   return (
-    <View className="w-full h-full bg-white p-4">
-      <Animated.Image
-        source={ImagePath.sp}
-        resizeMode="contain"
-        className="absolute"
-        style={{
-          opacity: fadeAnimTop,
-          width: width * 1.2,
-          height: height * 0.9,
-          transform: [
-            { scale: scaleAnimTop },
-            {
-              rotate: rotationAnimTop.interpolate({
-                inputRange: [0, 1],
-                outputRange: [
-                  rotationAngles[index],
-                  `${parseFloat(rotationAngles[index]) + 5}deg`,
-                ],
-              }),
-            },
-            { translateX: translateXAnimTop },
-            { translateY: translateYAnimTop },
-          ],
-        }}
-      />
-
-      <TouchableOpacity
-        className="absolute z-50 top-8 right-10"
-        onPress={handleSkip}>
-        <Text className="font-poppins font-semibold text-base text-gray-600">
-          Skip
-        </Text>
-      </TouchableOpacity>
-
-      <View className="w-full h-80 mt-40 mx-auto">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View className="w-full h-full bg-white p-4">
         <Animated.Image
-          source={shi[index]?.splash}
+          source={ImagePath.sp}
           resizeMode="contain"
-          className="w-full h-full"
+          className="absolute"
           style={{
-            opacity: fadeAnimMain,
-            transform: [{ translateX: slideAnimMain }],
+            opacity: fadeAnimTop,
+            width: width * 1.2,
+            height: height * 0.9,
+            transform: [
+              { scale: scaleAnimTop },
+              {
+                rotate: rotationAnimTop.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [
+                    rotationAngles[index],
+                    `${parseFloat(rotationAngles[index]) + 5}deg`,
+                  ],
+                }),
+              },
+              { translateX: translateXAnimTop },
+              { translateY: translateYAnimTop },
+            ],
           }}
         />
-      </View>
-
-      <View className="p-4 pt-16">
-        <Animated.Text
-          className="text-2xl text-center font-poppins font-semibold w-3/5 mx-auto text-gray-800"
-          style={{
-            opacity: fadeAnimText,
-            transform: [{ translateY: slideAnimText }],
-          }}>
-          {shi[index]?.title}
-        </Animated.Text>
 
         <TouchableOpacity
-          className="bg-black w-16 h-16 rounded-full p-4 mt-10 flex justify-center items-center mx-auto"
-          onPress={handleNext}>
-          <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
-            <Feather name="fast-forward" color="#fff" size={30} />
-          </Animated.View>
+          className="absolute z-50 top-8 right-10"
+          onPress={handleSkip}>
+          <Text className="font-poppins font-semibold text-base text-gray-600">
+            Skip
+          </Text>
         </TouchableOpacity>
+
+        <View className="w-full h-80 mt-40 mx-auto">
+          <Animated.Image
+            source={shi[index]?.splash}
+            resizeMode="contain"
+            className="w-full h-full"
+            style={{
+              opacity: fadeAnimMain,
+              transform: [{ translateX: slideAnimMain }],
+            }}
+          />
+        </View>
+
+        <View className="p-4 pt-16">
+          <Animated.Text
+            className="text-2xl text-center font-poppins font-semibold w-3/5 mx-auto text-gray-800"
+            style={{
+              opacity: fadeAnimText,
+              transform: [{ translateY: slideAnimText }],
+            }}>
+            {shi[index]?.title}
+          </Animated.Text>
+
+          <TouchableOpacity
+            className="bg-black w-16 h-16 rounded-full p-4 mt-10 flex justify-center items-center mx-auto"
+            onPress={handleNext}>
+            <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+              <Feather name="fast-forward" color="#fff" size={30} />
+            </Animated.View>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

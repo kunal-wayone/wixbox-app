@@ -26,6 +26,7 @@ import LoadingComponent from '../screens/otherScreen/LoadingComponent';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import { fetchUser } from '../store/slices/userSlice';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Stack = createNativeStackNavigator();
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -226,133 +227,135 @@ const HomeScreen = () => {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <ScrollView
-        className="p-4"
-        scrollEventThrottle={16}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#B68AD4']} // optional: for Android
-            tintColor="#B68AD4"   // optional: for iOS
-          />
-        }>
-        <Animated.View style={{ transform: [{ translateY }] }}>
-          <View className="flex-row items-center justify-between mb-4" >
-            <View>
-              <Text className="text-lg font-semibold font-poppins" numberOfLines={1} ellipsizeMode='tail'>
-                {user?.shop?.restaurant_name || ' Burger One (Cafe & Bakery)'}
-              </Text>
-              <Text className='text-sm pl-1' numberOfLines={2} ellipsizeMode='tail'>
-                {user?.shop?.address + ", " + user?.shop?.city}
-              </Text>
-            </View>
-            <View className="flex-row items-center gap-2">
-              <TouchableOpacity
-                onPress={() => navigaton.navigate('NotificationScreen')}
-                className="bg-primary-20 w-8 h-8 rounded-full justify-center items-center">
-                <Image
-                  source={ImagePath.bellIcon}
-                  className="h-4 w-4"
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigaton.navigate("CreateShopScreen", { shopId: user?.shop?.id })} className="bg-primary-20 w-8 h-8 rounded-full justify-center items-center">
-                <Image
-                  source={ImagePath.edit}
-                  className="h-4 w-4"
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <Banner
-            imageUrl={user?.shop?.restaurant_images[0] ? {
-              uri: IMAGE_URL + user?.shop?.restaurant_images[0]
-            } : ImagePath?.restaurant1}
-            showOverlay={false}
-          />
-          <ProfileCard
-            profileImageUrl={ImagePath.profile1}
-            name={user?.name || "John Doe"}
-            iconImageUrl={ImagePath.crown}
-            status={storeStatus ? "Online" : "Offline"}
-            rating={4}
-            layout="row"
-            onProfilePress={() =>
-              navigaton.navigate("Profile")
-            }
-
-            toggleLoadingIds={toggleLoadingIds}
-            toggleStoreStatus={toggleStoreStatus}
-            storeStatus={storeStatus}
-            shopId={user?.shop?.id}
-            shopCategory={user?.shop?.shop_category ?? "Restaurent"}
-
-          />
-
-
-
-          <View className="flex-row items-center justify-between gap-3 py-4">
-            <TouchableOpacity
-              onPress={() => navigaton.navigate('AddOrderScreen')}
-              disabled={!shopStatus}
-              className={`${shopStatus ? 'bg-primary-90' : 'bg-primary-50'
-                } p-4 w-1/2 rounded-xl justify-center items-center`}>
-              <Text className="text-white font-bold font-poppins">
-                Add Orders
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => navigaton.navigate('ManageStockScreen')}
-              disabled={!shopStatus}
-              className={`${shopStatus ? 'bg-white' : ' '
-                } p-4 w-1/2 border rounded-xl justify-center items-center`}>
-              <Text
-                className={`font-bold font-poppins ${shopStatus ? '' : 'text-gray-500'
-                  }`}>
-                Manage Stocks
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-
-        {/* Sticky Tab Bar */}
-        <View
-          ref={tabBarRef}
-          onLayout={onTabBarLayout}
-          style={{
-            position: 'relative',
-            top: 0,
-            zIndex: 10,
-            backgroundColor: 'white',
-          }}>
-          <View className="flex-row items-center justify-between gap-4 border-b-[2px]">
-            {['About', 'Menu', 'Reviews', 'Post'].map((d, i) => (
-              <TouchableOpacity key={i} onPress={() => setActiveTab(d)}>
-                <Text
-                  className={`text-lg px-2 font-poppins ${activeTab === d ? 'font-bold' : 'text-gray-500'
-                    }`}>
-                  {d}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View className="bg-white">
+        <ScrollView
+          className="p-4"
+          scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#B68AD4']} // optional: for Android
+              tintColor="#B68AD4"   // optional: for iOS
+            />
+          }>
+          <Animated.View style={{ transform: [{ translateY }] }}>
+            <View className="flex-row items-center justify-between mb-4" >
+              <View>
+                <Text className="text-lg font-semibold font-poppins" numberOfLines={1} ellipsizeMode='tail'>
+                  {user?.shop?.restaurant_name || ' Burger One (Cafe & Bakery)'}
                 </Text>
-                {activeTab === d && (
-                  <View className="w-full h-1 bg-black rounded-t-lg" />
-                )}
+                <Text className='text-sm pl-1' numberOfLines={2} ellipsizeMode='tail'>
+                  {user?.shop?.address + ", " + user?.shop?.city}
+                </Text>
+              </View>
+              <View className="flex-row items-center gap-2">
+                <TouchableOpacity
+                  onPress={() => navigaton.navigate('NotificationScreen')}
+                  className="bg-primary-20 w-8 h-8 rounded-full justify-center items-center">
+                  <Image
+                    source={ImagePath.bellIcon}
+                    className="h-4 w-4"
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => navigaton.navigate("CreateShopScreen", { shopId: user?.shop?.id })} className="bg-primary-20 w-8 h-8 rounded-full justify-center items-center">
+                  <Image
+                    source={ImagePath.edit}
+                    className="h-4 w-4"
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <Banner
+              imageUrl={user?.shop?.restaurant_images[0] ? {
+                uri: IMAGE_URL + user?.shop?.restaurant_images[0]
+              } : ImagePath?.restaurant1}
+              showOverlay={false}
+            />
+            <ProfileCard
+              profileImageUrl={ImagePath.profile1}
+              name={user?.name || "John Doe"}
+              iconImageUrl={ImagePath.crown}
+              status={storeStatus ? "Online" : "Offline"}
+              rating={4}
+              layout="row"
+              onProfilePress={() =>
+                navigaton.navigate("Profile")
+              }
+
+              toggleLoadingIds={toggleLoadingIds}
+              toggleStoreStatus={toggleStoreStatus}
+              storeStatus={storeStatus}
+              shopId={user?.shop?.id}
+              shopCategory={user?.shop?.shop_category ?? "Restaurent"}
+
+            />
+
+
+
+            <View className="flex-row items-center justify-between gap-3 py-4">
+              <TouchableOpacity
+                onPress={() => navigaton.navigate('AddOrderScreen')}
+                disabled={!shopStatus}
+                className={`${shopStatus ? 'bg-primary-90' : 'bg-primary-50'
+                  } p-4 w-1/2 rounded-xl justify-center items-center`}>
+                <Text className="text-white font-bold font-poppins">
+                  Add Orders
+                </Text>
               </TouchableOpacity>
-            ))}
+              <TouchableOpacity
+                onPress={() => navigaton.navigate('ManageStockScreen')}
+                disabled={!shopStatus}
+                className={`${shopStatus ? 'bg-white' : ' '
+                  } p-4 w-1/2 border rounded-xl justify-center items-center`}>
+                <Text
+                  className={`font-bold font-poppins ${shopStatus ? '' : 'text-gray-500'
+                    }`}>
+                  Manage Stocks
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+
+          {/* Sticky Tab Bar */}
+          <View
+            ref={tabBarRef}
+            onLayout={onTabBarLayout}
+            style={{
+              position: 'relative',
+              top: 0,
+              zIndex: 10,
+              backgroundColor: 'white',
+            }}>
+            <View className="flex-row items-center justify-between gap-4 border-b-[2px]">
+              {['About', 'Menu', 'Reviews', 'Post'].map((d, i) => (
+                <TouchableOpacity key={i} onPress={() => setActiveTab(d)}>
+                  <Text
+                    className={`text-lg px-2 font-poppins ${activeTab === d ? 'font-bold' : 'text-gray-500'
+                      }`}>
+                    {d}
+                  </Text>
+                  {activeTab === d && (
+                    <View className="w-full h-1 bg-black rounded-t-lg" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        </View>
-        {/* Render Tab Content (NO nested ScrollView) */}
-        <View className=''>
-          {renderTabContent()}
-        </View>
+          {/* Render Tab Content (NO nested ScrollView) */}
+          <View className=''>
+            {renderTabContent()}
+          </View>
 
 
 
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </View>
+    </SafeAreaView>
   );
 };
 

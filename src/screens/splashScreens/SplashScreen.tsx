@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { TokenStorage } from '../../utils/apiUtils';
 import { fetchUser } from '../../store/slices/userSlice';
 import { RootState } from '../../store/store';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const SplashScreen = () => {
   const navigation = useNavigation<any>();
@@ -100,14 +101,14 @@ const SplashScreen = () => {
         } else {
           console.log(user?.role, "dskjfkjjdsk")
 
-          if (user?.shopcreated) {
+          if (user && user?.shopcreated) {
             navigation.replace('HomeScreen', {
               screen: 'Home',
             });
             return
-          } else if (!user?.shopcreated) {
+          } else if (user && !user?.shopcreated) {
             navigation.replace('CreateShopScreen');
-            console.log("shor creaetd")
+            console.log("shor creaetd", user && !user?.shopcreated, user, !user?.shopcreated)
             return
           } else {
             navigation.replace('LoginScreen');
@@ -139,38 +140,40 @@ const SplashScreen = () => {
   });
 
   return (
-    <Animated.View
-      className="flex-1 justify-center items-center bg-white"
-      style={{ opacity: fadeAnim }}>
-      <View className="w-48 h-auto rounded-2xl shadow-lg">
-        <Animated.Image
-          source={ImagePath?.logo}
-          className="w-28 h-28 m-auto"
-          resizeMode="contain"
-          style={{ transform: [{ scale: scaleAnim }, { rotate: rotation }] }}
-        />
-      </View>
-      <View className="mt-4 flex-row">
-        {text.map((char, index) => (
-          <Animated.Text
-            key={index}
-            className="text-lg font-bold text-gray-900"
-            style={{
-              opacity: charAnims[index],
-              transform: [
-                {
-                  translateY: charAnims[index].interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [10, 0],
-                  }),
-                },
-              ],
-            }}>
-            {char}
-          </Animated.Text>
-        ))}
-      </View>
-    </Animated.View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <Animated.View
+        className="flex-1 justify-center items-center bg-white"
+        style={{ opacity: fadeAnim }}>
+        <View className="w-48 h-auto rounded-2xl shadow-lg">
+          <Animated.Image
+            source={ImagePath?.logo}
+            className="w-28 h-28 m-auto"
+            resizeMode="contain"
+            style={{ transform: [{ scale: scaleAnim }, { rotate: rotation }] }}
+          />
+        </View>
+        <View className="mt-4 flex-row">
+          {text.map((char, index) => (
+            <Animated.Text
+              key={index}
+              className="text-lg font-bold text-gray-900"
+              style={{
+                opacity: charAnims[index],
+                transform: [
+                  {
+                    translateY: charAnims[index].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [10, 0],
+                    }),
+                  },
+                ],
+              }}>
+              {char}
+            </Animated.Text>
+          ))}
+        </View>
+      </Animated.View>
+    </SafeAreaView>
   );
 };
 

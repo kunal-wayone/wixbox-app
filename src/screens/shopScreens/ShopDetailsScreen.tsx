@@ -34,6 +34,7 @@ import DirectionButton from '../../components/common/DirectionButton';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { addWishlistShop, removeWishlistShop } from '../../store/slices/wishlistSlice';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('screen');
 const DEFAULT_IMAGE = ImagePath.restaurant1;
@@ -59,6 +60,9 @@ const ShopDetailsScreen = () => {
   const shop_info = route.params?.shop_info || {};
   const [shopId, setShopId] = useState(shop_info?.id)
   const cartItems = useSelector((state: RootState) => state.cart.items);
+  const { status: userStatus, data: user }: any = useSelector(
+    (state: RootState) => state.user,
+  );
   const wishlistShopIds = useSelector((state: RootState) => state.wishlist.shop_ids);
   const isWishlisted = wishlistShopIds.includes(shop_info?.id);
   const [itemData, setItemData] = useState([]);
@@ -365,353 +369,371 @@ const ShopDetailsScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-        scrollEventThrottle={16}
-      >
-        {/* Gradient Overlay */}
-        <View className="flex-row items-center justify-between mb-6 px-4 pt-4 absolute w-full top09 z-50">
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View className="flex-1 bg-white">
+        <ScrollView
+          contentContainerStyle={{ marginBottom: 100 }}
+          showsVerticalScrollIndicator={false}
+          scrollEventThrottle={16}
+        >
+          {user?.role === "vendor" && (
+            <TouchableOpacity
+              onPress={() =>
+                ToastAndroid.show("You're viewing your shop profile", ToastAndroid.SHORT)
+              }
+              className="absolute z-50 bg-black/10 right-0 top-0 bottom-0 left-0"
+            />
+          )}
+          {/* Gradient Overlay */}
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            className="flex-row items-center gap-4 "
+            className="flex-row items-center gap-4 absolute left-2 z-50 p-4 "
           >
             <Ionicons name="arrow-back" size={20} color={'white'} />
           </TouchableOpacity>
-          <View className="flex-row items-center gap-4">
-            <TouchableOpacity
-              onPress={() => navigation.navigate('NotificationScreen')}
-              className="bg-gray-100 w-10 h-10 rounded justify-center items-center"
-            >
-              {!isWishlisted ? <Ionicons name='heart-outline' size={22} /> : <Ionicons name='heart' color={"red"} size={22} />}
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('NotificationScreen')}
-              className="bg-gray-100 w-10 h-10 rounded justify-center items-center"
-            >
-              <Image source={ImagePath.share} className="h-4 w-4" resizeMode="contain" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-
-        <View className="mb-4 relative h-72 bg-white">
-          {/* Image with overlay gradient */}
-          <Image
-            source={
-              shop_info?.restaurant_images?.[0]
-                ? { uri: IMAGE_URL + shop_info.restaurant_images[0] }
-                : DEFAULT_IMAGE
-            }
-            style={{ borderRadius: 0 }}
-            className="w-full h-full"
-            resizeMode='stretch'
-          />
-
-          {/* Gradient Overlay */}
-          <LinearGradient
-            colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.8)']}
-            style={{
-              position: 'absolute',
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: '50%', // bottom half gradient
-            }}
-          />
-          <View
-            className={`rounded-full px-3 py-1 right-2 absolute bg-primary-100 `}
-            style={{ top: '25%' }}
-          >
-            <Text className={`text-xs font-medium text-white`}>{"Wisbox Verified"}</Text>
-          </View>
-
-
-          {/* Info on gradient bottom */}
-          <View className="absolute bottom-0 left-4 right-4 mb-4">
-            <Text className="text-white text-xl font-bold" numberOfLines={1}>
-              {shop_info?.restaurant_name || 'Unknown Restaurant'}
-            </Text>
-            <View className="flex-row items-center mb-1 ">
-              <MaterialIcons name="location-on" size={16} color="white" />
-              <Text className="text-white ml-1">
-                {`${shop_info?.city}, ${shop_info?.state}`}
-              </Text>
+          <View className="flex-row items-center justify-end mb-6 px-4 pt-4 absolute w-full z-20">
+            <View className="flex-row items-center gap-4">
+              <TouchableOpacity
+                onPress={() => navigation.navigate('NotificationScreen')}
+                className="bg-gray-100 w-10 h-10 rounded justify-center items-center"
+              >
+                {!isWishlisted ? <Ionicons name='heart-outline' size={22} /> : <Ionicons name='heart' color={"red"} size={22} />}
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('NotificationScreen')}
+                className="bg-gray-100 w-10 h-10 rounded justify-center items-center"
+              >
+                <Image source={ImagePath.share} className="h-4 w-4" resizeMode="contain" />
+              </TouchableOpacity>
             </View>
-            <View className="flex-row flex-wrap gap-2 mt-1">
-              {availableTags.map(tag => (
-                <View
-                  key={tag.id}
-                  className={`rounded-full px-3 py-1 bg-primary-80 `}
-                >
-                  <Text className={`text-xs font-medium text-white`}>{tag.label}</Text>
-                </View>
-              ))}
+          </View>
 
-              {/* <View className="flex-row items-center gap-4">
+
+          <View className="mb-4 relative h-72 bg-white">
+            {/* Image with overlay gradient */}
+            <Image
+              source={
+                shop_info?.restaurant_images?.[0]
+                  ? { uri: IMAGE_URL + shop_info.restaurant_images[0] }
+                  : DEFAULT_IMAGE
+              }
+              style={{ borderRadius: 0 }}
+              className="w-full h-full"
+              resizeMode='stretch'
+            />
+
+            {/* Gradient Overlay */}
+            <LinearGradient
+              colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.8)']}
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '50%', // bottom half gradient
+              }}
+            />
+            <View
+              className={`rounded-full px-3 py-1 right-2 absolute bg-primary-100 `}
+              style={{ top: '25%' }}
+            >
+              <Text className={`text-xs font-medium text-white`}>{"Wisbox Verified"}</Text>
+            </View>
+
+
+            {/* Info on gradient bottom */}
+            <View className="absolute bottom-0 left-4 right-4 mb-4">
+              <Text className="text-white text-xl font-bold" numberOfLines={1}>
+                {shop_info?.restaurant_name || 'Unknown Restaurant'}
+              </Text>
+              <View className="flex-row items-center mb-1 ">
+                <MaterialIcons name="location-on" size={16} color="white" />
+                <Text className="text-white ml-1">
+                  {`${shop_info?.city}, ${shop_info?.state}`}
+                </Text>
+              </View>
+              <View className="flex-row flex-wrap gap-2 mt-1">
+                {availableTags.map(tag => (
+                  <View
+                    key={tag.id}
+                    className={`rounded-full px-3 py-1 bg-primary-80 `}
+                  >
+                    <Text className={`text-xs font-medium text-white`}>{tag.label}</Text>
+                  </View>
+                ))}
+
+                {/* <View className="flex-row items-center gap-4">
                 <PaymentIcons paymentMethods={paymentMethods} />
               </View> */}
 
-            </View>
-          </View>
-
-
-        </View>
-
-        <View className="bg-white dark:bg-gray-100 p-4 border border-gray-100 rounded-xl mx-4 mb-4" style={styles.shadow}>
-          <View className="flex-row justify-between mb-2">
-            {/* Row 1 - Column 1 */}
-            <View className="flex-1 mr-2 flex-row items-center gap-2">
-              <Ionicons name='star' size={18} color={'#eba834'} />
-              <Text className="text-xl font-semibold text-gray-900">{shop_info?.average_rating || 0}</Text>
-              <Text className="text-xs text-gray-600 mt-1">(1.2K reviews)</Text>
+              </View>
             </View>
 
-            {/* Row 1 - Column 2 */}
-            <View className="flex-1 flex-row items-center gap-2 ml-2">
-              <Ionicons name='timer-outline' size={18} color={'#eb7a34'} />
 
-              <Text className="text-base font-medium text-gray-900">12–15 mins</Text>
+          </View>
+
+          <View className="bg-white dark:bg-gray-100 p-4 border border-gray-100 rounded-xl mx-4 mb-4" style={styles.shadow}>
+            <View className="flex-row justify-between mb-2">
+              {/* Row 1 - Column 1 */}
+              <View className="flex-1 mr-2 flex-row items-center gap-2">
+                <Ionicons name='star' size={18} color={'#eba834'} />
+                <Text className="text-xl font-semibold text-gray-900">{shop_info?.average_rating || 0}</Text>
+                <Text className="text-xs text-gray-600 mt-1">(1.2K reviews)</Text>
+              </View>
+
+              {/* Row 1 - Column 2 */}
+              <View className="flex-1 flex-row items-center gap-2 ml-2">
+                <Ionicons name='timer-outline' size={18} color={'#eb7a34'} />
+
+                <Text className="text-base font-medium text-gray-900">12–15 mins</Text>
+              </View>
             </View>
-          </View>
 
-          <View className="flex-row justify-between">
-            {/* Row 2 - Column 1 */}
-            <View className="flex-1 flex-row items-center mr-2">
-              <View className={`${shopStatus.isOpen ? "bg-green-500" : "bg-red-400"} w-4 h-4 rounded-full`} />
-              <Text className="text-base text-gray-900 ml-2">
-                {shopStatus.openingTime && shopStatus.closingTime
-                  ? shopStatus.isOpen
-                    ? `Open till ${shopStatus.closingTime}`
-                    : `Closed now • Opens at ${shopStatus.openingTime}`
-                  : "Closed today"}
-              </Text>
-            </View>
-
-            {/* Row 2 - Column 2 */}
-            <View className="flex-1 flex-row items-center  ml-2">
-              <Ionicons name='shield-outline' size={18} color={'#eba834'} />
-
-              <Text className="text-base text-gray-900"> Hygiene: 4.5/5</Text>
-            </View>
-          </View>
-        </View>
-
-
-        <View className="bg-white dark:bg-gray-100 flex-row items-center gap-4 justify-between  p-5 border border-gray-100 px-3 rounded-xl mx-4 mb-4" style={styles.shadow}>
-          <View className='flex-row items-center gap-1 w-[48%] '>
-            <Ionicons name='location-outline' size={22} color={"#ac94f4"} />
-            <View className='' >
-              <Text className='text-xs' numberOfLines={1} ellipsizeMode='tail' >{shop_info?.distance_km} Km away   {`${Math.floor((shop_info?.travel_time_mins || 0) / 60)}h ${(shop_info?.travel_time_mins || 0) % 60}m`}</Text>
-              <Text className='text-xs w-36' numberOfLines={1} ellipsizeMode='tail' >{shop_info?.address + ", " + shop_info?.city}</Text>
-            </View>
-          </View>
-          <View className='flex-row items-center justify-between w-[48%] '>
-            <DirectionButton latitude={shop_info.latitude} longitude={shop_info.longitude} />
-            {shop_info?.dine_in_service && (
-              <TouchableOpacity
-                className="flex-row items-center gap-1 border border-gray-300 p-2 px-4 rounded-lg"
-                onPress={() => setIsModalVisible(true)}
-              >
-                <MaterialIcons name='chair-alt' size={16} />
-              </TouchableOpacity>
-            )}
-            <CallButton phone={shop_info?.phone} />
-          </View>
-        </View>
-
-        <View className="bg-white dark:bg-gray-100 flex-col items-center gap-4 justify-between  p-5 border border-gray-100 px-3 rounded-xl mx-4 mb-4" style={styles.shadow}>
-          <View className='flex-row items-center justify-between flex- w-full gap-4 '>
-            <Text className='font-semibold'>Top Dishes</Text>
-            <TouchableOpacity className='flex-row items-center  gap-3'>
-              <Ionicons name='eye-outline' color={"#ac94f4"} size={18} />
-              <Text className='text-primary-100'>View Full Menu</Text>
-            </TouchableOpacity>
-          </View>
-
-          {isLoadingItem ? (
-            <ActivityIndicator color={"#ac94f4"} />
-          ) : (itemData?.length === 0 ? (
-            <View className="items-center justify-center py-8">
-              <Text className="text-gray-500">No Item Found</Text>
-            </View>
-          ) : (
-            <View className="flex flex-wrap flex-row justify-between">
-              {itemData.slice(0, 4).map((item: any, index: number) => {
-                console.log(itemData)
-                const disabled = !shopStatus?.isOpen && item.status === 0;
-                return (
-                  <TouchableOpacity
-                    key={item.id}
-                    // disabled={disabled}
-                    activeOpacity={0.7}
-                    className={`w-[48%] mb-4 rounded-2xl border p-3 ${!shopStatus?.isOpen ? 'opacity-50 bg-gray-100 border-gray-300' : 'bg-white border-primary-100'
-                      }`}
-                    onPress={() => {
-                      if (shopStatus?.isOpen) {
-                        console.log('View Item:', item.item_name);
-                      }
-                      navigation.navigate("ProductDetailsScreen", { productId: item?.id })
-                    }}
-                  >
-                    <Image
-                      source={item.images?.length > 0 ? { uri: `${IMAGE_URL}${item.images[0]}` } : ImagePath.item1}
-                      className="h-28 w-full rounded-xl mb-2"
-                      resizeMode="cover"
-                    />
-                    <Text numberOfLines={1} ellipsizeMode='tail' className="text-base font-bold text-black mb-1">
-                      {item.item_name}
-                    </Text>
-                    <Text numberOfLines={1} ellipsizeMode='tail' className="text-sm text-gray-600 mb-1">
-                      {item.category?.name || 'Uncategorized'}
-                    </Text>
-                    <View className='flex-row items-center justify-between gap-1'>
-                      <Text numberOfLines={1} ellipsizeMode='tail' className={`text-xs font-semibold ${!shopStatus?.isOpen ? 'text-red-400' : 'text-green-600'}`}>
-                        {!shopStatus?.isOpen ? ' Closed' : ' Available'}
-                      </Text>
-                      <Text>
-                        <Ionicons name='star' color={'#ffb31c'} /> {item?.average_rating || 0}
-                      </Text>
-                    </View>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ))}
-
-        </View>
-
-
-
-        <View className="bg-white dark:bg-gray-100 flex-col items-center gap-4 justify-between  p-5 border border-gray-100 px-3 rounded-xl mx-4 mb-4" style={styles.shadow}>
-          <View className='flex-row items-center justify-between flex- w-full gap-4 '>
-            <Text className='font-semibold'>What People Are Saying</Text>
-            <TouchableOpacity className='flex-row items-center  gap-3 hidden'>
-              <Ionicons name='eye-outline' color={"#ac94f4"} size={18} />
-              <Text className='text-primary-100'>View All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <UsersReview shopId={shopId} />
-
-        </View>
-
-
-
-        <View className="bg-white dark:bg-gray-100 flex-col items-center gap-4 justify-between mb-40 p-5 border border-gray-100 px-3 rounded-xl mx-4 " style={styles.shadow}>
-          <View className='flex-row items-center justify-between flex- w-full gap-4 '>
-            <Text className='font-semibold'>Latest Post</Text>
-            <TouchableOpacity className='flex-row items-center  gap-3 hidden'>
-              <Ionicons name='eye-outline' color={"#ac94f4"} size={18} />
-              <Text className='text-primary-100'>View All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <UsersPost />
-
-        </View>
-
-
-      </ScrollView>
-
-      <View className="absolute bottom-0 w-full bg-white p-4 border-t border-gray-200">
-        <TouchableOpacity
-          disabled={cartItems?.length > 0 ? true : false}
-          className="bg-primary-90 p-4 rounded-xl flex-row items-center justify-center gap-2  "
-          onPress={() => navigation.navigate('')} // Add proper navigation route
-        >
-          {cartItems?.length > 0 && < Text className='absolute bg-red-600 rounded-full p-1 px-2 text-white z-50'
-            style={{ right: '-2%', top: "-40%" }}
-          >{cartItems?.length || 0}</Text>}
-          <Ionicons name='cart-outline' color={"#fff"} size={22} />
-          <Text className="text-center text-white font-bold font-poppins">
-            View Cart
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Table Selection Modal */}
-      <Modal
-        visible={isModalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsModalVisible(false)}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => setIsModalVisible(false)}
-          className="flex-1 bg-black/50 justify-end"
-        >
-          <TouchableOpacity
-            activeOpacity={1}
-            className="w-full justify-end"
-            onPress={() => setIsModalVisible(false)}
-          >
-            <View className="bg-white rounded-t-3xl pt-6 pb-4" style={{ height: '85%' }}>
-              <View className="w-12 h-1 bg-gray-400 rounded-full self-center mb-3" />
-              <Text className="text-lg font-bold mb-3 px-4">Select a Table</Text>
-              <FlatList
-                data={getUniqueFloors(shop_info?.tables)}
-                horizontal
-                keyExtractor={(item) => item.floor}
-                renderItem={renderFloorTab}
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
-                className="mb-4"
-              />
-              <FlatList
-                data={shop_info?.tables?.filter((t: any) => t.floor === selectedFloor)}
-                renderItem={renderTableItem}
-                keyExtractor={(item) => `${item.floor}-${item.table_number}`}
-                numColumns={2}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-              />
-              <TouchableOpacity
-                className="bg-primary-80 rounded-xl p-4 mx-4"
-                onPress={() => {
-                  if (selectedTable) {
-                    setIsModalTableReserveVisible(true);
-                  } else {
-                    ToastAndroid.show("Please select a table first", ToastAndroid.SHORT);
-                  }
-                }}
-              >
-                <Text className="text-center text-white font-semibold font-poppins">
-                  Reserve a Table
+            <View className="flex-row justify-between">
+              {/* Row 2 - Column 1 */}
+              <View className="flex-1 flex-row items-center mr-2">
+                <View className={`${shopStatus.isOpen ? "bg-green-500" : "bg-red-400"} w-4 h-4 rounded-full`} />
+                <Text className="text-base text-gray-900 ml-2">
+                  {shopStatus.openingTime && shopStatus.closingTime
+                    ? shopStatus.isOpen
+                      ? `Open till ${shopStatus.closingTime}`
+                      : `Closed now • Opens at ${shopStatus.openingTime}`
+                    : "Closed today"}
                 </Text>
+              </View>
+
+              {/* Row 2 - Column 2 */}
+              <View className="flex-1 flex-row items-center  ml-2">
+                <Ionicons name='shield-outline' size={18} color={'#eba834'} />
+
+                <Text className="text-base text-gray-900"> Hygiene: 4.5/5</Text>
+              </View>
+            </View>
+          </View>
+
+
+          <View className="bg-white dark:bg-gray-100 flex-row items-center gap-4 justify-between  p-5 border border-gray-100 px-3 rounded-xl mx-4 mb-4" style={styles.shadow}>
+            <View className='flex-row items-center gap-1 w-[48%] '>
+              <Ionicons name='location-outline' size={22} color={"#ac94f4"} />
+              <View className='' >
+                <Text className='text-xs' numberOfLines={1} ellipsizeMode='tail' >{shop_info?.distance_km} Km away   {`${Math.floor((shop_info?.travel_time_mins || 0) / 60)}h ${(shop_info?.travel_time_mins || 0) % 60}m`}</Text>
+                <Text className='text-xs w-36' numberOfLines={1} ellipsizeMode='tail' >{shop_info?.address + ", " + shop_info?.city}</Text>
+              </View>
+            </View>
+            <View className='flex-row items-center justify- gap-2 w-[48%] '>
+              {shop_info?.dine_in_service && (
+                <TouchableOpacity
+                  className="flex-row items-center gap-1 border border-gray-300 p-2 px-4 rounded-lg"
+                  onPress={() => setIsModalVisible(true)}
+                >
+                  <MaterialIcons name='chair-alt' size={16} />
+                </TouchableOpacity>
+              )}
+              <DirectionButton latitude={shop_info.latitude} longitude={shop_info.longitude} />
+              <CallButton phone={shop_info?.phone} />
+            </View>
+          </View>
+
+          <View className="bg-white dark:bg-gray-100 flex-col items-center gap-4 justify-between  p-5 border border-gray-100 px-3 rounded-xl mx-4 mb-4" style={styles.shadow}>
+            <View className='flex-row items-center justify-between flex- w-full gap-4 '>
+              <Text className='font-semibold'>Top Dishes</Text>
+              <TouchableOpacity className='flex-row items-center  gap-3'>
+                <Ionicons name='eye-outline' color={"#ac94f4"} size={18} />
+                <Text className='text-primary-100'>View Full Menu</Text>
               </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
 
-      {/* Reservation Info Modal */}
-      <Modal
-        visible={isModalTableReserveVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setIsModalTableReserveVisible(false)}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => setIsModalTableReserveVisible(false)}
-          className="flex-1 bg-black/50 justify-center items-center"
+            {isLoadingItem ? (
+              <ActivityIndicator color={"#ac94f4"} />
+            ) : (itemData?.length === 0 ? (
+              <View className="items-center justify-center py-8">
+                <Text className="text-gray-500">No Item Found</Text>
+              </View>
+            ) : (
+              <View className="flex flex-wrap flex-row justify-between">
+                {itemData.slice(0, 4).map((item: any, index: number) => {
+                  console.log(itemData)
+                  const disabled = !shopStatus?.isOpen && item.status === 0;
+                  return (
+                    <TouchableOpacity
+                      key={item.id}
+                      // disabled={disabled}
+                      activeOpacity={0.7}
+                      className={`w-[48%] mb-4 rounded-2xl border p-3 ${!shopStatus?.isOpen ? 'opacity-50 bg-gray-100 border-gray-300' : 'bg-white border-primary-100'
+                        }`}
+                      onPress={() => {
+                        if (shopStatus?.isOpen) {
+                          console.log('View Item:', item.item_name);
+                        }
+                        navigation.navigate("ProductDetailsScreen", { productId: item?.id })
+                      }}
+                    >
+                      <Image
+                        source={item.images?.length > 0 ? { uri: `${IMAGE_URL}${item.images[0]}` } : ImagePath.item1}
+                        className="h-28 w-full rounded-xl mb-2"
+                        resizeMode="cover"
+                      />
+                      <Text numberOfLines={1} ellipsizeMode='tail' className="text-base font-bold text-black mb-1">
+                        {item.item_name}
+                      </Text>
+                      <Text numberOfLines={1} ellipsizeMode='tail' className="text-sm text-gray-600 mb-1">
+                        {item.category?.name || 'Uncategorized'}
+                      </Text>
+                      <View className='flex-row items-center justify-between gap-1'>
+                        <Text numberOfLines={1} ellipsizeMode='tail' className={`text-xs font-semibold ${!shopStatus?.isOpen ? 'text-red-400' : 'text-green-600'}`}>
+                          {!shopStatus?.isOpen ? ' Closed' : ' Available'}
+                        </Text>
+                        <Text>
+                          <Ionicons name='star' color={'#ffb31c'} /> {item?.average_rating || 0}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ))}
+
+          </View>
+
+
+
+          <View className="bg-white dark:bg-gray-100 flex-col items-center gap-4 justify-between  p-5 border border-gray-100 px-3 rounded-xl mx-4 mb-4" style={styles.shadow}>
+            <View className='flex-row items-center justify-between flex- w-full gap-4 '>
+              <Text className='font-semibold'>What People Are Saying</Text>
+              <TouchableOpacity className='flex-row items-center  gap-3 hidden'>
+                <Ionicons name='eye-outline' color={"#ac94f4"} size={18} />
+                <Text className='text-primary-100'>View All</Text>
+              </TouchableOpacity>
+            </View>
+
+            <UsersReview shopId={shopId} />
+
+          </View>
+
+
+
+          <View className="bg-white dark:bg-gray-100 flex-col items-center gap-4 justify-between mb-40 p-5 border border-gray-100 px-3 rounded-xl mx-4 " style={styles.shadow}>
+            <View className='flex-row items-center justify-between flex- w-full gap-4 '>
+              <Text className='font-semibold'>Latest Post</Text>
+              <TouchableOpacity className='flex-row items-center  gap-3 hidden'>
+                <Ionicons name='eye-outline' color={"#ac94f4"} size={18} />
+                <Text className='text-primary-100'>View All</Text>
+              </TouchableOpacity>
+            </View>
+
+            <UsersPost />
+
+          </View>
+
+
+        </ScrollView>
+
+        <View className="absolute bottom-0 w-full bg-white p-4 border-t border-gray-200">
+
+          {user?.role === "vendor" && (
+            <TouchableOpacity
+              onPress={() =>
+                ToastAndroid.show("You're viewing your shop profile", ToastAndroid.SHORT)
+              }
+              className="absolute z-50 bg-black/10 right-0 top-0 bottom-0 left-0"
+            />
+          )}
+          <TouchableOpacity
+            disabled={cartItems?.length > 0 ? true : false}
+            className="bg-primary-90 p-4 rounded-xl flex-row items-center justify-center gap-2  "
+            onPress={() => navigation.navigate('')} // Add proper navigation route
+          >
+            {cartItems?.length > 0 && < Text className='absolute bg-red-600 rounded-full p-1 px-2 text-white z-50'
+              style={{ right: '-2%', top: "-40%" }}
+            >{cartItems?.length || 0}</Text>}
+            <Ionicons name='cart-outline' color={"#fff"} size={22} />
+            <Text className="text-center text-white font-bold font-poppins">
+              View Cart
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Table Selection Modal */}
+        <Modal
+          visible={isModalVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setIsModalVisible(false)}
         >
           <TouchableOpacity
             activeOpacity={1}
-            className="w-11/12"
-            onPress={() => { }}
+            onPress={() => setIsModalVisible(false)}
+            className="flex-1 bg-black/50 justify-end"
           >
-            <View className="bg-white rounded-2xl p-4">
-              <TouchableOpacity
-                onPress={() => setIsModalTableReserveVisible(false)}
-                className="absolute top-0 right-0 z-[1000]"
-              >
-                <Ionicons name="close" size={30} />
-              </TouchableOpacity>
-              {/* <Image
+            <TouchableOpacity
+              activeOpacity={1}
+              className="w-full justify-end"
+              onPress={() => setIsModalVisible(false)}
+            >
+              <View className="bg-white rounded-t-3xl pt-6 pb-4" style={{ height: '85%' }}>
+                <View className="w-12 h-1 bg-gray-400 rounded-full self-center mb-3" />
+                <Text className="text-lg font-bold mb-3 px-4">Select a Table</Text>
+                <FlatList
+                  data={getUniqueFloors(shop_info?.tables)}
+                  horizontal
+                  keyExtractor={(item) => item.floor}
+                  renderItem={renderFloorTab}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16 }}
+                  className="mb-4"
+                />
+                <FlatList
+                  data={shop_info?.tables?.filter((t: any) => t.floor === selectedFloor)}
+                  renderItem={renderTableItem}
+                  keyExtractor={(item) => `${item.floor}-${item.table_number}`}
+                  numColumns={2}
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+                />
+                <TouchableOpacity
+                  className="bg-primary-80 rounded-xl p-4 mx-4"
+                  onPress={() => {
+                    if (selectedTable) {
+                      setIsModalTableReserveVisible(true);
+                    } else {
+                      ToastAndroid.show("Please select a table first", ToastAndroid.SHORT);
+                    }
+                  }}
+                >
+                  <Text className="text-center text-white font-semibold font-poppins">
+                    Reserve a Table
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* Reservation Info Modal */}
+        <Modal
+          visible={isModalTableReserveVisible}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setIsModalTableReserveVisible(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            onPress={() => setIsModalTableReserveVisible(false)}
+            className="flex-1 bg-black/50 justify-center items-center"
+          >
+            <TouchableOpacity
+              activeOpacity={1}
+              className="w-11/12"
+              onPress={() => { }}
+            >
+              <View className="bg-white rounded-2xl p-4">
+                <TouchableOpacity
+                  onPress={() => setIsModalTableReserveVisible(false)}
+                  className="absolute top-0 right-0 z-[1000]"
+                >
+                  <Ionicons name="close" size={30} />
+                </TouchableOpacity>
+                {/* <Image
                 source={
                   shop_info?.restaurant_images?.[0]
                     ? { uri: IMAGE_URL + shop_info.restaurant_images[0] }
@@ -720,59 +742,60 @@ const ShopDetailsScreen = () => {
                 className="w-full h-56 rounded-xl mb-2"
                 resizeMode="cover"
               /> */}
-              <Text className="text-lg text-center font-bold mb-1">
-                {shop_info?.restaurant_name || 'Restaurant'}
-              </Text>
-              <Text className="text-center mb-4">Restaurant & Café</Text>
-              <Text className="py-2 mx-4 border-b border-gray-400 border-dashed">
-                Price Breakdown
-              </Text>
-              <View className="flex-row justify-between mx-4 my-2">
-                <View className="flex-1 mr-2">
-                  <Text className="text-base mb-1">Floor:</Text>
-                  <Text className="text-base mb-1">Table Number:</Text>
-                  <Text className="text-base mb-1">Table Type:</Text>
-                  <Text className="text-base mb-1">Seats:</Text>
-                  <Text className="text-base mb-1">Price:</Text>
-                  <Text className="text-base mb-1">Availability:</Text>
-                </View>
-                <View className="flex-1 ml-2 items-end">
-                  <Text className="text-base mb-1">{selectedTable?.floor}</Text>
-                  <Text className="text-base mb-1">{selectedTable?.table_number}</Text>
-                  <Text className="text-base mb-1">
-                    {selectedTable?.premium === "0" ? "Not Premium" : "Premium"}
-                  </Text>
-                  <Text className="text-base mb-1">{selectedTable?.seats}</Text>
-                  <Text className="text-base mb-1">₹ {selectedTable?.price}/-</Text>
-                  <Text className={`text-base mb-1 ${selectedTable?.is_booked === "1" ? 'text-red-500' : 'text-green-500'}`}>
-                    {selectedTable?.is_booked === "1" ? 'Booked' : 'Available'}
-                  </Text>
-                </View>
-              </View>
-              <View className="border-b border-dashed border-gray-400 mx-4 my-2" />
-              <TouchableOpacity
-                className={`rounded-xl p-4 mx-4 mt-5 ${selectedTable?.is_booked === "1" ? 'bg-gray-300' : 'bg-primary-80'}`}
-                onPress={() => {
-                  if (selectedTable && selectedTable.is_booked !== "1") {
-                    navigation.navigate("TableBookingFormScreen", {
-                      shop_id: shop_info?.id,
-                      table_info: [selectedTable],
-                    });
-                  } else {
-                    ToastAndroid.show("This table is already booked.", ToastAndroid.SHORT);
-                  }
-                }}
-                disabled={selectedTable?.is_booked === "1"}
-              >
-                <Text className={`text-center font-semibold font-poppins ${selectedTable?.is_booked === "1" ? 'text-gray-500' : 'text-white'}`}>
-                  Pay ₹ {selectedTable?.price}/- & Reserve Now
+                <Text className="text-lg text-center font-bold mb-1">
+                  {shop_info?.restaurant_name || 'Restaurant'}
                 </Text>
-              </TouchableOpacity>
-            </View>
+                <Text className="text-center mb-4">Restaurant & Café</Text>
+                <Text className="py-2 mx-4 border-b border-gray-400 border-dashed">
+                  Price Breakdown
+                </Text>
+                <View className="flex-row justify-between mx-4 my-2">
+                  <View className="flex-1 mr-2">
+                    <Text className="text-base mb-1">Floor:</Text>
+                    <Text className="text-base mb-1">Table Number:</Text>
+                    <Text className="text-base mb-1">Table Type:</Text>
+                    <Text className="text-base mb-1">Seats:</Text>
+                    <Text className="text-base mb-1">Price:</Text>
+                    <Text className="text-base mb-1">Availability:</Text>
+                  </View>
+                  <View className="flex-1 ml-2 items-end">
+                    <Text className="text-base mb-1">{selectedTable?.floor}</Text>
+                    <Text className="text-base mb-1">{selectedTable?.table_number}</Text>
+                    <Text className="text-base mb-1">
+                      {selectedTable?.premium === "0" ? "Not Premium" : "Premium"}
+                    </Text>
+                    <Text className="text-base mb-1">{selectedTable?.seats}</Text>
+                    <Text className="text-base mb-1">₹ {selectedTable?.price}/-</Text>
+                    <Text className={`text-base mb-1 ${selectedTable?.is_booked === "1" ? 'text-red-500' : 'text-green-500'}`}>
+                      {selectedTable?.is_booked === "1" ? 'Booked' : 'Available'}
+                    </Text>
+                  </View>
+                </View>
+                <View className="border-b border-dashed border-gray-400 mx-4 my-2" />
+                <TouchableOpacity
+                  className={`rounded-xl p-4 mx-4 mt-5 ${selectedTable?.is_booked === "1" ? 'bg-gray-300' : 'bg-primary-80'}`}
+                  onPress={() => {
+                    if (selectedTable && selectedTable.is_booked !== "1") {
+                      navigation.navigate("TableBookingFormScreen", {
+                        shop_id: shop_info?.id,
+                        table_info: [selectedTable],
+                      });
+                    } else {
+                      ToastAndroid.show("This table is already booked.", ToastAndroid.SHORT);
+                    }
+                  }}
+                  disabled={selectedTable?.is_booked === "1"}
+                >
+                  <Text className={`text-center font-semibold font-poppins ${selectedTable?.is_booked === "1" ? 'text-gray-500' : 'text-white'}`}>
+                    Pay ₹ {selectedTable?.price}/- & Reserve Now
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
           </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
-    </View >
+        </Modal>
+      </View >
+    </SafeAreaView>
   );
 };
 

@@ -43,7 +43,7 @@ export const fetchUser = createAsyncThunk(
             return response.data;
         } catch (error: any) {
             console.log(error);
-            return rejectWithValue('Failed to fetch user data');
+            return rejectWithValue(false);
         }
     }
 );

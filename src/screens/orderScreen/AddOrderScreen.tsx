@@ -8,6 +8,7 @@ import { ImagePath } from '../../constants/ImagePath';
 import { RootState } from '../../store/store';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { useCallback, useEffect, useState } from 'react';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddOrderScreen = () => {
   const navigation = useNavigation<any>();
@@ -196,150 +197,152 @@ const AddOrderScreen = () => {
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#fff', padding: 16 }}>
-      {/* Header */}
-      <View
-        className='absolute left-2 top-2'
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingBottom: 8,
-        }}>
-        <TouchableOpacity className='z-50' onPress={() => navigation.goBack()} style={{ padding: 8 }}>
-          <Ionicons name="arrow-back" size={24} color="#374151" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Title */}
-      <Text
-        style={{
-          textAlign: 'center',
-          fontSize: 20,
-          fontWeight: 'bold',
-          color: '#374151',
-          marginBottom: 16,
-        }}>
-        Add Products
-      </Text>
-
-      {/* Search & Cart */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={{ flex: 1, backgroundColor: '#fff', padding: 16 }}>
+        {/* Header */}
         <View
+          className='absolute left-2 top-2'
           style={{
-            flex: 1,
             flexDirection: 'row',
             alignItems: 'center',
-            borderWidth: 1,
-            borderColor: '#D1D5DB',
-            backgroundColor: '#F3F4F6',
-            borderRadius: 10,
-            paddingHorizontal: 12,
+            paddingBottom: 8,
           }}>
-          <Ionicons name="search-outline" size={20} color="#374151" style={{ marginRight: 8 }} />
-          <TextInput
-            style={{ flex: 1, fontSize: 16, paddingVertical: 10 }}
-            placeholder="Search product"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-        <TouchableOpacity
-          onPress={() => setIsCartVisible(true)}
-          style={{ backgroundColor: '#B68AD4', padding: 12, borderRadius: 10, marginLeft: 12 }}>
-          <Ionicons name="cart-outline" size={24} color="#fff" />
-          {cartItems.length > 0 && (
-            <View
-              style={{
-                position: 'absolute',
-                top: -4,
-                right: -4,
-                backgroundColor: 'red',
-                borderRadius: 10,
-                width: 18,
-                height: 18,
-                justifyContent: 'center',
-                alignItems: 'center',
-              }}>
-              <Text style={{ color: '#fff', fontSize: 10 }}>{cartItems.length}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 12 }}>
-        Tap to Add Product
-      </Text>
-
-      {/* Product List */}
-      {isLoading ? (
-        <View className="flex-1 justify-center items-center mt-10">
-          <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-      ) : filteredProducts.length === 0 ? (
-        <View className="flex-1 justify-center items-center mt-10">
-          <Text className="text-gray-500 text-lg">No products found</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredProducts}
-          renderItem={renderProductItem}
-          keyExtractor={item => item.id.toString()}
-          numColumns={2}
-          contentContainerStyle={{ paddingBottom: 16 }}
-          showsVerticalScrollIndicator={false}
-          ListFooterComponent={renderFooter}
-        />
-      )}
-      <TouchableOpacity
-        className='bg-primary-90 p-4 rounded-xl m-2'
-        onPress={() => {
-          setIsCartVisible(false);
-          navigation.navigate('AddCustomerFormScreen', { shopId });
-        }}
-        disabled={cartItems.length === 0}
-      >
-        <Text className='text-center text-white'>
-          {cartItems.length === 0 ? 'Cart is Empty' : 'Proceed to Checkout'}
-        </Text>
-      </TouchableOpacity>
-      {/* Cart Modal */}
-      <Modal
-        isVisible={isCartVisible}
-        onBackdropPress={() => setIsCartVisible(false)}
-        style={{ justifyContent: 'flex-end', margin: 0 }}>
-        <View
-          style={{
-            height: Dimensions.get('window').height * 0.75,
-            backgroundColor: '#fff',
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
-            padding: 8,
-          }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12, paddingHorizontal: 8 }}>
-            Your Cart
-          </Text>
-          <FlatList
-            data={cartItems}
-            renderItem={renderCartItem}
-            keyExtractor={item => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 8 }}
-          />
-          <TouchableOpacity
-            className='bg-primary-90 p-4 rounded-xl m-2'
-            onPress={() => {
-              setIsCartVisible(false);
-              navigation.navigate('AddCustomerFormScreen', { shopId });
-            }}
-            disabled={cartItems.length === 0}
-          >
-            <Text className='text-center text-white'>
-              {cartItems.length === 0 ? 'Cart is Empty' : 'Proceed to Checkout'}
-            </Text>
+          <TouchableOpacity className='z-50' onPress={() => navigation.goBack()} style={{ padding: 8 }}>
+            <Ionicons name="arrow-back" size={24} color="#374151" />
           </TouchableOpacity>
         </View>
-      </Modal>
-    </View>
+
+        {/* Title */}
+        <Text
+          style={{
+            textAlign: 'center',
+            fontSize: 20,
+            fontWeight: 'bold',
+            color: '#374151',
+            marginBottom: 16,
+          }}>
+          Add Products
+        </Text>
+
+        {/* Search & Cart */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderWidth: 1,
+              borderColor: '#D1D5DB',
+              backgroundColor: '#F3F4F6',
+              borderRadius: 10,
+              paddingHorizontal: 12,
+            }}>
+            <Ionicons name="search-outline" size={20} color="#374151" style={{ marginRight: 8 }} />
+            <TextInput
+              style={{ flex: 1, fontSize: 16, paddingVertical: 10 }}
+              placeholder="Search product"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+          <TouchableOpacity
+            onPress={() => setIsCartVisible(true)}
+            style={{ backgroundColor: '#B68AD4', padding: 12, borderRadius: 10, marginLeft: 12 }}>
+            <Ionicons name="cart-outline" size={24} color="#fff" />
+            {cartItems.length > 0 && (
+              <View
+                style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -4,
+                  backgroundColor: 'red',
+                  borderRadius: 10,
+                  width: 18,
+                  height: 18,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}>
+                <Text style={{ color: '#fff', fontSize: 10 }}>{cartItems.length}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 12 }}>
+          Tap to Add Product
+        </Text>
+
+        {/* Product List */}
+        {isLoading ? (
+          <View className="flex-1 justify-center items-center mt-10">
+            <ActivityIndicator size="large" color="#007AFF" />
+          </View>
+        ) : filteredProducts.length === 0 ? (
+          <View className="flex-1 justify-center items-center mt-10">
+            <Text className="text-gray-500 text-lg">No products found</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredProducts}
+            renderItem={renderProductItem}
+            keyExtractor={item => item.id.toString()}
+            numColumns={2}
+            contentContainerStyle={{ paddingBottom: 16 }}
+            showsVerticalScrollIndicator={false}
+            ListFooterComponent={renderFooter}
+          />
+        )}
+        <TouchableOpacity
+          className='bg-primary-90 p-4 rounded-xl m-2'
+          onPress={() => {
+            setIsCartVisible(false);
+            navigation.navigate('AddCustomerFormScreen', { shopId });
+          }}
+          disabled={cartItems.length === 0}
+        >
+          <Text className='text-center text-white'>
+            {cartItems.length === 0 ? 'Cart is Empty' : 'Proceed to Checkout'}
+          </Text>
+        </TouchableOpacity>
+        {/* Cart Modal */}
+        <Modal
+          isVisible={isCartVisible}
+          onBackdropPress={() => setIsCartVisible(false)}
+          style={{ justifyContent: 'flex-end', margin: 0 }}>
+          <View
+            style={{
+              height: Dimensions.get('window').height * 0.75,
+              backgroundColor: '#fff',
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              padding: 8,
+            }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12, paddingHorizontal: 8 }}>
+              Your Cart
+            </Text>
+            <FlatList
+              data={cartItems}
+              renderItem={renderCartItem}
+              keyExtractor={item => item.id}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 8 }}
+            />
+            <TouchableOpacity
+              className='bg-primary-90 p-4 rounded-xl m-2'
+              onPress={() => {
+                setIsCartVisible(false);
+                navigation.navigate('AddCustomerFormScreen', { shopId });
+              }}
+              disabled={cartItems.length === 0}
+            >
+              <Text className='text-center text-white'>
+                {cartItems.length === 0 ? 'Cart is Empty' : 'Proceed to Checkout'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 };
 

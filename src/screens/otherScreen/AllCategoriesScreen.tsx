@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import LinearGradient from 'react-native-linear-gradient';
 import { ImagePath } from '../../constants/ImagePath';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const DEFAULT_IMAGE = ImagePath.item1;
 const ITEM_WIDTH = (Dimensions.get('window').width - 38) / 2;
@@ -131,34 +132,36 @@ const AllCategoriesScreen = () => {
     }
 
     return (
-        <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Icon name="arrow-back" size={24} color="#333" />
-                </TouchableOpacity>
-                <Text style={styles.headerText}>Explore Categories</Text>
-            </View>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <LinearGradient colors={['#fdfbfb', '#ebedee']} style={styles.container}>
+                {/* Header */}
+                <View style={styles.header}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <Icon name="arrow-back" size={24} color="#333" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerText}>Explore Categories</Text>
+                </View>
 
-            {/* Error */}
-            {error && <Text style={styles.errorText}>{error}</Text>}
+                {/* Error */}
+                {error && <Text style={styles.errorText}>{error}</Text>}
 
-            {/* Grid */}
-            <FlatList
-                data={data}
-                renderItem={renderItem}
-                keyExtractor={(item) => item.id.toString()}
-                numColumns={2}
-                columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 12 }}
-                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-                onEndReached={() => {
-                    if (hasMore && !loadingMore) fetchCategories(page);
-                }}
-                onEndReachedThreshold={0.4}
-                ListFooterComponent={renderFooter}
-                contentContainerStyle={{ paddingBottom: 12, paddingTop: 12 }}
-            />
-        </LinearGradient>
+                {/* Grid */}
+                <FlatList
+                    data={data}
+                    renderItem={renderItem}
+                    keyExtractor={(item) => item.id.toString()}
+                    numColumns={2}
+                    columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 12 }}
+                    refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+                    onEndReached={() => {
+                        if (hasMore && !loadingMore) fetchCategories(page);
+                    }}
+                    onEndReachedThreshold={0.4}
+                    ListFooterComponent={renderFooter}
+                    contentContainerStyle={{ paddingBottom: 12, paddingTop: 12 }}
+                />
+            </LinearGradient>
+        </SafeAreaView>
     );
 };
 

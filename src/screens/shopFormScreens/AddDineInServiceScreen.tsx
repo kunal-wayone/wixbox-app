@@ -25,6 +25,7 @@ import Octicons from 'react-native-vector-icons/Octicons';
 
 import { Post, TokenStorage } from '../../utils/apiUtils';
 import { useSelector } from 'react-redux';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -99,7 +100,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
         ToastAndroid.SHORT,
       );
 
-      navigation.navigate('HomeScreen');
+      navigation.replace('HomeScreen');
     } catch (error: any) {
       console.log(error)
       if (error.errors) {
@@ -118,305 +119,307 @@ const AddDineInServiceScreen = ({ route }: any) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
-        <ActivityIndicator className='m-auto' size={"large"} color={'#B68AD4'} />
-      </View>}
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: 16,
-          backgroundColor: '#fff',
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        <Image
-          source={ImagePath.signBg}
-          style={{
-            position: 'absolute',
-            top: '-2%',
-            left: '-2%',
-            width: 208,
-            height: 176,
-            tintColor: "#ac94f4"
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+        {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
+          <ActivityIndicator className='m-auto' size={"large"} color={'#B68AD4'} />
+        </View>}
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: 16,
+            backgroundColor: '#fff',
           }}
-          resizeMode="contain"
-        />
-        <View style={{ marginTop: 80 }}>
-          <MaskedView
-            maskElement={
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 30,
-                  fontWeight: 'bold',
-                  fontFamily: 'Poppins',
-                }}>
-                Add Dine-in Service
-              </Text>
-            }>
-            <LinearGradient
-              colors={['#ac94f4', '#7248B3']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}>
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 30,
-                  fontWeight: 'bold',
-                  fontFamily: 'Poppins',
-                  opacity: 0,
-                }}>
-                Add Dine-in Service
-              </Text>
-            </LinearGradient>
-          </MaskedView>
-          <Text
-            style={{ textAlign: 'center', marginTop: 8, color: '#4B5563' }}>
-            Add your table details below
-          </Text>
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          <Image
+            source={ImagePath.signBg}
+            style={{
+              position: 'absolute',
+              top: '-2%',
+              left: '-2%',
+              width: 208,
+              height: 176,
+              tintColor: "#ac94f4"
+            }}
+            resizeMode="contain"
+          />
+          <View style={{ marginTop: 80 }}>
+            <MaskedView
+              maskElement={
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    fontFamily: 'Poppins',
+                  }}>
+                  Add Dine-in Service
+                </Text>
+              }>
+              <LinearGradient
+                colors={['#ac94f4', '#7248B3']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}>
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    fontFamily: 'Poppins',
+                    opacity: 0,
+                  }}>
+                  Add Dine-in Service
+                </Text>
+              </LinearGradient>
+            </MaskedView>
+            <Text
+              style={{ textAlign: 'center', marginTop: 8, color: '#4B5563' }}>
+              Add your table details below
+            </Text>
 
 
-          {showForm && (
-            <View style={styles.card} className="bg-gray-50">
-              <Formik
-                initialValues={{
-                  floor: '',
-                  table_number: '',
-                  price: '',
-                  seats: '',
-                }}
-                validationSchema={validationSchema}
-                onSubmit={handleAddTable}>
-                {({
-                  handleChange,
-                  handleBlur,
-                  handleSubmit,
-                  values,
-                  errors,
-                  touched,
-                  isSubmitting,
-                }) => (
-                  <View>
-                    <View
-                      className="bg-gray-100"
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        borderRadius: 8,
-                        marginBottom: 12,
-                      }}>
-                      <Picker
-                        selectedValue={floor}
-                        onValueChange={itemValue => setFloor(itemValue)}
-                        style={{ height: 50, width: '100%', color: "#000" }}>
-                        <Picker.Item label="Ground" value="Ground" />
-                        <Picker.Item label="1st" value="1st" />
-                        <Picker.Item label="2nd" value="2nd" />
-                        <Picker.Item label="3rd" value="3rd" />
-                        <Picker.Item label="4th" value="4th" />
-                        <Picker.Item label="5th" value="5th" />
-                        <Picker.Item label="6th" value="6th" />
-                        <Picker.Item label="7th" value="7th" />
-                        <Picker.Item label="8th" value="8th" />
-                        <Picker.Item label="9th" value="9th" />
-                        <Picker.Item label="10th" value="10th" />
-                        <Picker.Item label="11th" value="11th" />
-                      </Picker>
-                    </View>
-                    <View
-                      className="bg-gray-100"
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        marginBottom: 12,
-                      }}>
-                      <Picker
-                        selectedValue={type}
-                        onValueChange={itemValue => setType(itemValue)}
-                        style={{ height: 50, width: '100%', color: "#000" }}>
-                        <Picker.Item label="Standard" value="Standard" />
-                        <Picker.Item label="Booth" value="Booth" />
-                        <Picker.Item label="Outdoor" value="Outdoor" />
-                      </Picker>
-                    </View>
+            {showForm && (
+              <View style={styles.card} className="bg-gray-50">
+                <Formik
+                  initialValues={{
+                    floor: '',
+                    table_number: '',
+                    price: '',
+                    seats: '',
+                  }}
+                  validationSchema={validationSchema}
+                  onSubmit={handleAddTable}>
+                  {({
+                    handleChange,
+                    handleBlur,
+                    handleSubmit,
+                    values,
+                    errors,
+                    touched,
+                    isSubmitting,
+                  }) => (
+                    <View>
+                      <View
+                        className="bg-gray-100"
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          borderRadius: 8,
+                          marginBottom: 12,
+                        }}>
+                        <Picker
+                          selectedValue={floor}
+                          onValueChange={itemValue => setFloor(itemValue)}
+                          style={{ height: 50, width: '100%', color: "#000" }}>
+                          <Picker.Item label="Ground" value="Ground" />
+                          <Picker.Item label="1st" value="1st" />
+                          <Picker.Item label="2nd" value="2nd" />
+                          <Picker.Item label="3rd" value="3rd" />
+                          <Picker.Item label="4th" value="4th" />
+                          <Picker.Item label="5th" value="5th" />
+                          <Picker.Item label="6th" value="6th" />
+                          <Picker.Item label="7th" value="7th" />
+                          <Picker.Item label="8th" value="8th" />
+                          <Picker.Item label="9th" value="9th" />
+                          <Picker.Item label="10th" value="10th" />
+                          <Picker.Item label="11th" value="11th" />
+                        </Picker>
+                      </View>
+                      <View
+                        className="bg-gray-100"
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          marginBottom: 12,
+                        }}>
+                        <Picker
+                          selectedValue={type}
+                          onValueChange={itemValue => setType(itemValue)}
+                          style={{ height: 50, width: '100%', color: "#000" }}>
+                          <Picker.Item label="Standard" value="Standard" />
+                          <Picker.Item label="Booth" value="Booth" />
+                          <Picker.Item label="Outdoor" value="Outdoor" />
+                        </Picker>
+                      </View>
 
-                    <View className="bg-gray-100" style={{ marginBottom: 12 }}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter table number"
-                        placeholderTextColor={"#000"}
-                        className='text-gray-900'
-                        onChangeText={handleChange('table_number')}
-                        onBlur={handleBlur('table_number')}
-                        value={values.table_number}
-                        keyboardType="number-pad"
-                      />
-                      {touched.table_number && errors.table_number && (
-                        <Text style={styles.errorText}>
-                          {errors.table_number}
+                      <View className="bg-gray-100" style={{ marginBottom: 12 }}>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Enter table number"
+                          placeholderTextColor={"#000"}
+                          className='text-gray-900'
+                          onChangeText={handleChange('table_number')}
+                          onBlur={handleBlur('table_number')}
+                          value={values.table_number}
+                          keyboardType="number-pad"
+                        />
+                        {touched.table_number && errors.table_number && (
+                          <Text style={styles.errorText}>
+                            {errors.table_number}
+                          </Text>
+                        )}
+                      </View>
+                      <View className="bg-gray-100" style={{ marginBottom: 12 }}>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Enter no of seats"
+                          placeholderTextColor={"#000"}
+                          className='text-gray-900'
+                          onChangeText={handleChange('seats')}
+                          onBlur={handleBlur('seats')}
+                          value={values.seats}
+                          keyboardType="number-pad"
+                        />
+                        {touched.seats && errors.seats && (
+                          <Text style={styles.errorText}>
+                            {errors.seats}
+                          </Text>
+                        )}
+                      </View>
+
+                      <View className="bg-gray-100" style={{ marginBottom: 12 }}>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Enter table price"
+                          placeholderTextColor={"#000"}
+                          className='text-gray-900'
+                          onChangeText={handleChange('price')}
+                          onBlur={handleBlur('price')}
+                          value={values.price}
+                          keyboardType="numeric"
+                        />
+                        {touched.price && errors.price && (
+                          <Text style={styles.errorText}>
+                            {errors.price}
+                          </Text>
+                        )}
+                      </View>
+
+                      <View className="bg-gray-100" style={{ marginBottom: 12 }}>
+                        <View style={{ flexDirection: 'row', gap: 16 }}>
+                          <TouchableOpacity
+                            onPress={() => setPremium(false)}
+                            style={styles.radioContainer}>
+                            <View
+                              style={[
+                                styles.radio,
+                                !premium && styles.radioSelected,
+                              ]}
+                            />
+                            <Text style={styles.radioText}>Non-Premium</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            onPress={() => setPremium(true)}
+                            style={styles.radioContainer}>
+                            <View
+                              style={[
+                                styles.radio,
+                                premium && styles.radioSelected,
+                              ]}
+                            />
+                            <Text style={styles.radioText}>Premium</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+
+                      <TouchableOpacity
+                        onPress={() => handleSubmit()}
+                        disabled={isSubmitting}
+                        style={styles.addButton}>
+                        <Text style={styles.addButtonText}>
+                          + Add more Tables
                         </Text>
-                      )}
+                      </TouchableOpacity>
                     </View>
-                    <View className="bg-gray-100" style={{ marginBottom: 12 }}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter no of seats"
-                        placeholderTextColor={"#000"}
-                        className='text-gray-900'
-                        onChangeText={handleChange('seats')}
-                        onBlur={handleBlur('seats')}
-                        value={values.seats}
-                        keyboardType="number-pad"
-                      />
-                      {touched.seats && errors.seats && (
-                        <Text style={styles.errorText}>
-                          {errors.seats}
-                        </Text>
-                      )}
-                    </View>
+                  )}
+                </Formik>
+              </View>
+            )}
 
-                    <View className="bg-gray-100" style={{ marginBottom: 12 }}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Enter table price"
-                        placeholderTextColor={"#000"}
-                        className='text-gray-900'
-                        onChangeText={handleChange('price')}
-                        onBlur={handleBlur('price')}
-                        value={values.price}
-                        keyboardType="numeric"
-                      />
-                      {touched.price && errors.price && (
-                        <Text style={styles.errorText}>
-                          {errors.price}
+            {/* Added Tables List */}
+            {tables?.length > 0 && (
+              <View style={styles.tableListContainer}>
+                <Text style={styles.tableListTitle}>Added Tables</Text>
+                {tables.map((table: any, index: number) => (
+                  <View
+                    key={index}
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      backgroundColor: '#fff',
+                      padding: 16,
+                      borderRadius: 12,
+                      marginBottom: 12,
+                      borderColor: "lightgray",
+                      borderWidth: 1,
+                      elevation: 2
+                    }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1F2937' }}>
+                        Table {table.table_number} • Floor {table.floor}
+                      </Text>
+                      <Text style={{ fontSize: 14, color: '#4B5563', marginTop: 4 }}>
+                        Type: <Text style={{ fontWeight: '600' }}>{table.type}</Text>
+                      </Text>
+                      <Text style={{ fontSize: 14, color: '#4B5563', marginTop: 2 }}>
+                        Price: <Text style={{ fontWeight: '600' }}>₹ {table.price}/-</Text>
+                      </Text>
+                      <View
+                        style={{
+                          marginTop: 6,
+                          alignSelf: 'flex-start',
+                          backgroundColor: table.premium === 1 ? '#F59E0B' : '#9CA3AF',
+                          paddingHorizontal: 10,
+                          paddingVertical: 4,
+                          borderRadius: 20,
+                        }}>
+                        <Text style={{ fontSize: 12, color: '#fff', fontWeight: 'bold' }}>
+                          {table.premium === 1 ? 'Premium Table' : 'Standard Table'}
                         </Text>
-                      )}
-                    </View>
-
-                    <View className="bg-gray-100" style={{ marginBottom: 12 }}>
-                      <View style={{ flexDirection: 'row', gap: 16 }}>
-                        <TouchableOpacity
-                          onPress={() => setPremium(false)}
-                          style={styles.radioContainer}>
-                          <View
-                            style={[
-                              styles.radio,
-                              !premium && styles.radioSelected,
-                            ]}
-                          />
-                          <Text style={styles.radioText}>Non-Premium</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={() => setPremium(true)}
-                          style={styles.radioContainer}>
-                          <View
-                            style={[
-                              styles.radio,
-                              premium && styles.radioSelected,
-                            ]}
-                          />
-                          <Text style={styles.radioText}>Premium</Text>
-                        </TouchableOpacity>
                       </View>
                     </View>
-
                     <TouchableOpacity
-                      onPress={() => handleSubmit()}
-                      disabled={isSubmitting}
-                      style={styles.addButton}>
-                      <Text style={styles.addButtonText}>
-                        + Add more Tables
-                      </Text>
+                      onPress={() => handleRemoveTable(index)}
+                      style={{
+                        marginLeft: 12,
+                        backgroundColor: '#FEE2E2',
+                        padding: 8,
+                        borderRadius: 999,
+                      }}>
+                      <Octicons name="trash" size={20} color="#DC2626" />
                     </TouchableOpacity>
                   </View>
-                )}
-              </Formik>
-            </View>
-          )}
-
-          {/* Added Tables List */}
-          {tables?.length > 0 && (
-            <View style={styles.tableListContainer}>
-              <Text style={styles.tableListTitle}>Added Tables</Text>
-              {tables.map((table: any, index: number) => (
-                <View
-                  key={index}
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    backgroundColor: '#fff',
-                    padding: 16,
-                    borderRadius: 12,
-                    marginBottom: 12,
-                    borderColor: "lightgray",
-                    borderWidth: 1,
-                    elevation: 2
-                  }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1F2937' }}>
-                      Table {table.table_number} • Floor {table.floor}
-                    </Text>
-                    <Text style={{ fontSize: 14, color: '#4B5563', marginTop: 4 }}>
-                      Type: <Text style={{ fontWeight: '600' }}>{table.type}</Text>
-                    </Text>
-                    <Text style={{ fontSize: 14, color: '#4B5563', marginTop: 2 }}>
-                      Price: <Text style={{ fontWeight: '600' }}>₹ {table.price}/-</Text>
-                    </Text>
-                    <View
-                      style={{
-                        marginTop: 6,
-                        alignSelf: 'flex-start',
-                        backgroundColor: table.premium === 1 ? '#F59E0B' : '#9CA3AF',
-                        paddingHorizontal: 10,
-                        paddingVertical: 4,
-                        borderRadius: 20,
-                      }}>
-                      <Text style={{ fontSize: 12, color: '#fff', fontWeight: 'bold' }}>
-                        {table.premium === 1 ? 'Premium Table' : 'Standard Table'}
-                      </Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity
-                    onPress={() => handleRemoveTable(index)}
-                    style={{
-                      marginLeft: 12,
-                      backgroundColor: '#FEE2E2',
-                      padding: 8,
-                      borderRadius: 999,
-                    }}>
-                    <Octicons name="trash" size={20} color="#DC2626" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          )}
+                ))}
+              </View>
+            )}
 
 
-          <TouchableOpacity onPress={handleCreateTables} style={{ marginTop: 16 }}>
-            <LinearGradient
-              colors={['#ac94f4', '#7248B3']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={{
-                padding: 16,
-                borderRadius: 10,
-                alignItems: 'center',
-              }}>
-              <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
-                Save Tables
-              </Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <TouchableOpacity onPress={handleCreateTables} style={{ marginTop: 16 }}>
+              <LinearGradient
+                colors={['#ac94f4', '#7248B3']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  padding: 16,
+                  borderRadius: 10,
+                  alignItems: 'center',
+                }}>
+                <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                  Save Tables
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

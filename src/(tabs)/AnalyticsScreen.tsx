@@ -11,6 +11,7 @@ import {
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { BarChart } from 'react-native-gifted-charts';
 import { Fetch } from '../utils/apiUtils';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const screenWidth = Dimensions.get('window').width;
 
@@ -127,82 +128,84 @@ const AnalyticsScreen = () => {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-100 px-4 pt-10">
-      <Text className="text-2xl font-bold text-center mb-4">Business Analytics Dashboard</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ScrollView className="flex-1 bg-gray-100 px-4 pt-10">
+        <Text className="text-2xl font-bold text-center mb-4">Business Analytics Dashboard</Text>
 
-      {renderTabs()}
+        {renderTabs()}
 
-      {selectedTab === 'Custom' && (
-        <View className="flex-row justify-between mb-4">
-          <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, from: true })} className="flex-1 mr-2 bg-white py-3 px-4 rounded-lg shadow">
-            <Text className="text-base text-gray-700">From: {displayDate(dateRange.from)}</Text>
-          </TouchableOpacity>
+        {selectedTab === 'Custom' && (
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, from: true })} className="flex-1 mr-2 bg-white py-3 px-4 rounded-lg shadow">
+              <Text className="text-base text-gray-700">From: {displayDate(dateRange.from)}</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, to: true })} className="flex-1 ml-2 bg-white py-3 px-4 rounded-lg shadow">
-            <Text className="text-base text-gray-700">To: {displayDate(dateRange.to)}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      {loading ? (
-        <View className="items-center justify-center mt-10">
-          <ActivityIndicator size="large" color="#B68AD4" />
-          <Text className="text-sm mt-2 text-gray-500">Loading analytics...</Text>
-        </View>
-      ) : analyticsData ? (
-        <>
-          <View className="flex-row flex-wrap justify-between">
-            {renderInfoCard('Total Earnings', `₹${analyticsData.total_earnings}`)}
-            {renderInfoCard('Total Orders', analyticsData.total_orders)}
-            {renderInfoCard('Avg. Order Value', `₹${analyticsData.average_order_price}`)}
-            {renderInfoCard('Table Bookings', analyticsData.table_booking_count)}
-            {renderInfoCard('Users', analyticsData.user_count)}
-            {renderInfoCard('Best Selling', `${analyticsData.best_selling_item} (${analyticsData.best_selling_quantity})`)}
+            <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, to: true })} className="flex-1 ml-2 bg-white py-3 px-4 rounded-lg shadow">
+              <Text className="text-base text-gray-700">To: {displayDate(dateRange.to)}</Text>
+            </TouchableOpacity>
           </View>
+        )}
 
-          <View className="bg-white p-4 mt-4 rounded-xl shadow mb-20">
-            <Text className="text-lg font-bold mb-2">Sales Over Time</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <BarChart
-                data={getBarChartData()}
-                barWidth={10}
-                spacing={30}
-                roundedTop
-                frontColor="#B68AD4"
-                isAnimated
-                xAxisTextStyle={{ color: '#444' }}
-                barBorderRadius={6}
-                yAxisThickness={1}
-                hideYAxisText
-                showValuesOnTopOfBars
-                width={screenWidth * 1.8}
-              />
-            </ScrollView>
+        {loading ? (
+          <View className="items-center justify-center mt-10">
+            <ActivityIndicator size="large" color="#B68AD4" />
+            <Text className="text-sm mt-2 text-gray-500">Loading analytics...</Text>
           </View>
+        ) : analyticsData ? (
+          <>
+            <View className="flex-row flex-wrap justify-between">
+              {renderInfoCard('Total Earnings', `₹${analyticsData.total_earnings}`)}
+              {renderInfoCard('Total Orders', analyticsData.total_orders)}
+              {renderInfoCard('Avg. Order Value', `₹${analyticsData.average_order_price}`)}
+              {renderInfoCard('Table Bookings', analyticsData.table_booking_count)}
+              {renderInfoCard('Users', analyticsData.user_count)}
+              {renderInfoCard('Best Selling', `${analyticsData.best_selling_item} (${analyticsData.best_selling_quantity})`)}
+            </View>
 
-          {/* {renderCragData()} */}
-        </>
-      ) : (
-        <Text className="text-center text-gray-500 mt-10">No data found</Text>
-      )}
+            <View className="bg-white p-4 mt-4 rounded-xl shadow mb-20">
+              <Text className="text-lg font-bold mb-2">Sales Over Time</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <BarChart
+                  data={getBarChartData()}
+                  barWidth={10}
+                  spacing={30}
+                  roundedTop
+                  frontColor="#B68AD4"
+                  isAnimated
+                  xAxisTextStyle={{ color: '#444' }}
+                  barBorderRadius={6}
+                  yAxisThickness={1}
+                  hideYAxisText
+                  showValuesOnTopOfBars
+                  width={screenWidth * 1.8}
+                />
+              </ScrollView>
+            </View>
 
-      {showPicker.from && (
-        <DateTimePicker
-          value={dateRange.from}
-          mode="date"
-          display="calendar"
-          onChange={(e, d) => handleDateChange('from', e, d)}
-        />
-      )}
-      {showPicker.to && (
-        <DateTimePicker
-          value={dateRange.to}
-          mode="date"
-          display="calendar"
-          onChange={(e, d) => handleDateChange('to', e, d)}
-        />
-      )}
-    </ScrollView>
+            {/* {renderCragData()} */}
+          </>
+        ) : (
+          <Text className="text-center text-gray-500 mt-10">No data found</Text>
+        )}
+
+        {showPicker.from && (
+          <DateTimePicker
+            value={dateRange.from}
+            mode="date"
+            display="calendar"
+            onChange={(e, d) => handleDateChange('from', e, d)}
+          />
+        )}
+        {showPicker.to && (
+          <DateTimePicker
+            value={dateRange.to}
+            mode="date"
+            display="calendar"
+            onChange={(e, d) => handleDateChange('to', e, d)}
+          />
+        )}
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

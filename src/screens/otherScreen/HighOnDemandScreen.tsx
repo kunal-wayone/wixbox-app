@@ -24,6 +24,7 @@ import {
 import { AppDispatch, RootState } from '../../store/store';
 import FoodItem from '../../components/common/FoodItem';
 import { addToCart } from '../../store/slices/cartSlice';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const PER_PAGE = 5;
 
@@ -229,20 +230,22 @@ const HighOnDemandScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-white">
-      <FlatList
-        data={initialLoading ? Array(3).fill(0) : data}
-        keyExtractor={(item, index) =>
-          initialLoading ? index.toString() : item.id.toString()
-        }
-        renderItem={initialLoading ? () => <SkeletonCard /> : renderItem}
-        ListHeaderComponent={Header}
-        ListFooterComponent={renderFooter}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        contentContainerStyle={{ paddingBottom: 80 }}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View className="flex-1 bg-white">
+        <FlatList
+          data={initialLoading ? Array(3).fill(0) : data}
+          keyExtractor={(item, index) =>
+            initialLoading ? index.toString() : item.id.toString()
+          }
+          renderItem={initialLoading ? () => <SkeletonCard /> : renderItem}
+          ListHeaderComponent={Header}
+          ListFooterComponent={renderFooter}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          contentContainerStyle={{ paddingBottom: 80 }}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
+    </SafeAreaView>
   );
 };
 

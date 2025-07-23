@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Platform,
+  ToastAndroid,
+  Alert,
 } from 'react-native';
 import { Formik } from 'formik';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -45,6 +47,44 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
   }>({ type: null });
   const [tempDate, setTempDate] = useState(new Date());
   console.log(data)
+  // const handleTimeSelect = (
+  //   event: any,
+  //   selectedDate: Date | undefined,
+  //   type: string,
+  //   values: ShiftData,
+  //   setFieldValue: (field: string, value: any) => void
+  // ) => {
+  //   setShowPicker({ type: null });
+  //   if (!selectedDate) return;
+  //   const formatted = formatTime(selectedDate);
+
+  //   if (type === 'shift1-from') {
+  //     const updated = { ...values.shift1, from: formatted, to: '' };
+  //     setFieldValue('shift1', updated);
+  //     onChange({ ...values, shift1: updated });
+  //   } else if (type === 'shift1-to') {
+  //     const updated = { ...values.shift1, to: formatted };
+  //     setFieldValue('shift1.to', formatted);
+  //     onChange({ ...values, shift1: updated });
+  //   } else if (type === 'shift2-from') {
+  //     const updated = {
+  //       ...(values.shift2 || { from: '', to: '' }),
+  //       from: formatted,
+  //       to: '',
+  //     };
+  //     setFieldValue('shift2', updated);
+  //     onChange({ ...values, shift2: updated });
+  //   } else if (type === 'shift2-to') {
+  //     const updated = {
+  //       ...(values.shift2 || { from: '', to: '' }),
+  //       to: formatted,
+  //     };
+  //     setFieldValue('shift2', updated);
+  //     onChange({ ...values, shift2: updated });
+  //   }
+  // };
+
+
   const handleTimeSelect = (
     event: any,
     selectedDate: Date | undefined,
@@ -54,29 +94,31 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
   ) => {
     setShowPicker({ type: null });
     if (!selectedDate) return;
+
     const formatted = formatTime(selectedDate);
 
     if (type === 'shift1-from') {
-      const updated = { ...values.shift1, from: formatted, to: '' };
+      const updated = { from: formatted, to: '', rawFrom: selectedDate, rawTo: undefined };
       setFieldValue('shift1', updated);
       onChange({ ...values, shift1: updated });
     } else if (type === 'shift1-to') {
-      const updated = { ...values.shift1, to: formatted };
-      setFieldValue('shift1.to', formatted);
+      if (values.shift1.rawFrom && selectedDate <= values.shift1.rawFrom) {
+        Alert.alert('End time must be after start time.');
+        return;
+      }
+      const updated = { ...values.shift1, to: formatted, rawTo: selectedDate };
+      setFieldValue('shift1', updated);
       onChange({ ...values, shift1: updated });
     } else if (type === 'shift2-from') {
-      const updated = {
-        ...(values.shift2 || { from: '', to: '' }),
-        from: formatted,
-        to: '',
-      };
+      const updated = { from: formatted, to: '', rawFrom: selectedDate, rawTo: undefined };
       setFieldValue('shift2', updated);
       onChange({ ...values, shift2: updated });
     } else if (type === 'shift2-to') {
-      const updated = {
-        ...(values.shift2 || { from: '', to: '' }),
-        to: formatted,
-      };
+      if (values.shift2?.rawFrom && selectedDate <= values.shift2.rawFrom) {
+        Alert.alert('End time must be after start time.');
+        return;
+      }
+      const updated = { ...values.shift2, to: formatted, rawTo: selectedDate };
       setFieldValue('shift2', updated);
       onChange({ ...values, shift2: updated });
     }

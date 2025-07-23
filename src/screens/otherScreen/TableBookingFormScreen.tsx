@@ -20,6 +20,7 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Picker } from '@react-native-picker/picker';
 import { Post } from '../../utils/apiUtils';
 import PaymentComponent from '../../components/PaymentComponent';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().required('Full name is required'),
@@ -148,239 +149,241 @@ const TableBookingFormScreen = () => {
     const seatCount = Number(table_info?.[0]?.seats) || 0;
 
     return (
-        <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0}
-        >
-            {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
-                <ActivityIndicator className='m-auto' size={"large"} color={'#ac94f4'} />
-            </View>}
-            <ScrollView
-                contentContainerStyle={{
-                    flexGrow: 1,
-                    padding: 16,
-                    backgroundColor: '#fff',
-                }}
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 120 : 0}
             >
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
-                        <Ionicons name="arrow-back" size={24} color="black" />
-                    </TouchableOpacity>
-                    <Text style={{ flex: 1, fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: '#374151' }}>
-                        Book a Table
-                    </Text>
-                </View>
-
-                <Formik
-                    initialValues={{
-                        name: '',
-                        phone: '',
-                        booking_date: '',
-                        time_slot: '',
-                        guests: '',
-                        description: '',
+                {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
+                    <ActivityIndicator className='m-auto' size={"large"} color={'#ac94f4'} />
+                </View>}
+                <ScrollView
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        padding: 16,
+                        backgroundColor: '#fff',
                     }}
-                    validationSchema={validationSchema}
-                    onSubmit={(values) => {
-                        // Pass form values directly to PaymentComponent
-                        // No need to store in state
-                    }}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
                 >
-                    {({
-                        handleChange,
-                        handleBlur,
-                        handleSubmit,
-                        values,
-                        errors,
-                        touched,
-                        resetForm,
-                        setFieldValue,
-                        isSubmitting,
-                    }) => (
-                        <View>
-                            <InputField
-                                label="Full Name"
-                                placeholder="Enter full name"
-                                value={values.name}
-                                onChangeText={handleChange('name')}
-                                onBlur={handleBlur('name')}
-                                error={touched.name && errors.name}
-                            />
-
-                            <InputField
-                                label="Phone Number"
-                                placeholder="Enter phone number"
-                                value={values.phone}
-                                onChangeText={handleChange('phone')}
-                                onBlur={handleBlur('phone')}
-                                keyboardType="phone-pad"
-                                maxLength={10}
-                                error={touched.phone && errors.phone}
-                            />
-
-                            <DateTimeField
-                                label="Booking Date"
-                                value={values.booking_date}
-                                icon="calendar-today"
-                                onPress={() => setShowDatePicker(true)}
-                            />
-                            <DateTimePickerModal
-                                isVisible={showDatePicker}
-                                mode="date"
-                                minimumDate={new Date()}
-                                onConfirm={(date) => {
-                                    setFieldValue('booking_date', formatDate(date));
-                                    setShowDatePicker(false);
-                                }}
-                                onCancel={() => setShowDatePicker(false)}
-                            />
-                            {touched.booking_date && errors.booking_date && (
-                                <ErrorText text={errors.booking_date} />
-                            )}
-
-                            <DateTimeField
-                                label="Time Slot"
-                                value={values.time_slot}
-                                icon="access-time"
-                                onPress={() => setShowTimePicker(true)}
-                            />
-                            <DateTimePickerModal
-                                isVisible={showTimePicker}
-                                mode="time"
-                                is24Hour={true}
-                                onConfirm={(time) => {
-                                    setFieldValue('time_slot', formatTime(time));
-                                    setShowTimePicker(false);
-                                }}
-                                onCancel={() => setShowTimePicker(false)}
-                            />
-                            {touched.time_slot && errors.time_slot && (
-                                <ErrorText text={errors.time_slot} />
-                            )}
-
-                            <View style={{ marginBottom: 12 }}>
-                                <Text style={labelStyle}>Number of Guests</Text>
-                                <View style={pickerContainer}>
-                                    <Picker
-                                        selectedValue={values.guests || ''}
-                                        onValueChange={(val) => setFieldValue('guests', val)}
-                                    >
-                                        <Picker.Item label="Select number of guests" value="" />
-                                        {Array.from({ length: seatCount }, (_, i) => (
-                                            <Picker.Item key={i + 1} label={`${i + 1}`} value={`${i + 1}`} />
-                                        ))}
-                                    </Picker>
-                                </View>
-                                {touched.guests && errors.guests && <ErrorText text={errors.guests} />}
-                            </View>
-
-                            <InputField
-                                label="Description (Optional)"
-                                placeholder="Enter special requests"
-                                value={values.description}
-                                onChangeText={handleChange('description')}
-                                onBlur={handleBlur('description')}
-                                multiline
-                                minHeight={80}
-                            />
-
-                            <View style={{ marginBottom: 12 }}>
-                                <Text style={labelStyle}>Selected Table</Text>
-                                {isLoading ? (
-                                    <ActivityIndicator />
-                                ) : (
-                                    table_info.map((table: any, index: any) => (
-                                        <View
-                                            key={index}
-                                            style={{
-                                                flexDirection: 'row',
-                                                justifyContent: 'space-between',
-                                                padding: 8,
-                                                borderBottomWidth: 1,
-                                                borderBottomColor: '#D1D5DB',
-                                            }}
-                                        >
-                                            <Text>
-                                                {table.floor} Floor, Table {table.table_number} ({table.type})
-                                            </Text>
-                                            <Text>₹{table.price} ({table.seats} seats)</Text>
-                                        </View>
-                                    ))
-                                )}
-                            </View>
-
-                            <PaymentComponent
-                                amount={Number(table_info[0]?.price) || 0}
-                                customer={{
-                                    name: values.name || 'Guest',
-                                    email: 'guest@example.com',
-                                    phone: values.phone || '1234567890',
-                                }}
-                                config={{
-                                    name: 'WisBox Store',
-                                    currency: 'INR',
-                                    description: `Table reservation for table ${table_info[0]?.table_number}`,
-                                    theme: { color: '#ac94f4' },
-                                }}
-                                buttonLabel={
-                                    isSubmitting
-                                        ? 'Processing...'
-                                        : `Pay ₹ ${table_info[0]?.price || 0}/- & Reserve Now`
-                                }
-                                buttonClassName={`bg-primary-80 rounded-xl p-4 w-full mt-5 ${isSubmitting ? 'opacity-50' : ''
-                                    }`}
-                                onPaymentSuccess={(paymentData, orderId) => {
-                                    console.log(paymentData)
-                                    orderPayment(orderId, paymentData, table_info[0]?.price);
-                                }}
-                                onPaymentFailure={(error) => {
-                                    ToastAndroid.show('Payment failed. Please try again.', ToastAndroid.LONG);
-                                }}
-                                onPaymentCancel={() => {
-                                    ToastAndroid.show('Payment cancelled.', ToastAndroid.LONG);
-                                }}
-                                handleSubmit={() => {
-                                    const data = handleBookTable(values, resetForm)
-                                    return data;
-                                }}
-                            />
-                        </View>
-                    )}
-                </Formik>
-            </ScrollView>
-
-            <Modal visible={showThankYouModal} transparent animationType="fade">
-                <View
-                    style={{
-                        flex: 1,
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                    }}
-                >
-                    <View
-                        style={{
-                            backgroundColor: '#fff',
-                            padding: 24,
-                            borderRadius: 12,
-                            alignItems: 'center',
-                            width: '80%',
-                        }}
-                    >
-                        <Ionicons name="checkmark-circle" size={60} color="#10B981" />
-                        <Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 10 }}>
-                            Thank You!
-                        </Text>
-                        <Text style={{ textAlign: 'center' }}>
-                            Your table has been booked successfully.
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
+                            <Ionicons name="arrow-back" size={24} color="black" />
+                        </TouchableOpacity>
+                        <Text style={{ flex: 1, fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: '#374151' }}>
+                            Book a Table
                         </Text>
                     </View>
-                </View>
-            </Modal>
-        </KeyboardAvoidingView>
+
+                    <Formik
+                        initialValues={{
+                            name: '',
+                            phone: '',
+                            booking_date: '',
+                            time_slot: '',
+                            guests: '',
+                            description: '',
+                        }}
+                        validationSchema={validationSchema}
+                        onSubmit={(values) => {
+                            // Pass form values directly to PaymentComponent
+                            // No need to store in state
+                        }}
+                    >
+                        {({
+                            handleChange,
+                            handleBlur,
+                            handleSubmit,
+                            values,
+                            errors,
+                            touched,
+                            resetForm,
+                            setFieldValue,
+                            isSubmitting,
+                        }) => (
+                            <View>
+                                <InputField
+                                    label="Full Name"
+                                    placeholder="Enter full name"
+                                    value={values.name}
+                                    onChangeText={handleChange('name')}
+                                    onBlur={handleBlur('name')}
+                                    error={touched.name && errors.name}
+                                />
+
+                                <InputField
+                                    label="Phone Number"
+                                    placeholder="Enter phone number"
+                                    value={values.phone}
+                                    onChangeText={handleChange('phone')}
+                                    onBlur={handleBlur('phone')}
+                                    keyboardType="phone-pad"
+                                    maxLength={10}
+                                    error={touched.phone && errors.phone}
+                                />
+
+                                <DateTimeField
+                                    label="Booking Date"
+                                    value={values.booking_date}
+                                    icon="calendar-today"
+                                    onPress={() => setShowDatePicker(true)}
+                                />
+                                <DateTimePickerModal
+                                    isVisible={showDatePicker}
+                                    mode="date"
+                                    minimumDate={new Date()}
+                                    onConfirm={(date) => {
+                                        setFieldValue('booking_date', formatDate(date));
+                                        setShowDatePicker(false);
+                                    }}
+                                    onCancel={() => setShowDatePicker(false)}
+                                />
+                                {touched.booking_date && errors.booking_date && (
+                                    <ErrorText text={errors.booking_date} />
+                                )}
+
+                                <DateTimeField
+                                    label="Time Slot"
+                                    value={values.time_slot}
+                                    icon="access-time"
+                                    onPress={() => setShowTimePicker(true)}
+                                />
+                                <DateTimePickerModal
+                                    isVisible={showTimePicker}
+                                    mode="time"
+                                    is24Hour={true}
+                                    onConfirm={(time) => {
+                                        setFieldValue('time_slot', formatTime(time));
+                                        setShowTimePicker(false);
+                                    }}
+                                    onCancel={() => setShowTimePicker(false)}
+                                />
+                                {touched.time_slot && errors.time_slot && (
+                                    <ErrorText text={errors.time_slot} />
+                                )}
+
+                                <View style={{ marginBottom: 12 }}>
+                                    <Text style={labelStyle}>Number of Guests</Text>
+                                    <View style={pickerContainer}>
+                                        <Picker
+                                            selectedValue={values.guests || ''}
+                                            onValueChange={(val) => setFieldValue('guests', val)}
+                                        >
+                                            <Picker.Item label="Select number of guests" value="" />
+                                            {Array.from({ length: seatCount }, (_, i) => (
+                                                <Picker.Item key={i + 1} label={`${i + 1}`} value={`${i + 1}`} />
+                                            ))}
+                                        </Picker>
+                                    </View>
+                                    {touched.guests && errors.guests && <ErrorText text={errors.guests} />}
+                                </View>
+
+                                <InputField
+                                    label="Description (Optional)"
+                                    placeholder="Enter special requests"
+                                    value={values.description}
+                                    onChangeText={handleChange('description')}
+                                    onBlur={handleBlur('description')}
+                                    multiline
+                                    minHeight={80}
+                                />
+
+                                <View style={{ marginBottom: 12 }}>
+                                    <Text style={labelStyle}>Selected Table</Text>
+                                    {isLoading ? (
+                                        <ActivityIndicator />
+                                    ) : (
+                                        table_info.map((table: any, index: any) => (
+                                            <View
+                                                key={index}
+                                                style={{
+                                                    flexDirection: 'row',
+                                                    justifyContent: 'space-between',
+                                                    padding: 8,
+                                                    borderBottomWidth: 1,
+                                                    borderBottomColor: '#D1D5DB',
+                                                }}
+                                            >
+                                                <Text>
+                                                    {table.floor} Floor, Table {table.table_number} ({table.type})
+                                                </Text>
+                                                <Text>₹{table.price} ({table.seats} seats)</Text>
+                                            </View>
+                                        ))
+                                    )}
+                                </View>
+
+                                <PaymentComponent
+                                    amount={Number(table_info[0]?.price) || 0}
+                                    customer={{
+                                        name: values.name || 'Guest',
+                                        email: 'guest@example.com',
+                                        phone: values.phone || '1234567890',
+                                    }}
+                                    config={{
+                                        name: 'WisBox Store',
+                                        currency: 'INR',
+                                        description: `Table reservation for table ${table_info[0]?.table_number}`,
+                                        theme: { color: '#ac94f4' },
+                                    }}
+                                    buttonLabel={
+                                        isSubmitting
+                                            ? 'Processing...'
+                                            : `Pay ₹ ${table_info[0]?.price || 0}/- & Reserve Now`
+                                    }
+                                    buttonClassName={`bg-primary-80 rounded-xl p-4 w-full mt-5 ${isSubmitting ? 'opacity-50' : ''
+                                        }`}
+                                    onPaymentSuccess={(paymentData, orderId) => {
+                                        console.log(paymentData)
+                                        orderPayment(orderId, paymentData, table_info[0]?.price);
+                                    }}
+                                    onPaymentFailure={(error) => {
+                                        ToastAndroid.show('Payment failed. Please try again.', ToastAndroid.LONG);
+                                    }}
+                                    onPaymentCancel={() => {
+                                        ToastAndroid.show('Payment cancelled.', ToastAndroid.LONG);
+                                    }}
+                                    handleSubmit={() => {
+                                        const data = handleBookTable(values, resetForm)
+                                        return data;
+                                    }}
+                                />
+                            </View>
+                        )}
+                    </Formik>
+                </ScrollView>
+
+                <Modal visible={showThankYouModal} transparent animationType="fade">
+                    <View
+                        style={{
+                            flex: 1,
+                            backgroundColor: 'rgba(0,0,0,0.6)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                    >
+                        <View
+                            style={{
+                                backgroundColor: '#fff',
+                                padding: 24,
+                                borderRadius: 12,
+                                alignItems: 'center',
+                                width: '80%',
+                            }}
+                        >
+                            <Ionicons name="checkmark-circle" size={60} color="#10B981" />
+                            <Text style={{ fontSize: 20, fontWeight: 'bold', marginVertical: 10 }}>
+                                Thank You!
+                            </Text>
+                            <Text style={{ textAlign: 'center' }}>
+                                Your table has been booked successfully.
+                            </Text>
+                        </View>
+                    </View>
+                </Modal>
+            </KeyboardAvoidingView>
+        </SafeAreaView>
     );
 };
 

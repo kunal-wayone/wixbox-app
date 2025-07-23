@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,15 +14,16 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import {Formik} from 'formik';
+import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
-import {ImagePath} from '../../constants/ImagePath';
-import {useNavigation} from '@react-navigation/native';
-import {Post} from '../../utils/apiUtils';
+import { ImagePath } from '../../constants/ImagePath';
+import { useNavigation } from '@react-navigation/native';
+import { Post } from '../../utils/apiUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const {width, height} = Dimensions.get('screen');
+const { width, height } = Dimensions.get('screen');
 
 // Validation schema for password fields
 const validationSchema = Yup.object().shape({
@@ -104,11 +105,11 @@ const ResetPasswordScreen = () => {
   // };
 
   const handleResetPassword = async (
-    values: {password: string; confirmPassword: string},
-    {setSubmitting, resetForm}: any,
+    values: { password: string; confirmPassword: string },
+    { setSubmitting, resetForm }: any,
   ) => {
     try {
-      setApiErrors({password: '', confirmPassword: ''});
+      setApiErrors({ password: '', confirmPassword: '' });
       const response: any = await Post(
         '/auth/reset-password',
         {
@@ -156,290 +157,297 @@ const ResetPasswordScreen = () => {
   }, [showSuccessModal]);
 
   return (
-    <KeyboardAvoidingView
-      style={{flex: 1}}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: 16,
-          backgroundColor: '#fff',
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        <Image
-          source={ImagePath.signBg}
-          style={{
-            position: 'absolute',
-            top: '-2%',
-            left: '-2%',
-            width: 208,
-            height: 176,
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: 16,
+            backgroundColor: '#fff',
           }}
-          resizeMode="contain"
-        />
-        <View style={{marginTop: 80}}>
-          <MaskedView
-            maskElement={
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 30,
-                  fontWeight: 'bold',
-                  fontFamily: 'Poppins',
-                }}>
-                Reset Password
-              </Text>
-            }>
-            <LinearGradient
-              colors={['#EE6447', '#7248B3']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}>
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 30,
-                  fontWeight: 'bold',
-                  fontFamily: 'Poppins',
-                  opacity: 0,
-                }}>
-                Reset Password
-              </Text>
-            </LinearGradient>
-          </MaskedView>
-          <Text
-            style={{textAlign: 'center', marginVertical: 8, color: '#4B5563'}}>
-            Enter and confirm your new password.
-          </Text>
-
-          <Formik
-            initialValues={{
-              password: '',
-              confirmPassword: '',
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          <Image
+            source={ImagePath.signBg}
+            style={{
+              position: 'absolute',
+              top: '-2%',
+              left: '-2%',
+              width: 208,
+              height: 176,
+              tintColor: "#ac94f4"
             }}
-            validationSchema={validationSchema}
-            onSubmit={handleResetPassword}>
-            {({
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-              isSubmitting,
-            }: any) => (
-              <View style={{marginTop: 16}}>
-                <View style={{marginBottom: 12}}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    New Password
-                  </Text>
-                  <View style={{position: 'relative'}}>
-                    <TextInput
+            resizeMode="contain"
+          />
+          <View style={{ marginTop: 80 }}>
+            <MaskedView
+              maskElement={
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    fontFamily: 'Poppins',
+                  }}>
+                  Reset Password
+                </Text>
+              }>
+              <LinearGradient
+                colors={['#ac94f4', '#7248B3']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}>
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    fontFamily: 'Poppins',
+                    opacity: 0,
+                  }}>
+                  Reset Password
+                </Text>
+              </LinearGradient>
+            </MaskedView>
+            <Text
+              style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
+              Enter and confirm your new password.
+            </Text>
+
+            <Formik
+              initialValues={{
+                password: '',
+                confirmPassword: '',
+              }}
+              validationSchema={validationSchema}
+              onSubmit={handleResetPassword}>
+              {({
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                values,
+                errors,
+                touched,
+                isSubmitting,
+              }: any) => (
+                <View style={{ marginTop: 16 }}>
+                  <View style={{ marginBottom: 12 }}>
+                    <Text
                       style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        padding: 12,
-                        fontSize: 16,
-                      }}
-                      placeholder="Enter new password"
-                      onChangeText={handleChange('password')}
-                      onBlur={handleBlur('password')}
-                      value={values.password}
-                      secureTextEntry={!showPassword}
-                    />
-                    <TouchableOpacity
-                      style={{position: 'absolute', right: 12, top: 12}}
-                      onPress={() => setShowPassword(!showPassword)}>
-                      <Icon
-                        name={showPassword ? 'eye-off' : 'eye'}
-                        size={20}
-                        color="#4B5563"
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}>
+                      New Password
+                    </Text>
+                    <View style={{ position: 'relative' }}>
+                      <TextInput
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          padding: 12,
+                          fontSize: 16,
+                          color: "#000"
+                        }}
+                        placeholder="Enter new password"
+                        placeholderTextColor={"#000"}
+                        onChangeText={handleChange('password')}
+                        onBlur={handleBlur('password')}
+                        value={values.password}
+                        secureTextEntry={!showPassword}
                       />
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{ position: 'absolute', right: 12, top: 12 }}
+                        onPress={() => setShowPassword(!showPassword)}>
+                        <Icon
+                          name={showPassword ? 'eye-off' : 'eye'}
+                          size={20}
+                          color="#4B5563"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {touched.password && errors.password && (
+                      <Text
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        {errors.password}
+                      </Text>
+                    )}
+                    {apiErrors?.password && (
+                      <Text
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        {apiErrors?.password}
+                      </Text>
+                    )}
                   </View>
-                  {touched.password && errors.password && (
-                    <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
-                      {errors.password}
-                    </Text>
-                  )}
-                  {apiErrors?.password && (
-                    <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
-                      {apiErrors?.password}
-                    </Text>
-                  )}
-                </View>
 
-                <View style={{marginBottom: 12}}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Confirm Password
-                  </Text>
-                  <View style={{position: 'relative'}}>
-                    <TextInput
+                  <View style={{ marginBottom: 12 }}>
+                    <Text
                       style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        padding: 12,
-                        fontSize: 16,
-                      }}
-                      placeholder="Re-enter password"
-                      onChangeText={handleChange('confirmPassword')}
-                      onBlur={handleBlur('confirmPassword')}
-                      value={values.confirmPassword}
-                      secureTextEntry={!showConfirmPassword}
-                    />
-                    <TouchableOpacity
-                      style={{position: 'absolute', right: 12, top: 12}}
-                      onPress={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }>
-                      <Icon
-                        name={showConfirmPassword ? 'eye-off' : 'eye'}
-                        size={20}
-                        color="#4B5563"
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}>
+                      Confirm Password
+                    </Text>
+                    <View style={{ position: 'relative' }}>
+                      <TextInput
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          padding: 12,
+                          fontSize: 16,
+                          color: "#000"
+                        }}
+                        placeholder="Re-enter password"
+                        placeholderTextColor={"#000"}
+                        onChangeText={handleChange('confirmPassword')}
+                        onBlur={handleBlur('confirmPassword')}
+                        value={values.confirmPassword}
+                        secureTextEntry={!showConfirmPassword}
                       />
-                    </TouchableOpacity>
+                      <TouchableOpacity
+                        style={{ position: 'absolute', right: 12, top: 12 }}
+                        onPress={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }>
+                        <Icon
+                          name={showConfirmPassword ? 'eye-off' : 'eye'}
+                          size={20}
+                          color="#4B5563"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {touched.confirmPassword && errors.confirmPassword && (
+                      <Text
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        {errors.confirmPassword}
+                      </Text>
+                    )}
                   </View>
-                  {touched.confirmPassword && errors.confirmPassword && (
-                    <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
-                      {errors.confirmPassword}
-                    </Text>
-                  )}
+
+                  <TouchableOpacity
+                    onPress={handleSubmit}
+                    disabled={isSubmitting}
+                    style={{ marginTop: 16 }}>
+                    <LinearGradient
+                      colors={['#ac94f4', '#7248B3']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{
+                        padding: 16,
+                        borderRadius: 10,
+                        alignItems: 'center',
+                      }}>
+                      <Text
+                        style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                        {isSubmitting ? 'Resetting...' : 'Reset Password'}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
                 </View>
+              )}
+            </Formik>
 
-                <TouchableOpacity
-                  onPress={handleSubmit}
-                  disabled={isSubmitting}
-                  style={{marginTop: 16}}>
-                  <LinearGradient
-                    colors={['#EE6447', '#7248B3']}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 0}}
-                    style={{
-                      padding: 16,
-                      borderRadius: 10,
-                      alignItems: 'center',
-                    }}>
-                    <Text
-                      style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>
-                      {isSubmitting ? 'Resetting...' : 'Reset Password'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            )}
-          </Formik>
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 16,
+              }}>
+              <Text style={{ fontSize: 14, color: '#4B5563' }}>Back to</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('LoginScreen')}>
+                <Text
+                  style={{
+                    color: '#ac94f4',
+                    marginLeft: 4,
+                    fontSize: 14,
+                    textDecorationLine: 'underline',
+                    fontWeight: 'bold',
+                  }}>
+                  Login
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
 
+        {/* Success Modal */}
+        <Modal
+          visible={showSuccessModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowSuccessModal(false)}>
           <View
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
+              flex: 1,
               justifyContent: 'center',
-              marginTop: 16,
+              alignItems: 'center',
+              backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
             }}>
-            <Text style={{fontSize: 14, color: '#4B5563'}}>Back to</Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('LoginScreen')}>
+            <View
+              style={{
+                backgroundColor: '#fff',
+                borderRadius: 12,
+                padding: 24,
+                alignItems: 'center',
+                width: width * 0.8,
+              }}>
+              <LinearGradient
+                colors={['#EE6447', '#7248B3']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{
+                  padding: 10,
+                  borderRadius: 999,
+                  alignItems: 'center',
+                }}>
+                <Image
+                  source={ImagePath.stars}
+                  className="absolute left-[-15%] top-0 w-8 h-8"
+                  resizeMode="contain"
+                />
+
+                <Icon name="checkmark" size={45} color={'#fff'} />
+                <Image
+                  source={ImagePath.stars}
+                  className="absolute right-[-15%] bottom-0 w-8 h-8"
+                  resizeMode="contain"
+                />
+              </LinearGradient>
               <Text
                 style={{
-                  color: '#F97316',
-                  marginLeft: 4,
-                  fontSize: 14,
-                  textDecorationLine: 'underline',
-                  fontWeight: 'bold',
+                  fontSize: 18,
+                  fontWeight: '600',
+                  color: '#1F2937',
+                  marginTop: 16,
+                  textAlign: 'center',
                 }}>
-                Login
+                Thank You!
               </Text>
-            </TouchableOpacity>
+              <Text
+                style={{
+                  fontSize: 14,
+                  color: '#4B5563',
+                  marginTop: 8,
+                  textAlign: 'center',
+                }}>
+                Your password has been reset successfully.
+              </Text>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-
-      {/* Success Modal */}
-      <Modal
-        visible={showSuccessModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowSuccessModal(false)}>
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent background
-          }}>
-          <View
-            style={{
-              backgroundColor: '#fff',
-              borderRadius: 12,
-              padding: 24,
-              alignItems: 'center',
-              width: width * 0.8,
-            }}>
-            <LinearGradient
-              colors={['#EE6447', '#7248B3']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}
-              style={{
-                padding: 10,
-                borderRadius: 999,
-                alignItems: 'center',
-              }}>
-              <Image
-                source={ImagePath.stars}
-                className="absolute left-[-15%] top-0 w-8 h-8"
-                resizeMode="contain"
-              />
-
-              <Icon name="checkmark" size={45} color={'#fff'} />
-              <Image
-                source={ImagePath.stars}
-                className="absolute right-[-15%] bottom-0 w-8 h-8"
-                resizeMode="contain"
-              />
-            </LinearGradient>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '600',
-                color: '#1F2937',
-                marginTop: 16,
-                textAlign: 'center',
-              }}>
-              Thank You!
-            </Text>
-            <Text
-              style={{
-                fontSize: 14,
-                color: '#4B5563',
-                marginTop: 8,
-                textAlign: 'center',
-              }}>
-              Your password has been reset successfully.
-            </Text>
-          </View>
-        </View>
-      </Modal>
-    </KeyboardAvoidingView>
+        </Modal>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

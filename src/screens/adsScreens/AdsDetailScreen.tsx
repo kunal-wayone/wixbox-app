@@ -15,6 +15,7 @@ import {
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 
@@ -100,82 +101,84 @@ const AdsDetailScreen = () => {
   }
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: '#fff' }}>
-      {/* Header */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderColor: '#eee' }}>
-        <TouchableOpacity style={{ position: 'absolute', left: 10 }} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={{ fontSize: 18, fontWeight: '600', textAlign: 'center', width: '100%' }}>Ads Details</Text>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ScrollView style={{ flex: 1, backgroundColor: '#fff' }}>
+        {/* Header */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderColor: '#eee' }}>
+          <TouchableOpacity style={{ position: 'absolute', left: 10 }} onPress={() => navigation.goBack()}>
+            <Icon name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={{ fontSize: 18, fontWeight: '600', textAlign: 'center', width: '100%' }}>Ads Details</Text>
+        </View>
 
-      {/* Image Slider */}
-      <View style={{ width, height: 250 }}>
-        <FlatList
-          data={ads.images}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          onScroll={handleScroll}
-          ref={flatListRef}
-          keyExtractor={(_, index) => index.toString()}
-          renderItem={({ item }) => (
-            <Image
-              source={{ uri: IMAGE_URL + item }}
-              style={{ width, height: 250, resizeMode: 'cover' }}
-            />
+        {/* Image Slider */}
+        <View style={{ width, height: 250 }}>
+          <FlatList
+            data={ads.images}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleScroll}
+            ref={flatListRef}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ item }) => (
+              <Image
+                source={{ uri: IMAGE_URL + item }}
+                style={{ width, height: 250, resizeMode: 'cover' }}
+              />
+            )}
+          />
+          {/* Pagination Dots */}
+          <View style={{ flexDirection: 'row', justifyContent: 'center', position: 'absolute', bottom: 10, width: '100%' }}>
+            {ads.images.map((_, index) => (
+              <View
+                key={index}
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 4,
+                  marginHorizontal: 4,
+                  backgroundColor: activeIndex === index ? '#007AFF' : '#ccc',
+                }}
+              />
+            ))}
+          </View>
+          {ads.promotion_tag && (
+            <Text className='absolute bottom-4 left-2 bg-primary-90 py-2.5 px-4 flex items-center' style={{ marginTop: 8, color: '#fff', borderRadius: 8, alignSelf: 'flex-start' }}>
+              {ads.promotion_tag}
+            </Text>
           )}
-        />
-        {/* Pagination Dots */}
-        <View style={{ flexDirection: 'row', justifyContent: 'center', position: 'absolute', bottom: 10, width: '100%' }}>
-          {ads.images.map((_, index) => (
-            <View
-              key={index}
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                marginHorizontal: 4,
-                backgroundColor: activeIndex === index ? '#007AFF' : '#ccc',
-              }}
-            />
-          ))}
+
         </View>
-        {ads.promotion_tag && (
-          <Text className='absolute bottom-4 left-2 bg-primary-90 py-2.5 px-4 flex items-center' style={{ marginTop: 8, color: '#fff', borderRadius: 8, alignSelf: 'flex-start' }}>
-            {ads.promotion_tag}
+
+        {/* Ad Content */}
+        <View style={{ padding: 16 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: '#333' }}>{ads.product_name}</Text>
+          </View>
+
+
+          <View className={`flex-row items-center justify-between`} style={{ flexDirection: 'row', marginTop: 12, gap: 20 }}>
+            <Text style={{ color: '#666', fontSize: 13 }}>{formatDate(ads.created_at)}</Text>
+            <Text style={{ fontSize: 14 }} className={`${ads.status === '1' ? 'text-green-600' : 'text-red-500'}`}>•{ads.status === '1' ? 'Active' : 'Inactive'}</Text>
+          </View>
+
+          <View className='flex-row items-center gap-1 mt-2 border-b border-gray-300 pb-2'>
+            <Text className='font-semibold text-lg'>₹{ads.discounted_price}/-</Text>
+            <Text className='text-xs line-through '> ₹{ads.original_price}/-</Text>
+            <Text style={{ fontSize: 14, }} className='text-orange-500 ml-2'> • {ads.offer_tag}</Text>
+          </View>
+
+          <Text style={{ marginTop: 6, }} className='font-semibold'>
+            Offer Duration:
           </Text>
-        )}
-
-      </View>
-
-      {/* Ad Content */}
-      <View style={{ padding: 16 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: '#333' }}>{ads.product_name}</Text>
+          <Text className='text-grey-600 mt-1'>
+            {formatDate(ads.offer_starts_at)} - {formatDate(ads.offer_ends_at)}
+          </Text>
+          <Text style={{ marginTop: 12, color: '#333', fontSize: 15 }}>{ads.caption || 'No description provided.'}</Text>
         </View>
-
-
-        <View className={`flex-row items-center justify-between`} style={{ flexDirection: 'row', marginTop: 12, gap: 20 }}>
-          <Text style={{ color: '#666', fontSize: 13 }}>{formatDate(ads.created_at)}</Text>
-          <Text style={{ fontSize: 14 }} className={`${ads.status === '1' ? 'text-green-600' : 'text-red-500'}`}>•{ads.status === '1' ? 'Active' : 'Inactive'}</Text>
-        </View>
-
-        <View className='flex-row items-center gap-1 mt-2 border-b border-gray-300 pb-2'>
-          <Text className='font-semibold text-lg'>₹{ads.discounted_price}/-</Text>
-          <Text className='text-xs line-through '> ₹{ads.original_price}/-</Text>
-          <Text style={{ fontSize: 14, }} className='text-orange-500 ml-2'> • {ads.offer_tag}</Text>
-        </View>
-
-        <Text style={{ marginTop: 6, }} className='font-semibold'>
-          Offer Duration:
-        </Text>
-        <Text className='text-grey-600 mt-1'>
-          {formatDate(ads.offer_starts_at)} - {formatDate(ads.offer_ends_at)}
-        </Text>
-        <Text style={{ marginTop: 12, color: '#333', fontSize: 15 }}>{ads.caption || 'No description provided.'}</Text>
-      </View>
-    </ScrollView >
+      </ScrollView >
+    </SafeAreaView>
   );
 };
 

@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,19 +12,20 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import {Formik} from 'formik';
+import { Formik } from 'formik';
 import * as Yup from 'yup';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ImagePath} from '../../constants/ImagePath';
-import {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { ImagePath } from '../../constants/ImagePath';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Post } from '../../utils/apiUtils';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Define navigation stack param list
 type RootStackParamList = {
   LoginScreen: undefined;
   ForgetPasswordScreen: undefined;
-  VerifyOtpScreen: {email: string};
+  VerifyOtpScreen: { email: string };
   ResetPasswordScreen: undefined;
 };
 
@@ -45,7 +46,7 @@ const VerifyOtpScreen = () => {
   const [otpHint, setOtpHint] = useState('');
   const [resendTimer, setResendTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
-  const [apiErrors, setApiErrors] = useState<{otp: string}>({otp: ''});
+  const [apiErrors, setApiErrors] = useState<{ otp: string }>({ otp: '' });
   const otpRefs = useRef<any>(
     Array(4)
       .fill(null)
@@ -80,47 +81,47 @@ const VerifyOtpScreen = () => {
   }, [resendTimer]);
 
   // Handle OTP verification
-    const handleVerifyOtp = async (
-      values: {otp: string},
-      {setSubmitting, resetForm}: any,
-    ) => {
-      try {
-        setApiErrors({otp: ''});
-        const response: any = await Post('/auth/verify-otp', {
-          email,
-          otp: values.otp,
-        },5000);
-        console.log(values);
-        console.log(response);
-        if (!response.success) {
-          throw new Error(response?.message || 'OTP verification failed');
-        }
-
-        // await AsyncStorage.removeItem('resetOtp');
-        // await AsyncStorage.removeItem('resetEmail');
-        resetForm();
-        ToastAndroid.show('OTP verified successfully!', ToastAndroid.SHORT);
-        navigation.navigate('ResetPasswordScreen');
-      } catch (error: any) {
-        const errorMessage =
-          error?.errors?.errors || 'Something went wrong. Please try again.';
-        const errorData = error?.errors || {};
-        setApiErrors({
-          otp: errorData.otp || errorMessage,
-        });
-        ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
-      } finally {
-        setSubmitting(false);
+  const handleVerifyOtp = async (
+    values: { otp: string },
+    { setSubmitting, resetForm }: any,
+  ) => {
+    try {
+      setApiErrors({ otp: '' });
+      const response: any = await Post('/auth/verify-otp', {
+        email,
+        otp: values.otp,
+      }, 5000);
+      console.log(values);
+      console.log(response);
+      if (!response.success) {
+        throw new Error(response?.message || 'OTP verification failed');
       }
-    };
+
+      // await AsyncStorage.removeItem('resetOtp');
+      // await AsyncStorage.removeItem('resetEmail');
+      resetForm();
+      ToastAndroid.show('OTP verified successfully!', ToastAndroid.SHORT);
+      navigation.navigate('ResetPasswordScreen');
+    } catch (error: any) {
+      const errorMessage =
+        error?.errors?.errors || 'Something went wrong. Please try again.';
+      const errorData = error?.errors || {};
+      setApiErrors({
+        otp: errorData.otp || errorMessage,
+      });
+      ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Handle resend OTP
   const handleResendOtp = async () => {
     try {
-      setApiErrors({otp: ''});
+      setApiErrors({ otp: '' });
       const response: any = await Post('/auth/forget-password', {
         email,
-      },5000);
+      }, 5000);
       console.log(email, response);
       setOtpHint(response?.data?.otp);
       if (!response.success) {
@@ -164,196 +165,204 @@ const VerifyOtpScreen = () => {
     }
   };
   return (
-    <KeyboardAvoidingView
-      style={{flex: 1}}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: 16,
-          backgroundColor: '#fff',
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        <Image
-          source={ImagePath.signBg}
-          style={{
-            position: 'absolute',
-            top: '-2%',
-            left: '-2%',
-            width: 208,
-            height: 176,
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: 16,
+            backgroundColor: '#fff',
           }}
-          resizeMode="contain"
-        />
-        <View style={{marginTop: 80}}>
-          <MaskedView
-            maskElement={
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 30,
-                  fontWeight: 'bold',
-                  fontFamily: 'Poppins',
-                }}>
-                Verify OTP
-              </Text>
-            }>
-            <LinearGradient
-              colors={['#EE6447', '#7248B3']}
-              start={{x: 0, y: 0}}
-              end={{x: 1, y: 0}}>
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 30,
-                  fontWeight: 'bold',
-                  fontFamily: 'Poppins',
-                  opacity: 0,
-                }}>
-                Verify OTP
-              </Text>
-            </LinearGradient>
-          </MaskedView>
-          <Text
-            style={{textAlign: 'center', marginVertical: 8, color: '#4B5563'}}>
-            Enter the 4-digit OTP sent to{' '}
-            <Text style={{fontWeight: 'bold'}}>{email}</Text>.
-            {otpHint && <Text> Hint: OTP starts with {otpHint}</Text>}
-          </Text>
-
-          <Formik
-            initialValues={{otp: ''}}
-            validationSchema={verifyOtpSchema}
-            onSubmit={handleVerifyOtp}>
-            {({
-              handleSubmit,
-              setFieldValue,
-              values,
-              errors,
-              touched,
-              isSubmitting,
-            }) => (
-              <View style={{marginTop: 16}}>
-                <View style={{marginBottom: 12}}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}>
-                    Enter OTP
-                  </Text>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'center',
-                    }}>
-                    {[...Array(4)].map((_, index) => (
-                      <TextInput
-                        key={index}
-                        ref={otpRefs.current[index]}
-                        style={{
-                          borderWidth: 1,
-                          borderColor: '#D1D5DB',
-                          backgroundColor: '#F3F4F6',
-                          borderRadius: 8,
-                          width: 48,
-                          height: 48,
-                          textAlign: 'center',
-                          fontSize: 18,
-                          marginHorizontal: 4,
-                        }}
-                        placeholder="0"
-                        keyboardType="number-pad"
-                        maxLength={1}
-                        onChangeText={(value: string) =>
-                          handleOtpChange(index, value, setFieldValue, values)
-                        }
-                        value={values.otp[index] || ''}
-                      />
-                    ))}
-                  </View>
-                  {touched.otp && errors.otp && (
-                    <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
-                      {errors.otp}
-                    </Text>
-                  )}
-                  {apiErrors.otp && (
-                    <Text
-                      style={{color: '#EF4444', fontSize: 12, marginTop: 4}}>
-                      {apiErrors.otp}
-                    </Text>
-                  )}
-                </View>
-
-                <TouchableOpacity
-                  onPress={handleResendOtp}
-                  disabled={!canResend}
-                  style={{marginBottom: 16}}>
-                  <Text
-                    style={{
-                      color: canResend ? '#F97316' : '#A1A1AA',
-                      fontSize: 14,
-                      textDecorationLine: 'underline',
-                      fontWeight: 'bold',
-                      textAlign: 'center',
-                    }}>
-                    {canResend ? 'Resend OTP' : `Resend OTP in ${resendTimer}s`}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => handleSubmit()}
-                  disabled={isSubmitting}
-                  style={{marginTop: 16}}>
-                  <LinearGradient
-                    colors={['#EE6447', '#7248B3']}
-                    start={{x: 0, y: 0}}
-                    end={{x: 1, y: 0}}
-                    style={{
-                      padding: 16,
-                      borderRadius: 10,
-                      alignItems: 'center',
-                    }}>
-                    <Text
-                      style={{color: '#fff', fontSize: 16, fontWeight: 'bold'}}>
-                      {isSubmitting ? 'Verifying...' : 'Verify'}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </View>
-            )}
-          </Formik>
-
-          <View
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          <Image
+            source={ImagePath.signBg}
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              marginTop: 16,
-            }}>
-            <Text style={{fontSize: 14, color: '#4B5563'}}>Back to</Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('LoginScreen')}>
-              <Text
-                style={{
-                  color: '#F97316',
-                  marginLeft: 4,
-                  fontSize: 14,
-                  textDecorationLine: 'underline',
-                  fontWeight: 'bold',
-                }}>
-                Login
-              </Text>
-            </TouchableOpacity>
+              position: 'absolute',
+              top: '-2%',
+              left: '-2%',
+              width: 208,
+              height: 176,
+              tintColor: "#ac94f4"
+            }}
+            resizeMode="contain"
+          />
+          <View style={{ marginTop: 80 }}>
+            <MaskedView
+              maskElement={
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    fontFamily: 'Poppins',
+                  }}>
+                  Verify OTP
+                </Text>
+              }>
+              <LinearGradient
+                colors={['#ac94f4', '#7248B3']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}>
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    fontFamily: 'Poppins',
+                    opacity: 0,
+                  }}>
+                  Verify OTP
+                </Text>
+              </LinearGradient>
+            </MaskedView>
+            <Text
+              style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
+              Enter the 4-digit OTP sent to{' '}
+              <Text style={{ fontWeight: 'bold' }}>{email}</Text>.
+              {otpHint && <Text> Hint: OTP starts with {otpHint}</Text>}
+            </Text>
+
+            <Formik
+              initialValues={{ otp: '' }}
+              validationSchema={verifyOtpSchema}
+              onSubmit={handleVerifyOtp}>
+              {({
+                handleSubmit,
+                setFieldValue,
+                values,
+                errors,
+                touched,
+                isSubmitting,
+              }) => (
+                <View style={{ marginTop: 16 }}>
+                  <View style={{ marginBottom: 12 }}>
+                    <Text
+                      className='text-center'
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}>
+                      Enter OTP
+                    </Text>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                      }}>
+                      {[...Array(4)].map((_, index) => (
+                        <TextInput
+                          key={index}
+                          ref={otpRefs.current[index]}
+                          style={{
+                            borderWidth: 1,
+                            borderColor: '#D1D5DB',
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 8,
+                            width: 48,
+                            height: 48,
+                            textAlign: 'center',
+                            fontSize: 18,
+                            marginHorizontal: 4,
+                            color: "#000"
+                          }}
+                          placeholder="0"
+                          placeholderTextColor={"#000"}
+                          keyboardType="number-pad"
+                          maxLength={1}
+                          onChangeText={(value: string) =>
+                            handleOtpChange(index, value, setFieldValue, values)
+                          }
+                          value={values.otp[index] || ''}
+                        />
+                      ))}
+                    </View>
+                    {touched.otp && errors.otp && (
+                      <Text
+                        className='text-center'
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        {errors.otp}
+                      </Text>
+                    )}
+                    {apiErrors.otp && (
+                      <Text
+                        className='text-center'
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        {apiErrors.otp}
+                      </Text>
+                    )}
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={handleResendOtp}
+                    disabled={!canResend}
+                    style={{ marginBottom: 16 }}>
+                    <Text
+                      style={{
+                        color: canResend ? '#ac94f4' : '#ac94f4',
+                        fontSize: 14,
+                        textDecorationLine: 'underline',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                      }}>
+                      {canResend ? 'Resend OTP' : `Resend OTP in ${resendTimer}s`}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={() => handleSubmit()}
+                    disabled={isSubmitting}
+                    style={{ marginTop: 16 }}>
+                    <LinearGradient
+                      colors={['#ac94f4', '#7248B3']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={{
+                        padding: 16,
+                        borderRadius: 10,
+                        alignItems: 'center',
+                      }}>
+                      <Text
+                        style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                        {isSubmitting ? 'Verifying...' : 'Verify'}
+                      </Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </Formik>
+
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginTop: 16,
+              }}>
+              <Text style={{ fontSize: 14, color: '#4B5563' }}>Back to</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('LoginScreen')}>
+                <Text
+                  style={{
+                    color: '#ac94f4',
+                    marginLeft: 4,
+                    fontSize: 14,
+                    textDecorationLine: 'underline',
+                    fontWeight: 'bold',
+                  }}>
+                  Login
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

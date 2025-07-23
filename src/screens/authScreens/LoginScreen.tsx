@@ -26,6 +26,7 @@ import { googleAuth, login } from '../../store/slices/authSlice';
 import { fetchUser } from '../../store/slices/userSlice';
 import { getFcmToken } from '../../utils/notification/firebase';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -116,188 +117,190 @@ const LoginScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-    >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, backgroundColor: '#fff' }}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
-        <View className="relative p-4">
-          <Image
-            source={ImagePath.signBg}
-            style={{ tintColor: "#ac94f4" }}
-            className="absolute -top-[2%] -left-[2%] w-52 h-44"
-            resizeMode="contain"
-          />
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, backgroundColor: '#fff' }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View className="relative p-4">
+            <Image
+              source={ImagePath.signBg}
+              style={{ tintColor: "#ac94f4" }}
+              className="absolute -top-[2%] -left-[2%] w-52 h-44"
+              resizeMode="contain"
+            />
 
-          <View className="mt-20">
-            <MaskedView
-              maskElement={
-                <Text className="text-center text-3xl font-bold">Welcome Back!</Text>
-              }
-            >
-              <LinearGradient
-                colors={['#ac94f4', '#7248B3']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
+            <View className="mt-20">
+              <MaskedView
+                maskElement={
+                  <Text className="text-center text-3xl font-bold">Welcome Back!</Text>
+                }
               >
-                <Text className="text-center text-3xl font-bold" style={{ opacity: 0 }}>
-                  Welcome Back!
-                </Text>
-              </LinearGradient>
-            </MaskedView>
+                <LinearGradient
+                  colors={['#ac94f4', '#7248B3']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text className="text-center text-3xl font-bold" style={{ opacity: 0 }}>
+                    Welcome Back!
+                  </Text>
+                </LinearGradient>
+              </MaskedView>
 
-            <Text className="text-center my-2 text-gray-600">
-              Sign in to continue your journey
-            </Text>
+              <Text className="text-center my-2 text-gray-600">
+                Sign in to continue your journey
+              </Text>
 
-            <Formik
-              initialValues={{ email: '', password: '' }}
-              validationSchema={validationSchema}
-              onSubmit={handleLogin}
-            >
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                touched,
-                isSubmitting: formSubmitting,
-              }) => (
-                <View className="mt-4">
-                  {/* Email */}
-                  <View className="mb-3">
-                    <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
-                    <TextInput
-                      className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
-                      placeholder="Enter your email"
-                      placeholderTextColor={"#000"}
-                      onChangeText={handleChange('email')}
-                      onBlur={handleBlur('email')}
-                      value={values.email}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      editable={!isSubmitting}
-                    />
-                    {(touched.email || apiErrors.email) && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {errors.email || apiErrors.email}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* Password */}
-                  <View className="mb-3">
-                    <Text className="text-sm font-medium text-gray-700 mb-1">Password</Text>
-                    <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
+              <Formik
+                initialValues={{ email: '', password: '' }}
+                validationSchema={validationSchema}
+                onSubmit={handleLogin}
+              >
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                  isSubmitting: formSubmitting,
+                }) => (
+                  <View className="mt-4">
+                    {/* Email */}
+                    <View className="mb-3">
+                      <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
                       <TextInput
-                        className="flex-1 p-3 bg-gray-100 text-gray-900 text-base"
-                        placeholder="Enter your password"
+                        className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
+                        placeholder="Enter your email"
                         placeholderTextColor={"#000"}
-                        secureTextEntry={!showPassword}
-                        onChangeText={handleChange('password')}
-                        onBlur={handleBlur('password')}
-                        value={values.password}
+                        onChangeText={handleChange('email')}
+                        onBlur={handleBlur('email')}
+                        value={values.email}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
                         editable={!isSubmitting}
                       />
-                      <TouchableOpacity
-                        onPress={() => setShowPassword(!showPassword)}
-                        className="p-3 bg-gray-100"
-                      >
-                        <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color="#666" />
-                      </TouchableOpacity>
+                      {(touched.email || apiErrors.email) && (
+                        <Text className="text-red-500 text-xs mt-1">
+                          {errors.email || apiErrors.email}
+                        </Text>
+                      )}
                     </View>
-                    {(touched.password || apiErrors.password) && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {errors.password || apiErrors.password}
-                      </Text>
-                    )}
-                  </View>
 
-                  {/* Forgot Password */}
-                  <TouchableOpacity
-                    className="my-1"
-                    onPress={() => navigation.navigate('ForgetPasswordScreen')}
-                    disabled={isSubmitting}
-                  >
-                    <Text className="ml-2 text-sm text-primary-90 font-bold">
-                      Forgot Password?
-                    </Text>
-                  </TouchableOpacity>
+                    {/* Password */}
+                    <View className="mb-3">
+                      <Text className="text-sm font-medium text-gray-700 mb-1">Password</Text>
+                      <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
+                        <TextInput
+                          className="flex-1 p-3 bg-gray-100 text-gray-900 text-base"
+                          placeholder="Enter your password"
+                          placeholderTextColor={"#000"}
+                          secureTextEntry={!showPassword}
+                          onChangeText={handleChange('password')}
+                          onBlur={handleBlur('password')}
+                          value={values.password}
+                          editable={!isSubmitting}
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowPassword(!showPassword)}
+                          className="p-3 bg-gray-100"
+                        >
+                          <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color="#666" />
+                        </TouchableOpacity>
+                      </View>
+                      {(touched.password || apiErrors.password) && (
+                        <Text className="text-red-500 text-xs mt-1">
+                          {errors.password || apiErrors.password}
+                        </Text>
+                      )}
+                    </View>
 
-                  {/* Submit Button */}
-                  <TouchableOpacity
-                    className="mt-4"
-                    onPress={() => handleSubmit()}
-                    disabled={isSubmitting || formSubmitting}
-                  >
-                    <LinearGradient
-                      colors={['#ac94f4', '#7248B3']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={[
-                        styles.loginButton,
-                        (isSubmitting || formSubmitting) && { opacity: 0.7 },
-                      ]}
+                    {/* Forgot Password */}
+                    <TouchableOpacity
+                      className="my-1"
+                      onPress={() => navigation.navigate('ForgetPasswordScreen')}
+                      disabled={isSubmitting}
                     >
-                      <Text className="text-white text-base font-bold">Login</Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </Formik>
+                      <Text className="ml-2 text-sm text-primary-90 font-bold">
+                        Forgot Password?
+                      </Text>
+                    </TouchableOpacity>
 
-            <Text className="text-center my-4 mt-10 text-gray-600">
-              -------- Or Continue with --------
-            </Text>
+                    {/* Submit Button */}
+                    <TouchableOpacity
+                      className="mt-4"
+                      onPress={() => handleSubmit()}
+                      disabled={isSubmitting || formSubmitting}
+                    >
+                      <LinearGradient
+                        colors={['#ac94f4', '#7248B3']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={[
+                          styles.loginButton,
+                          (isSubmitting || formSubmitting) && { opacity: 0.7 },
+                        ]}
+                      >
+                        <Text className="text-white text-base font-bold">Login</Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </Formik>
 
-            <View className="flex-row justify-center gap-4 mb-10 mt-5">
-              <TouchableOpacity
-                className="p-3 w-1/2 bg-primary-10 rounded-2xl"
-                onPress={handleGoogleLogin}
-                disabled={isSubmitting}
-              >
-                <Image source={ImagePath.google} className="w-8 h-8 m-auto" resizeMode="contain" />
-              </TouchableOpacity>
+              <Text className="text-center my-4 mt-10 text-gray-600">
+                -------- Or Continue with --------
+              </Text>
 
-              {/* Facebook (Placeholder) */}
-              <TouchableOpacity
-                className="p-3 w-1/2 bg-primary-10 rounded-2xl opacity-50 hidden"
-                onPress={() => ToastAndroid.show('Facebook login not implemented', ToastAndroid.SHORT)}
-                disabled
-              >
-                <Image source={ImagePath.facebook} className="w-8 h-8 m-auto" resizeMode="contain" />
-              </TouchableOpacity>
-            </View>
+              <View className="flex-row justify-center gap-4 mb-10 mt-5">
+                <TouchableOpacity
+                  className="p-3 w-1/2 bg-primary-10 rounded-2xl"
+                  onPress={handleGoogleLogin}
+                  disabled={isSubmitting}
+                >
+                  <Image source={ImagePath.google} className="w-8 h-8 m-auto" resizeMode="contain" />
+                </TouchableOpacity>
 
-            {/* Sign Up Link */}
-            <View className="flex-row items-center justify-center mb-4">
-              <Text className="text-sm text-gray-600">Don't have an account?</Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('AccountTypeScreen')}
-                disabled={isSubmitting}
-              >
-                <Text className="text-primary-100 text-sm ml-1 underline font-bold">
-                  Sign Up
-                </Text>
-              </TouchableOpacity>
+                {/* Facebook (Placeholder) */}
+                <TouchableOpacity
+                  className="p-3 w-1/2 bg-primary-10 rounded-2xl opacity-50 hidden"
+                  onPress={() => ToastAndroid.show('Facebook login not implemented', ToastAndroid.SHORT)}
+                  disabled
+                >
+                  <Image source={ImagePath.facebook} className="w-8 h-8 m-auto" resizeMode="contain" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Sign Up Link */}
+              <View className="flex-row items-center justify-center mb-4">
+                <Text className="text-sm text-gray-600">Don't have an account?</Text>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('AccountTypeScreen')}
+                  disabled={isSubmitting}
+                >
+                  <Text className="text-primary-100 text-sm ml-1 underline font-bold">
+                    Sign Up
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
 
-      {/* Loading Overlay */}
-      {isSubmitting && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>Logging In...</Text>
-        </View>
-      )}
-    </KeyboardAvoidingView>
+        {/* Loading Overlay */}
+        {isSubmitting && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#fff" />
+            <Text style={styles.loadingText}>Logging In...</Text>
+          </View>
+        )}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

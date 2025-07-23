@@ -11,6 +11,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { Fetch } from '../../utils/apiUtils';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const formatDate = (date: any) => date.toISOString().split('T')[0];
 const displayDate = (date: any) => date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -75,82 +76,84 @@ const WalletScreen = () => {
     );
 
     return (
-        <ScrollView className="flex-1 bg-gray-100 px-4 pt-4">
-            <TouchableOpacity onPress={() => navigation.goBack()} className="absolute top-0 left-4 z-10">
-                <Icon name='arrow-back' size={20} />
-            </TouchableOpacity>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+            <ScrollView className="flex-1 bg-gray-100 px-4 pt-4">
+                <TouchableOpacity onPress={() => navigation.goBack()} className="absolute top-0 left-4 z-10">
+                    <Icon name='arrow-back' size={20} />
+                </TouchableOpacity>
 
-            <Text className="text-2xl font-bold text-center mb-4">Wallet & Settlement</Text>
+                <Text className="text-2xl font-bold text-center mb-4">Wallet & Settlement</Text>
 
-            {/* Tabs */}
-            <View className="flex-row justify-around mb-4">
-                {['Today', 'Weekly', 'Monthly', 'Custom'].map((tab) => (
-                    <TouchableOpacity
-                        key={tab}
-                        onPress={() => {
-                            setSelectedTab(tab);
-                            if (tab !== 'Custom') setDateRange(getPresetRange(tab));
-                        }}
-                        className={`px-4 py-2 rounded-lg ${selectedTab === tab ? 'bg-primary-90' : 'bg-white'} shadow`}
-                    >
-                        <Text className={`${selectedTab === tab ? 'text-white' : 'text-gray-700'} font-semibold`}>{tab}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-
-            {/* Date Filter (only for Custom) */}
-            {selectedTab === 'Custom' && (
-                <View className="flex-row justify-between mb-4">
-                    <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, from: true })} className="flex-1 mr-2 bg-white py-3 px-4 rounded-lg shadow">
-                        <Text className="text-base text-gray-700">From: {displayDate(dateRange.from)}</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, to: true })} className="flex-1 ml-2 bg-white py-3 px-4 rounded-lg shadow">
-                        <Text className="text-base text-gray-700">To: {displayDate(dateRange.to)}</Text>
-                    </TouchableOpacity>
+                {/* Tabs */}
+                <View className="flex-row justify-around mb-4">
+                    {['Today', 'Weekly', 'Monthly', 'Custom'].map((tab) => (
+                        <TouchableOpacity
+                            key={tab}
+                            onPress={() => {
+                                setSelectedTab(tab);
+                                if (tab !== 'Custom') setDateRange(getPresetRange(tab));
+                            }}
+                            className={`px-4 py-2 rounded-lg ${selectedTab === tab ? 'bg-primary-90' : 'bg-white'} shadow`}
+                        >
+                            <Text className={`${selectedTab === tab ? 'text-white' : 'text-gray-700'} font-semibold`}>{tab}</Text>
+                        </TouchableOpacity>
+                    ))}
                 </View>
-            )}
 
-            {loading ? (
-                <View className="items-center justify-center mt-10">
-                    <ActivityIndicator size="large" color="#B68AD4" />
-                    <Text className="text-sm mt-2 text-gray-500">Loading wallet info...</Text>
-                </View>
-            ) : walletData ? (
-                <>
-                    <View className="flex-row flex-wrap justify-between">
-                        {renderInfoCard('Total Orders', walletData.total_orders)}
-                        {renderInfoCard('Total Earnings', `₹${walletData.total_earnings}`, '#28a745')}
-                        {renderInfoCard('Commission Deducted', `₹${walletData.commission_deducted}`, '#dc3545')}
-                        {renderInfoCard('Final Earning', `₹${walletData.final_earning}`, '#007bff')}
+                {/* Date Filter (only for Custom) */}
+                {selectedTab === 'Custom' && (
+                    <View className="flex-row justify-between mb-4">
+                        <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, from: true })} className="flex-1 mr-2 bg-white py-3 px-4 rounded-lg shadow">
+                            <Text className="text-base text-gray-700">From: {displayDate(dateRange.from)}</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, to: true })} className="flex-1 ml-2 bg-white py-3 px-4 rounded-lg shadow">
+                            <Text className="text-base text-gray-700">To: {displayDate(dateRange.to)}</Text>
+                        </TouchableOpacity>
                     </View>
+                )}
 
-                    <View className="bg-white p-4 mt-2 rounded-xl shadow">
-                        <Text className="text-base text-gray-800">Statement Period</Text>
-                        <Text className="text-sm text-gray-500">{walletData.from} to {walletData.to}</Text>
+                {loading ? (
+                    <View className="items-center justify-center mt-10">
+                        <ActivityIndicator size="large" color="#B68AD4" />
+                        <Text className="text-sm mt-2 text-gray-500">Loading wallet info...</Text>
                     </View>
-                </>
-            ) : (
-                <Text className="text-center text-gray-500 mt-10">No wallet data found</Text>
-            )}
+                ) : walletData ? (
+                    <>
+                        <View className="flex-row flex-wrap justify-between">
+                            {renderInfoCard('Total Orders', walletData.total_orders)}
+                            {renderInfoCard('Total Earnings', `₹${walletData.total_earnings}`, '#28a745')}
+                            {renderInfoCard('Commission Deducted', `₹${walletData.commission_deducted}`, '#dc3545')}
+                            {renderInfoCard('Final Earning', `₹${walletData.final_earning}`, '#007bff')}
+                        </View>
 
-            {showPicker.from && (
-                <DateTimePicker
-                    value={dateRange.from}
-                    mode="date"
-                    display="calendar"
-                    onChange={(e, d) => handleDateChange('from', e, d)}
-                />
-            )}
-            {showPicker.to && (
-                <DateTimePicker
-                    value={dateRange.to}
-                    mode="date"
-                    display="calendar"
-                    onChange={(e, d) => handleDateChange('to', e, d)}
-                />
-            )}
-        </ScrollView>
+                        <View className="bg-white p-4 mt-2 rounded-xl shadow">
+                            <Text className="text-base text-gray-800">Statement Period</Text>
+                            <Text className="text-sm text-gray-500">{walletData.from} to {walletData.to}</Text>
+                        </View>
+                    </>
+                ) : (
+                    <Text className="text-center text-gray-500 mt-10">No wallet data found</Text>
+                )}
+
+                {showPicker.from && (
+                    <DateTimePicker
+                        value={dateRange.from}
+                        mode="date"
+                        display="calendar"
+                        onChange={(e, d) => handleDateChange('from', e, d)}
+                    />
+                )}
+                {showPicker.to && (
+                    <DateTimePicker
+                        value={dateRange.to}
+                        mode="date"
+                        display="calendar"
+                        onChange={(e, d) => handleDateChange('to', e, d)}
+                    />
+                )}
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 

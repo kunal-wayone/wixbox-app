@@ -25,6 +25,7 @@ import { useDispatch } from 'react-redux';
 import { googleAuth, signup } from '../../store/slices/authSlice';
 import { fetchUser } from '../../store/slices/userSlice';
 import { getFcmToken } from '../../utils/notification/firebase';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -174,267 +175,269 @@ const SignUpScreen = ({ route }: any) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          backgroundColor: '#fff',
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled">
-        <View className="p-4">
-          <Image
-            source={ImagePath.signBg}
-            style={{ tintColor: '#ac94f4' }}
-            className="absolute -top-[2%] -left-[2%] w-52 h-44"
-            resizeMode="contain"
-          />
-          <View className="mt-20">
-            <MaskedView
-              maskElement={
-                <Text className="text-center text-3xl font-bold font-poppins">
-                  Create an Account
-                </Text>
-              }>
-              <LinearGradient
-                colors={['#ac94f4', '#7248B3']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}>
-                <Text
-                  className="text-center text-3xl font-bold font-poppins"
-                  style={{ opacity: 0 }}>
-                  Create an Account
-                </Text>
-              </LinearGradient>
-            </MaskedView>
-            <Text className="text-center my-2 text-gray-600">
-              Create your account to get started
-            </Text>
-
-            <Formik
-              initialValues={{
-                fullName: '',
-                email: '',
-                password: '',
-                confirmPassword: '',
-                agreeTerms: false,
-              }}
-              validationSchema={validationSchema}
-              onSubmit={handleSignUp}>
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                touched,
-                isSubmitting: formikSubmitting,
-              }) => (
-                <View className="mt-4">
-                  <View className="mb-1">
-                    <Text className="text-sm font-medium text-gray-700 mb-1">
-                      Full Name
-                    </Text>
-                    <TextInput
-                      className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
-                      placeholder="Enter your full name"
-                      placeholderTextColor={"#000"}
-                      onChangeText={handleChange('fullName')}
-                      onBlur={handleBlur('fullName')}
-                      value={values.fullName}
-                      editable={!isSubmitting}
-                    />
-                    {(touched.fullName || apiErrors.name) && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {errors.fullName || apiErrors.name}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View className="mb-1">
-                    <Text className="text-sm font-medium text-gray-700 mb-1">
-                      Email Address
-                    </Text>
-                    <TextInput
-                      className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
-                      placeholder="Enter your email"
-                      placeholderTextColor={"#000"}
-                      onChangeText={handleChange('email')}
-                      onBlur={handleBlur('email')}
-                      value={values.email}
-                      keyboardType="email-address"
-                      autoCapitalize="none"
-                      editable={!isSubmitting}
-                    />
-                    {(touched.email || apiErrors.email) && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {errors.email || apiErrors.email}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View className="mb-1">
-                    <Text className="text-sm font-medium text-gray-700 mb-1">
-                      Create Password
-                    </Text>
-                    <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
-                      <TextInput
-                        className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
-                        placeholder="Enter your password"
-                        placeholderTextColor={"#000"}
-                        onChangeText={handleChange('password')}
-                        onBlur={handleBlur('password')}
-                        value={values.password}
-                        secureTextEntry={!showPassword}
-                        editable={!isSubmitting}
-                      />
-                      <TouchableOpacity
-                        onPress={() => setShowPassword(!showPassword)}
-                        className="p-3 bg-gray-100"
-                        disabled={isSubmitting}>
-                        <Icon
-                          name={showPassword ? 'eye-off' : 'eye'}
-                          size={20}
-                          color="#666"
-                        />
-                      </TouchableOpacity>
-                    </View>
-                    {(touched.password || apiErrors.password) && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {errors.password || apiErrors.password}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View className="mb-1">
-                    <Text className="text-sm font-medium text-gray-700 mb-1">
-                      Confirm Password
-                    </Text>
-                    <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
-                      <TextInput
-                        className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
-                        placeholder="Confirm your password"
-                        placeholderTextColor={"#000"}
-                        onChangeText={handleChange('confirmPassword')}
-                        onBlur={handleBlur('confirmPassword')}
-                        value={values.confirmPassword}
-                        secureTextEntry={!showConfirmPassword}
-                        editable={!isSubmitting}
-                      />
-                      <TouchableOpacity
-                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="p-3 bg-gray-100"
-                        disabled={isSubmitting}>
-                        <Icon
-                          name={showConfirmPassword ? 'eye-off' : 'eye'}
-                          size={20}
-                          color="#666"
-                        />
-                      </TouchableOpacity>
-                    </View>
-                    {(touched.confirmPassword || apiErrors.password_confirmation) && (
-                      <Text className="text-red-500 text-xs mt-1">
-                        {errors.confirmPassword || apiErrors.password_confirmation}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View className="flex-row items-center mb-3">
-                    <CheckBox
-                      value={isCheck}
-                      onValueChange={va => {
-                        setIsCheck(va);
-                        handleChange('agreeTerms');
-                        console.log(va, isCheck, values.agreeTerms);
-                      }}
-                      tintColors={{ true: '#7248B3', false: '#666' }}
-                    />
-                    <Text className="ml-2 text-sm text-gray-600">
-                      I agree to the Terms & Conditions
-                    </Text>
-                  </View>
-
-                  {touched.confirmPassword && !isCheck && (
-                    <Text className="text-red-500 text-xs mb-3">
-                      {"Required to check the Terms & Conditions"}
-                    </Text>
-                  )}
-
-                  <TouchableOpacity
-                    onPress={() => handleSubmit()}
-                    disabled={isSubmitting || formikSubmitting}
-                    className="mt-4">
-                    <LinearGradient
-                      colors={['#ac94f4', '#7248B3']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={{
-                        padding: 16,
-                        borderRadius: 10,
-                        alignItems: 'center',
-                        opacity: isSubmitting || formikSubmitting ? 0.7 : 1,
-                      }}>
-                      <Text className="text-white text-base font-bold">
-                        Create Account
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </Formik>
-
-            <Text className="text-center my-4 text-gray-600">
-              -------- Or Continue with --------
-            </Text>
-
-            <View className="flex-row justify-center gap-4 mb-4">
-              <TouchableOpacity
-                className="p-3 w-1/2 bg-primary-10 rounded-2xl"
-                onPress={handleGoogleSignUp}
-                disabled={isSubmitting}>
-                <Image
-                  source={ImagePath.google}
-                  className="w-8 h-8 m-auto"
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              <TouchableOpacity
-                className="p-3 w-1/2 bg-primary-10 rounded-2xl hidden"
-                disabled={isSubmitting}>
-                <Image
-                  source={ImagePath.facebook}
-                  className="w-8 h-8 m-auto"
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            </View>
-
-            <View className="flex-row justify-center items-center mb-4">
-              <Text className="text-sm text-gray-600">
-                Already have an account?{' '}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            backgroundColor: '#fff',
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+          <View className="p-4">
+            <Image
+              source={ImagePath.signBg}
+              style={{ tintColor: '#ac94f4' }}
+              className="absolute -top-[2%] -left-[2%] w-52 h-44"
+              resizeMode="contain"
+            />
+            <View className="mt-20">
+              <MaskedView
+                maskElement={
+                  <Text className="text-center text-3xl font-bold font-poppins">
+                    Create an Account
+                  </Text>
+                }>
+                <LinearGradient
+                  colors={['#ac94f4', '#7248B3']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}>
+                  <Text
+                    className="text-center text-3xl font-bold font-poppins"
+                    style={{ opacity: 0 }}>
+                    Create an Account
+                  </Text>
+                </LinearGradient>
+              </MaskedView>
+              <Text className="text-center my-2 text-gray-600">
+                Create your account to get started
               </Text>
-              <TouchableOpacity
-                onPress={() => navigation.navigate('LoginScreen')}
-                disabled={isSubmitting}>
-                <Text className="text-primary-100 text-sm ml-1 font-bold underline">
-                  Login
+
+              <Formik
+                initialValues={{
+                  fullName: '',
+                  email: '',
+                  password: '',
+                  confirmPassword: '',
+                  agreeTerms: false,
+                }}
+                validationSchema={validationSchema}
+                onSubmit={handleSignUp}>
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                  isSubmitting: formikSubmitting,
+                }) => (
+                  <View className="mt-4">
+                    <View className="mb-1">
+                      <Text className="text-sm font-medium text-gray-700 mb-1">
+                        Full Name
+                      </Text>
+                      <TextInput
+                        className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
+                        placeholder="Enter your full name"
+                        placeholderTextColor={"#000"}
+                        onChangeText={handleChange('fullName')}
+                        onBlur={handleBlur('fullName')}
+                        value={values.fullName}
+                        editable={!isSubmitting}
+                      />
+                      {(touched.fullName || apiErrors.name) && (
+                        <Text className="text-red-500 text-xs mt-1">
+                          {errors.fullName || apiErrors.name}
+                        </Text>
+                      )}
+                    </View>
+
+                    <View className="mb-1">
+                      <Text className="text-sm font-medium text-gray-700 mb-1">
+                        Email Address
+                      </Text>
+                      <TextInput
+                        className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
+                        placeholder="Enter your email"
+                        placeholderTextColor={"#000"}
+                        onChangeText={handleChange('email')}
+                        onBlur={handleBlur('email')}
+                        value={values.email}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        editable={!isSubmitting}
+                      />
+                      {(touched.email || apiErrors.email) && (
+                        <Text className="text-red-500 text-xs mt-1">
+                          {errors.email || apiErrors.email}
+                        </Text>
+                      )}
+                    </View>
+
+                    <View className="mb-1">
+                      <Text className="text-sm font-medium text-gray-700 mb-1">
+                        Create Password
+                      </Text>
+                      <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
+                        <TextInput
+                          className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
+                          placeholder="Enter your password"
+                          placeholderTextColor={"#000"}
+                          onChangeText={handleChange('password')}
+                          onBlur={handleBlur('password')}
+                          value={values.password}
+                          secureTextEntry={!showPassword}
+                          editable={!isSubmitting}
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowPassword(!showPassword)}
+                          className="p-3 bg-gray-100"
+                          disabled={isSubmitting}>
+                          <Icon
+                            name={showPassword ? 'eye-off' : 'eye'}
+                            size={20}
+                            color="#666"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {(touched.password || apiErrors.password) && (
+                        <Text className="text-red-500 text-xs mt-1">
+                          {errors.password || apiErrors.password}
+                        </Text>
+                      )}
+                    </View>
+
+                    <View className="mb-1">
+                      <Text className="text-sm font-medium text-gray-700 mb-1">
+                        Confirm Password
+                      </Text>
+                      <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
+                        <TextInput
+                          className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
+                          placeholder="Confirm your password"
+                          placeholderTextColor={"#000"}
+                          onChangeText={handleChange('confirmPassword')}
+                          onBlur={handleBlur('confirmPassword')}
+                          value={values.confirmPassword}
+                          secureTextEntry={!showConfirmPassword}
+                          editable={!isSubmitting}
+                        />
+                        <TouchableOpacity
+                          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="p-3 bg-gray-100"
+                          disabled={isSubmitting}>
+                          <Icon
+                            name={showConfirmPassword ? 'eye-off' : 'eye'}
+                            size={20}
+                            color="#666"
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      {(touched.confirmPassword || apiErrors.password_confirmation) && (
+                        <Text className="text-red-500 text-xs mt-1">
+                          {errors.confirmPassword || apiErrors.password_confirmation}
+                        </Text>
+                      )}
+                    </View>
+
+                    <View className="flex-row items-center mb-3">
+                      <CheckBox
+                        value={isCheck}
+                        onValueChange={va => {
+                          setIsCheck(va);
+                          handleChange('agreeTerms');
+                          console.log(va, isCheck, values.agreeTerms);
+                        }}
+                        tintColors={{ true: '#7248B3', false: '#666' }}
+                      />
+                      <Text className="ml-2 text-sm text-gray-600">
+                        I agree to the Terms & Conditions
+                      </Text>
+                    </View>
+
+                    {touched.confirmPassword && !isCheck && (
+                      <Text className="text-red-500 text-xs mb-3">
+                        {"Required to check the Terms & Conditions"}
+                      </Text>
+                    )}
+
+                    <TouchableOpacity
+                      onPress={() => handleSubmit()}
+                      disabled={isSubmitting || formikSubmitting}
+                      className="mt-4">
+                      <LinearGradient
+                        colors={['#ac94f4', '#7248B3']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{
+                          padding: 16,
+                          borderRadius: 10,
+                          alignItems: 'center',
+                          opacity: isSubmitting || formikSubmitting ? 0.7 : 1,
+                        }}>
+                        <Text className="text-white text-base font-bold">
+                          Create Account
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </Formik>
+
+              <Text className="text-center my-4 text-gray-600">
+                -------- Or Continue with --------
+              </Text>
+
+              <View className="flex-row justify-center gap-4 mb-4">
+                <TouchableOpacity
+                  className="p-3 w-1/2 bg-primary-10 rounded-2xl"
+                  onPress={handleGoogleSignUp}
+                  disabled={isSubmitting}>
+                  <Image
+                    source={ImagePath.google}
+                    className="w-8 h-8 m-auto"
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  className="p-3 w-1/2 bg-primary-10 rounded-2xl hidden"
+                  disabled={isSubmitting}>
+                  <Image
+                    source={ImagePath.facebook}
+                    className="w-8 h-8 m-auto"
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <View className="flex-row justify-center items-center mb-4">
+                <Text className="text-sm text-gray-600">
+                  Already have an account?{' '}
                 </Text>
-              </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('LoginScreen')}
+                  disabled={isSubmitting}>
+                  <Text className="text-primary-100 text-sm ml-1 font-bold underline">
+                    Login
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
 
-      {isSubmitting && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text style={styles.loadingText}>Creating Account...</Text>
-        </View>
-      )}
-    </KeyboardAvoidingView>
+        {isSubmitting && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#FFFFFF" />
+            <Text style={styles.loadingText}>Creating Account...</Text>
+          </View>
+        )}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

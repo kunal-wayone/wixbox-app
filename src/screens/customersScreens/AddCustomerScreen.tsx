@@ -17,6 +17,7 @@ import { ImagePath } from '../../constants/ImagePath';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { RootState } from '../../store/store';
 import { useSelector } from 'react-redux';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const AddCustomerScreen = () => {
   const navigation = useNavigation<any>();
@@ -180,53 +181,55 @@ const AddCustomerScreen = () => {
 
 
   return (
-    <View className="flex-1 bg-gray-100 p-4">
-      <View className="absolute left-2 top-2 z-50">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View className="flex-1 bg-gray-100 p-4">
+        <View className="absolute left-2 top-2 z-50">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+            <Ionicons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
 
-      <Text className="text-2xl font-semibold text-center mb-4">
-        {user?.role === 'user' ? 'Orders List' : 'Manage Customer'}
-      </Text>
+        <Text className="text-2xl font-semibold text-center mb-4">
+          {user?.role === 'user' ? 'Orders List' : 'Manage Customer'}
+        </Text>
 
-      <View className="flex-row justify-between mb-6">
-        <View className="flex-1 flex-row items-center border border-gray-300 rounded-xl mr-3 px-2">
-          <Ionicons name="search" size={20} color="#4B5563" />
-          <TextInput
-            className="flex-1 text-base ml-2"
-            placeholder="Search Customer"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
+        <View className="flex-row justify-between mb-6">
+          <View className="flex-1 flex-row items-center border border-gray-300 rounded-xl mr-3 px-2">
+            <Ionicons name="search" size={20} color="#4B5563" />
+            <TextInput
+              className="flex-1 text-base ml-2"
+              placeholder="Search Customer"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AddOrderScreen')}
+            className="bg-primary-90 py-2.5 px-3 rounded-lg justify-center">
+            <Ionicons name="add" size={20} color="white" />
+          </TouchableOpacity>
+        </View>
+
+        {isLoading ? (
+          <View className="flex-1 justify-center items-center mt-10">
+            <ActivityIndicator size="large" color="#007AFF" />
+          </View>
+        ) : filteredOrders.length === 0 ? (
+          <View className="flex-1 justify-center items-center mt-10">
+            <Text className="text-gray-500 text-lg">No orders found</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredOrders}
+            renderItem={renderCustomerCard}
+            keyExtractor={(item: any) => item.id}
+            showsVerticalScrollIndicator={false}
           />
-        </View>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('AddOrderScreen')}
-          className="bg-primary-90 py-2.5 px-3 rounded-lg justify-center">
-          <Ionicons name="add" size={20} color="white" />
-        </TouchableOpacity>
+        )}
+
+        {renderModalContent()}
       </View>
-
-      {isLoading ? (
-        <View className="flex-1 justify-center items-center mt-10">
-          <ActivityIndicator size="large" color="#007AFF" />
-        </View>
-      ) : filteredOrders.length === 0 ? (
-        <View className="flex-1 justify-center items-center mt-10">
-          <Text className="text-gray-500 text-lg">No orders found</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredOrders}
-          renderItem={renderCustomerCard}
-          keyExtractor={(item: any) => item.id}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-
-      {renderModalContent()}
-    </View>
+    </SafeAreaView>
   );
 };
 

@@ -25,6 +25,7 @@ import { addToCart } from '../../store/slices/cartSlice';
 import { RootState } from '../../store/store';
 import FoodItem from '../../components/common/FoodItem';
 import Shop from '../../components/common/Shop';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 
@@ -203,124 +204,126 @@ const SearchScreen = () => {
   );
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 bg-white">
-      <View className="flex-1">
-        {/* Back Button */}
-        <TouchableOpacity className="ml-4 mt-3" onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 bg-white">
+        <View className="flex-1">
+          {/* Back Button */}
+          <TouchableOpacity className="ml-4 mt-3" onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
 
-        {/* Search Bar */}
-        <View className="flex-row items-center gap-2 mb-2 mx-2 rounded-xl px-3 mt-4  bg-gray-100 border border-gray-300">
-          <Text>🍝</Text>
-          <TextInput
-            className="flex-1 ml-2 text-base text-gray-700"
-            placeholder="Search for food or restaurants"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            returnKeyType="search"
-            onSubmitEditing={() => handleSearch(active)}
-          />
-          <Ionicons name="search" size={20} color="gray" />
-        </View>
+          {/* Search Bar */}
+          <View className="flex-row items-center gap-2 mb-4 mx-4 rounded-xl px-3 mt-4 bg-gray-100 border border-gray-300">
+            <Text>🍝</Text>
+            <TextInput
+              className="flex-1 ml-2 text-base text-gray-700"
+              placeholder="Search for food or restaurants"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              returnKeyType="search"
+              onSubmitEditing={() => handleSearch(active)}
+            />
+            <Ionicons name="search" size={20} color="gray" />
+          </View>
 
 
 
-        {active === "product" && <ScrollView
-          horizontal
-          className="px-4  "
-          style={{ maxHeight: "6%", minHeight: "6%", }}
-          contentContainerStyle={{ maxHeight: "100%", minHeight: "100%", }}
+          {active === "product" && <ScrollView
+            horizontal
+            className="px-4  "
+            style={{ maxHeight: "6%", minHeight: "6%", }}
+            contentContainerStyle={{ maxHeight: "100%", minHeight: "100%", }}
 
-          showsHorizontalScrollIndicator={false}
-        >
-          {availableTags.map(tag => (
+            showsHorizontalScrollIndicator={false}
+          >
+            {availableTags.map(tag => (
+              <TouchableOpacity
+                key={tag.id}
+                onPress={() => toggleTag(tag.id)}
+                className={`rounded-full px-3 py-1 h-8 mr-2 border border-gray-300 ${selectedTags.includes(tag.id) ? 'bg-green-600' : 'bg-white'
+                  }`}
+              >
+                <Text className={`text-sm ${selectedTags.includes(tag.id) ? 'text-white' : 'text-gray-900'}`}>
+                  {tag.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          }
+          {/* Tabs */}
+          <View className="flex-row gap-4 mx-4  mb-2">
             <TouchableOpacity
-              key={tag.id}
-              onPress={() => toggleTag(tag.id)}
-              className={`rounded-full px-3 py-1 h-8 mr-2 border border-gray-300 ${selectedTags.includes(tag.id) ? 'bg-green-600' : 'bg-white'
-                }`}
+              onPress={() => handleSearch('product')}
+              className={`pb-1 ${active === "product" ? "border-b-2 border-primary-100" : ""}`}
             >
-              <Text className={`text-sm ${selectedTags.includes(tag.id) ? 'text-white' : 'text-gray-900'}`}>
-                {tag.label}
-              </Text>
+              <Text className="text-md font-semibold">Dishes</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-        }
-        {/* Tabs */}
-        <View className="flex-row gap-4 mx-4  mb-2">
-          <TouchableOpacity
-            onPress={() => handleSearch('product')}
-            className={`pb-1 ${active === "product" ? "border-b-2 border-primary-100" : ""}`}
-          >
-            <Text className="text-md font-semibold">Dishes</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleSearch('shop')}
-            className={`pb-1 ${active === "shop" ? "border-b-2 border-primary-100" : ""}`}
-          >
-            <Text className="text-md font-semibold">Restaurants</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              onPress={() => handleSearch('shop')}
+              className={`pb-1 ${active === "shop" ? "border-b-2 border-primary-100" : ""}`}
+            >
+              <Text className="text-md font-semibold">Restaurants</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Content List */}
-        {isLoading ? (
-          <ActivityIndicator size="large" className="mt-20" />
-        ) : active === "shop" ? (
-          <FlatList
-            data={restaurants}
-            keyExtractor={(item: any) => item.id.toString()}
-            renderItem={(store: any) => (
-              <View key={store?.item?.id}>
-                <Shop
-                  id={store?.item?.id}
-                  name={store?.item?.restaurant_name}
-                  description={store?.item?.about_business || 'No description available'}
-                  images={store?.item?.restaurant_images || []}
-                  address={store?.item?.address || 'No address provided'}
-                  phone={store?.item?.phone || 'No phone provided'}
-                  rating={store?.item?.average_rating || 0}
-                  categories={store?.item?.categories || []}
-                  isOpen={store?.item?.is_open !== false}
-                  featuredItems={
-                    store?.item?.featured_items?.map((item) => ({
-                      id: item.id,
-                      name: item.name,
-                      price: item.price,
-                      image: item.image || ImagePath.item1,
-                    })) || []
-                  }
-                  maxImages={5}
-                  item={store?.item}
-                />
-              </View>
-            )}
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            onEndReached={handleLoadMore}
-            onEndReachedThreshold={0.3}
-            ListFooterComponent={renderLoadMoreButton}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }}
-          />
-        ) : (
-          <FlatList
-            data={filteredItems}
-            keyExtractor={(item: any) => item.id.toString()}
-            renderItem={renderItem}
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            onEndReached={handleLoadMore}
-            onEndReachedThreshold={0.3}
-            ListFooterComponent={renderLoadMoreButton}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingBottom: 100 }}
-            keyboardShouldPersistTaps="handled"
-          />
-        )}
-      </View>
-    </KeyboardAvoidingView>
+          {/* Content List */}
+          {isLoading ? (
+            <ActivityIndicator size="large" className="mt-20" />
+          ) : active === "shop" ? (
+            <FlatList
+              data={restaurants}
+              keyExtractor={(item: any) => item?.id?.toString()}
+              renderItem={(store: any) => (
+                <View key={store?.item?.id}>
+                  <Shop
+                    id={store?.item?.id}
+                    name={store?.item?.restaurant_name}
+                    description={store?.item?.about_business || 'No description available'}
+                    images={store?.item?.restaurant_images || []}
+                    address={store?.item?.address || 'No address provided'}
+                    phone={store?.item?.phone || 'No phone provided'}
+                    rating={store?.item?.average_rating || 0}
+                    categories={store?.item?.categories || []}
+                    isOpen={store?.item?.is_open !== false}
+                    featuredItems={
+                      store?.item?.featured_items?.map((item: any) => ({
+                        id: item.id,
+                        name: item.name,
+                        price: item.price,
+                        image: item.image || ImagePath.item1,
+                      })) || []
+                    }
+                    maxImages={5}
+                    item={store?.item}
+                  />
+                </View>
+              )}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.3}
+              ListFooterComponent={renderLoadMoreButton}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 100 }}
+            />
+          ) : (
+            <FlatList
+              data={filteredItems}
+              keyExtractor={(item: any) => item.id.toString()}
+              renderItem={renderItem}
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              onEndReached={handleLoadMore}
+              onEndReachedThreshold={0.3}
+              ListFooterComponent={renderLoadMoreButton}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 100 }}
+              keyboardShouldPersistTaps="handled"
+            />
+          )}
+        </View>
+      </KeyboardAvoidingView>
+      </SafeAreaView>
   );
 };
 

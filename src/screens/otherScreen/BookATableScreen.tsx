@@ -17,6 +17,7 @@ import Modal from 'react-native-modal';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { ImagePath } from '../../constants/ImagePath';
 import Shop2 from '../../components/common/Shop2';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 
 // Default image for restaurants
@@ -307,171 +308,173 @@ const BookATableScreen = () => {
 
   // Main render
   return (
-    <View className="flex-1 bg-white">
-      {/* Back Button */}
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        className="absolute top-5 left-5 z-10"
-      >
-        <Ionicons name="arrow-back" color="#fff" size={24} />
-      </TouchableOpacity>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View className="flex-1 bg-white">
+        {/* Back Button */}
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          className="absolute top-5 left-5 z-10"
+        >
+          <Ionicons name="arrow-back" color="#fff" size={24} />
+        </TouchableOpacity>
 
-      <Image
-        source={ImagePath?.bell}
-        className="w-44 h-44 absolute top-[-10%] left-[-10%] z-[1] rounded-xl"
-        resizeMode="contain"
-        tintColor={'#FFFFFF33'}
-      />
-
-      {/* Header Background */}
-      <View className="bg-primary-80 px-4 py-14 justify-end h-56 rounded-b-[40px]">
-        <Text className="text-white mb-1 font-poppins-bold text-2xl">Book a Table</Text>
-        <Text className="text-white font-poppins-regular">
-          Find and reserve tables at nearby restaurants
-        </Text>
         <Image
-          source={ImagePath.bell}
-          className="w-24 h-24 absolute right-5 bottom-5"
+          source={ImagePath?.bell}
+          className="w-44 h-44 absolute top-[-10%] left-[-10%] z-[1] rounded-xl"
           resizeMode="contain"
-          tintColor={'white'}
+          tintColor={'#FFFFFF33'}
         />
-      </View>
 
-
-
-      {/* Content */}
-      {initialLoading ? (
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-          {Array(3)
-            .fill(0)
-            .map((_, index) => (
-              <SkeletonCard key={index} />
-            ))}
-        </ScrollView>
-      ) : (
-        <ScrollView
-          contentContainerStyle={{ padding: 16 }}
-          showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        >
-          {error && <Text className="text-red-600 mb-4 text-center">{error}</Text>}
-          {data.map((shop) => (
-            <Shop2 item={shop} />
-          ))}
-          {renderFooter()}
-        </ScrollView>
-      )}
-
-      {/* Modal for Table Layout */}
-      <Modal
-        isVisible={isModalVisible}
-        onBackdropPress={() => setIsModalVisible(false)}
-        style={{ justifyContent: 'flex-end', margin: 0 }}
-      >
-        <View
-          className="bg-white rounded-t-3xl pt-6 pb-4"
-          style={{ width, height: '75%', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
-        >
-          <View className="absolute top-2 self-center w-12 h-1 bg-gray-400 rounded-full" />
-          <Text className="text-lg font-bold mb-3 px-4">Select a Table</Text>
-          <FlatList
-            data={getUniqueFloors(selectedRestaurant?.tables)}
-            horizontal
-            keyExtractor={(item) => item.floor}
-            renderItem={renderFloorTab}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-            style={{ marginBottom: 16 }}
-          />
-          <FlatList
-            data={selectedRestaurant?.tables?.filter((t: any) => t.floor === selectedFloor)}
-            renderItem={renderTableItem}
-            keyExtractor={(item) => `${item.floor}-${item.table_number}`}
-            numColumns={2}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
-          />
-          <TouchableOpacity
-            className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto"
-            onPress={() => {
-              if (!selectTable) {
-                ToastAndroid.show('Please select a table.', ToastAndroid.SHORT);
-                return;
-              }
-              setIsModalVisible(false);
-              setIsModalTableReserveVisible(true);
-            }}
-          >
-            <Text className="text-center text-white font-poppins font-semibold">
-              Reserve a Table
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-
-      {/* Modal for Reservation Info */}
-      <Modal
-        isVisible={isModalTableReserveVisible}
-        onBackdropPress={() => setIsModalTableReserveVisible(false)}
-        style={{ justifyContent: 'center' }}
-      >
-        <View
-          className="bg-white rounded-t-3xl pt-6 pb-4"
-          style={{ height: '80%', borderRadius: 20 }}
-        >
-          <TouchableOpacity
-            onPress={() => setIsModalTableReserveVisible(false)}
-            className="absolute top-1 right-2 z-50"
-          >
-            <Ionicons name="close" size={30} />
-          </TouchableOpacity>
+        {/* Header Background */}
+        <View className="bg-primary-80 px-4 py-14 justify-end h-56 rounded-b-[40px]">
+          <Text className="text-white mb-1 font-poppins-bold text-2xl">Book a Table</Text>
+          <Text className="text-white font-poppins-regular">
+            Find and reserve tables at nearby restaurants
+          </Text>
           <Image
-            source={{ uri: selectedRestaurant?.restaurant_images || DEFAULT_IMAGE }}
-            className="w-11/12 h-56 rounded-xl mb-2 mx-auto"
-            resizeMode="cover"
-            onError={() => handleImageError(selectedRestaurant?.id)}
+            source={ImagePath.bell}
+            className="w-24 h-24 absolute right-5 bottom-5"
+            resizeMode="contain"
+            tintColor={'white'}
           />
-          <Text className="text-lg text-center font-bold mb-1 px-4">
-            {selectedRestaurant?.restaurant_name || 'Restaurant'}
-          </Text>
-          <Text className="text-center mb-4">Restaurant & Café</Text>
-          <Text className="py-2 mx-4 border-b border-gray-400 border-dashed">
-            Price Breakdown
-          </Text>
-          <View className="flex-row justify-between mx-4 my-2">
-            <View className="flex-1 mr-2">
-              <Text className="text-base mb-1">Floor:</Text>
-              <Text className="text-base mb-1">Table Number:</Text>
-              <Text className="text-base mb-1">Table Type:</Text>
-              <Text className="text-base mb-1">Seats:</Text>
-              <Text className="text-base mb-1">Price:</Text>
-            </View>
-            <View className="flex-1 ml-2 items-end">
-              <Text className="text-base mb-1">{selectTable?.floor || 'N/A'}</Text>
-              <Text className="text-base mb-1">{selectTable?.table_number || 'N/A'}</Text>
-              <Text className="text-base mb-1">
-                {selectTable?.premium === '0' ? 'Not Premium' : 'Premium'}
-              </Text>
-              <Text className="text-base mb-1">{selectTable?.seats || 'N/A'}</Text>
-              <Text className="text-base mb-1">₹ {selectTable?.price || 0}/-</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('TableBookingFormScreen', {
-                shop_id: selectedRestaurant?.id,
-                table_info: [selectTable],
-              })
-            }
-            className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto mt-5"
-          >
-            <Text className="text-center text-white font-poppins font-semibold">
-              Pay ₹ {selectTable?.price || 0}/- & Reserve Now
-            </Text>
-          </TouchableOpacity>
         </View>
-      </Modal>
-    </View>
+
+
+
+        {/* Content */}
+        {initialLoading ? (
+          <ScrollView contentContainerStyle={{ padding: 16 }}>
+            {Array(3)
+              .fill(0)
+              .map((_, index) => (
+                <SkeletonCard key={index} />
+              ))}
+          </ScrollView>
+        ) : (
+          <ScrollView
+            contentContainerStyle={{ padding: 16 }}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          >
+            {error && <Text className="text-red-600 mb-4 text-center">{error}</Text>}
+            {data.map((shop) => (
+              <Shop2 item={shop} />
+            ))}
+            {renderFooter()}
+          </ScrollView>
+        )}
+
+        {/* Modal for Table Layout */}
+        <Modal
+          isVisible={isModalVisible}
+          onBackdropPress={() => setIsModalVisible(false)}
+          style={{ justifyContent: 'flex-end', margin: 0 }}
+        >
+          <View
+            className="bg-white rounded-t-3xl pt-6 pb-4"
+            style={{ width, height: '75%', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}
+          >
+            <View className="absolute top-2 self-center w-12 h-1 bg-gray-400 rounded-full" />
+            <Text className="text-lg font-bold mb-3 px-4">Select a Table</Text>
+            <FlatList
+              data={getUniqueFloors(selectedRestaurant?.tables)}
+              horizontal
+              keyExtractor={(item) => item.floor}
+              renderItem={renderFloorTab}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+              style={{ marginBottom: 16 }}
+            />
+            <FlatList
+              data={selectedRestaurant?.tables?.filter((t: any) => t.floor === selectedFloor)}
+              renderItem={renderTableItem}
+              keyExtractor={(item) => `${item.floor}-${item.table_number}`}
+              numColumns={2}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 16 }}
+            />
+            <TouchableOpacity
+              className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto"
+              onPress={() => {
+                if (!selectTable) {
+                  ToastAndroid.show('Please select a table.', ToastAndroid.SHORT);
+                  return;
+                }
+                setIsModalVisible(false);
+                setIsModalTableReserveVisible(true);
+              }}
+            >
+              <Text className="text-center text-white font-poppins font-semibold">
+                Reserve a Table
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+
+        {/* Modal for Reservation Info */}
+        <Modal
+          isVisible={isModalTableReserveVisible}
+          onBackdropPress={() => setIsModalTableReserveVisible(false)}
+          style={{ justifyContent: 'center' }}
+        >
+          <View
+            className="bg-white rounded-t-3xl pt-6 pb-4"
+            style={{ height: '80%', borderRadius: 20 }}
+          >
+            <TouchableOpacity
+              onPress={() => setIsModalTableReserveVisible(false)}
+              className="absolute top-1 right-2 z-50"
+            >
+              <Ionicons name="close" size={30} />
+            </TouchableOpacity>
+            <Image
+              source={{ uri: selectedRestaurant?.restaurant_images || DEFAULT_IMAGE }}
+              className="w-11/12 h-56 rounded-xl mb-2 mx-auto"
+              resizeMode="cover"
+              onError={() => handleImageError(selectedRestaurant?.id)}
+            />
+            <Text className="text-lg text-center font-bold mb-1 px-4">
+              {selectedRestaurant?.restaurant_name || 'Restaurant'}
+            </Text>
+            <Text className="text-center mb-4">Restaurant & Café</Text>
+            <Text className="py-2 mx-4 border-b border-gray-400 border-dashed">
+              Price Breakdown
+            </Text>
+            <View className="flex-row justify-between mx-4 my-2">
+              <View className="flex-1 mr-2">
+                <Text className="text-base mb-1">Floor:</Text>
+                <Text className="text-base mb-1">Table Number:</Text>
+                <Text className="text-base mb-1">Table Type:</Text>
+                <Text className="text-base mb-1">Seats:</Text>
+                <Text className="text-base mb-1">Price:</Text>
+              </View>
+              <View className="flex-1 ml-2 items-end">
+                <Text className="text-base mb-1">{selectTable?.floor || 'N/A'}</Text>
+                <Text className="text-base mb-1">{selectTable?.table_number || 'N/A'}</Text>
+                <Text className="text-base mb-1">
+                  {selectTable?.premium === '0' ? 'Not Premium' : 'Premium'}
+                </Text>
+                <Text className="text-base mb-1">{selectTable?.seats || 'N/A'}</Text>
+                <Text className="text-base mb-1">₹ {selectTable?.price || 0}/-</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('TableBookingFormScreen', {
+                  shop_id: selectedRestaurant?.id,
+                  table_info: [selectTable],
+                })
+              }
+              className="bg-primary-80 rounded-xl p-4 w-11/12 mx-auto mt-5"
+            >
+              <Text className="text-center text-white font-poppins font-semibold">
+                Pay ₹ {selectTable?.price || 0}/- & Reserve Now
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+      </View>
+    </SafeAreaView>
   );
 };
 

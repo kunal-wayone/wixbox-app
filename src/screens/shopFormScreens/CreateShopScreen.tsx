@@ -15,7 +15,7 @@ import IconM from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'react-native-image-picker';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useDispatch, useSelector } from 'react-redux';
-
+import MultiSelect from 'react-native-multiple-select';
 import { fetchUser } from '../../store/slices/userSlice';
 import { TokenStorage, Post, IMAGE_URL, Fetch } from '../../utils/apiUtils';
 import { convertShiftData, revertShiftData } from '../../utils/tools/shiftConverter';
@@ -23,13 +23,13 @@ import { ImagePath } from '../../constants/ImagePath';
 import { states } from '../../utils/data/constant';
 import ShiftCard from '../../components/common/ShiftCard';
 import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('screen');
 const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const validationSchema = Yup.object().shape({
   business_name: Yup.string().required('Business name is required'),
-  shop_category: Yup.string().required('Shop category is required'),
   phone: Yup.string().matches(/^[0-9]{10}$/, 'Must be a valid 10-digit phone number').required(),
   address: Yup.string().required('Address is required'),
   zip_code: Yup.string().required('Zip Code is required'),
@@ -53,6 +53,7 @@ const CreateShopScreen = ({ route }: any) => {
   const [isLocation, setIsLocation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState<any>(user?.shop?.shop_category ?? [])
   const [schedules, setSchedules] = useState<any>(daysOfWeek.map(day => ({
     day, status: false, shift1: { from: '', to: '' }, shift2: { from: '', to: '' }, state: 'active'
   })));
@@ -199,7 +200,6 @@ const CreateShopScreen = ({ route }: any) => {
       const formData = new FormData();
 
       formData.append('business_name', values.business_name);
-      formData.append('shop_category', values.shop_category);
       formData.append('phone', values.phone);
       formData.append('gst', values.gst);
       formData.append('address', values.address);
@@ -215,6 +215,10 @@ const CreateShopScreen = ({ route }: any) => {
       formData.append('payment_cash', paymentMethods.cash ? 1 : 0);
       formData.append('payment_card', paymentMethods.card ? 1 : 0);
       formData.append('payment_upi', paymentMethods.upi ? 1 : 0);
+
+      selectedCategory?.forEach((category: any, index: any) => {
+        formData.append(`shop_category[${index}]`, category)
+      })
 
       if (shopId) formData.append('_method', 'PUT');
       images.forEach((img: any, index: any) => {
@@ -238,9 +242,9 @@ const CreateShopScreen = ({ route }: any) => {
 
       if (values?.dine_in_service === "yes") {
         shopId ?
-          navigation.navigate('AddDineInServiceScreen', { shopId }) : navigation.navigate("AddDineInServiceScreen")
+          navigation.navigate('AddDineInServiceScreen', { shopId }) : navigation.replace("AddDineInServiceScreen")
       } else {
-        navigation.navigate("HomeScreen")
+        navigation.replace("HomeScreen")
       }
     } catch (error: any) {
       ToastAndroid.show(error.message || 'Something went wrong', ToastAndroid.SHORT);
@@ -266,762 +270,780 @@ const CreateShopScreen = ({ route }: any) => {
 
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      {(isLocation || isLoading) && (
-        <View className='w-screen h-screen bg-black/50 absolute left-0 top-0 z-[100000] '>
-          <ActivityIndicator className='m-auto' color={"#B68AD4"} size={"large"} />
-        </View>
-      )}
-      <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-        <Image
-          source={ImagePath.signBg}
-          style={{
-            position: 'absolute',
-            top: '-2%',
-            left: '-2%',
-            width: 208,
-            height: 176,
-            tintColor: "#ac94f4"
-          }}
-          resizeMode="contain"
-        />
-        <View style={{ marginTop: 40 }}>
-          <MaskedView
-            maskElement={
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 30,
-                  fontWeight: 'bold',
-                  fontFamily: 'Poppins',
-                }}>
-                {shopId ? 'Edit Your Shop' : 'Create Your Shop'}
-              </Text>
-            }>
-            <LinearGradient
-              colors={['#ac94f4', '#7248B3']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}>
-              <Text
-                style={{
-                  textAlign: 'center',
-                  fontSize: 30,
-                  fontWeight: 'bold',
-                  fontFamily: 'Poppins',
-                  opacity: 0,
-                }}>
-                {shopId ? 'Edit Your Shop' : 'Create Your Shop'}
-              </Text>
-            </LinearGradient>
-          </MaskedView>
-          <Text
-            style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
-            {shopId
-              ? 'Update your shop details.'
-              : 'Set up your shop details to get started.'}
-          </Text>
-
-          {loading && shopId ? (
-            <View>
-              <Text className='text-center'>Loading shop data...</Text>
-              <ActivityIndicator size={"large"} color={"#B68AD4"} />
-            </View>
-          ) : (
-            <Formik
-              initialValues={{
-                business_name: shopId ? user?.shop?.restaurant_name : '',
-                shop_category: shopId ? user?.shop?.shop_category : '',
-                phone: shopId ? user?.shop?.phone : '',
-                gst: shopId ? user?.shop?.gst : '',
-                address: shopId ? user?.shop?.address : '',
-                zip_code: shopId ? user?.shop?.zip_code : '',
-                city: shopId ? user?.shop?.city : '',
-                state: shopId ? user?.shop?.state : '',
-                about_business: shopId ? user?.shop?.about_business : '',
-                single_shift: shopId ? (user?.shop?.single_shift ? "Single Shift" : "Double Shift") : '',
-                dine_in_service: shopId ? (user?.shop?.dine_in_service ? "yes" : "no") : '',
-              }}
-              validationSchema={validationSchema}
-              onSubmit={handleSubmit}
-              enableReinitialize
-            >
-              {({
-                handleChange,
-                handleBlur,
-                handleSubmit,
-                values,
-                errors,
-                touched,
-                isSubmitting,
-                setFieldValue,
-              }: any) => (
-                <View style={{ marginTop: 16 }}>
-                  {/* Business Name */}
-                  <View style={{ marginBottom: 12 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}>
-                      Business Name
-                    </Text>
-                    <View style={{ position: 'relative' }}>
-                      <TextInput
-                        style={{
-                          borderWidth: 1,
-                          borderColor: '#D1D5DB',
-                          backgroundColor: '#F3F4F6',
-                          borderRadius: 8,
-                          padding: 12,
-                          paddingLeft: 40,
-                          fontSize: 16,
-                        }}
-                        className='text-gray-900'
-                        placeholder="Shop Name"
-                        placeholderTextColor={"#000"}
-                        onChangeText={handleChange('business_name')}
-                        onBlur={handleBlur('business_name')}
-                        value={values.business_name}
-                        accessible
-                        accessibilityLabel="Business name input"
-                      />
-                      <Icon
-                        name="storefront-outline"
-                        size={20}
-                        color="#4B5563"
-                        style={{ position: 'absolute', left: 12, top: 12 }}
-                      />
-                    </View>
-                    {touched.business_name && errors.business_name && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.business_name}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      paddingHorizontal: 10,
-                      marginBottom: 8,
-                    }}>
-
-                    <Picker
-                      selectedValue={values.shop_category}
-                      onValueChange={(value) => setFieldValue("shop_category", value)}
-                      onBlur={handleBlur('shop_category')}
-                      style={{ fontSize: 16, height: 50, color: "#000" }}
-                    >
-                      <Picker.Item label="Select shop category" value="" />
-                      {categories?.map((cat: any, index: any) => (
-                        <Picker.Item key={cat?.id ?? index} label={cat?.name ?? 'Unnamed'} value={cat?.id ?? ''} />
-                      ))}
-                    </Picker>
-                  </View>
-                  {touched.shop_category && errors.shop_category && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                      {errors.shop_category}
-                    </Text>
-                  )}
-
-                  {/* Store Image Upload */}
-                  <View style={{ marginBottom: 12 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}>
-                      Store Images
-                    </Text>
-                    <TouchableOpacity
-                      onPress={handleImageUpload}
-                      style={{
-                        borderWidth: 2,
-                        borderColor: '#D1D5DB',
-                        borderStyle: 'dashed',
-                        borderRadius: 8,
-                        height: 100,
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        backgroundColor: '#F9FAFB',
-                      }}
-                      accessible
-                      accessibilityLabel="Upload store images">
-                      <Icon
-                        name="add-circle-outline"
-                        size={30}
-                        color="#4B5563"
-                      />
-                      <Text
-                        style={{ color: '#4B5563', fontSize: 14, marginTop: 4 }}>
-                        Upload store front and other images
-                      </Text>
-                    </TouchableOpacity>
-                    {images.length > 0 && (
-                      <FlatList
-                        horizontal
-                        data={images}
-                        keyExtractor={(item, index) => index.toString()}
-                        renderItem={({ item }) => (
-                          <View
-                            style={{
-                              marginTop: 8,
-                              marginRight: 8,
-                              position: 'relative',
-                            }}>
-                            <TouchableOpacity
-                              onPress={() => setViewImageModal(item.uri)}
-                              accessible
-                              accessibilityLabel="View uploaded image">
-                              <Image
-                                source={{ uri: item.uri }}
-                                style={{ width: 80, height: 80, borderRadius: 8 }}
-                              />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              style={{ position: 'absolute', top: -8, right: -8 }}
-                              onPress={() => handleRemoveImage(item.id)}
-                              accessible
-                              accessibilityLabel="Remove uploaded image">
-                              <Icon
-                                name="close-circle"
-                                size={24}
-                                color="#EF4444"
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        )}
-                        style={{ marginTop: 8 }}
-                      />
-                    )}
-                  </View>
-
-                  {/* Phone Number */}
-                  <View style={{ marginBottom: 12 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}>
-                      Phone Number
-                    </Text>
-                    <View style={{ position: 'relative' }}>
-                      <TextInput
-                        style={{
-                          borderWidth: 1,
-                          borderColor: '#D1D5DB',
-                          backgroundColor: '#F3F4F6',
-                          borderRadius: 8,
-                          padding: 12,
-                          paddingLeft: 40,
-                          fontSize: 16,
-                        }}
-                        className='text-gray-900'
-                        placeholderTextColor={"#000"}
-                        placeholder="Enter phone number"
-                        onChangeText={handleChange('phone')}
-                        onBlur={handleBlur('phone')}
-                        value={values.phone}
-                        keyboardType="number-pad"
-                        maxLength={10}
-                        accessible
-                        accessibilityLabel="Phone number input"
-                      />
-                      <Icon
-                        name="call-outline"
-                        size={20}
-                        color="#4B5563"
-                        style={{ position: 'absolute', left: 12, top: 12 }}
-                      />
-                    </View>
-                    {touched.phone && errors.phone && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.phone}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* GST ID */}
-                  <View style={{ marginBottom: 12 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}>
-                      GST ID
-                    </Text>
-                    <TextInput
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        padding: 12,
-                        fontSize: 16,
-                      }}
-                      className='text-gray-900'
-                      placeholderTextColor={"#000"}
-                      placeholder="Enter GST ID"
-                      onChangeText={handleChange('gst')}
-                      onBlur={handleBlur('gst')}
-                      value={values.gst}
-                      accessible
-                      accessibilityLabel="GST ID input"
-                    />
-                    {touched.gst && errors.gst && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.gst}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* Address Fields */}
-                  <View style={{ marginBottom: 12 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}>
-                      Address
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => getLiveLocation(setFieldValue)}
-                      style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        marginBottom: 12,
-                      }}
-                      accessible
-                      accessibilityLabel="Pin your location">
-                      <Icon name="location-outline" size={20} color="#4B5563" />
-                      <Text
-                        style={{
-                          color: '#ac94f4',
-                          fontSize: 14,
-                          marginLeft: 4,
-                          textDecorationLine: 'underline',
-                        }}>
-                        Pin your location
-                      </Text>
-                    </TouchableOpacity>
-                    {apiErrors && (
-                      <Text
-                        className='text-center'
-                        style={{ color: '#EF4444', fontSize: 12, }}>
-                        {"Please enable location services, Try agian"}
-                      </Text>
-                    )}
-                    <View style={{ marginVertical: 8 }}>
-                      <TextInput
-                        style={{
-                          borderWidth: 1,
-                          borderColor: '#D1D5DB',
-                          backgroundColor: '#F3F4F6',
-                          borderRadius: 8,
-                          padding: 12,
-                          fontSize: 16,
-                        }}
-                        className='text-gray-900'
-                        placeholderTextColor={"#000"}
-                        placeholder="Enter your city"
-                        onChangeText={handleChange('city')}
-                        onBlur={handleBlur('city')}
-                        value={values.city}
-                        accessible
-                        accessibilityLabel="City"
-                      />
-                    </View>
-                    {touched.city && errors.city && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.city}
-                      </Text>
-                    )}
-                    <View
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        paddingHorizontal: 10,
-                        marginVertical: 8,
-                      }}>
-                      <Picker
-                        selectedValue={values.state}
-                        onValueChange={(value) => setFieldValue('state', value)}
-                        style={{ fontSize: 16, height: 50, color: "#000" }}
-                        accessible
-                        accessibilityLabel="Select state">
-                        <Picker.Item label="Select State" value="" />
-                        {states.map((state) => (
-                          <Picker.Item key={state?.id} label={state?.name} value={state?.name} />
-                        ))}
-                      </Picker>
-                    </View>
-                    {touched.state && errors.state && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.state}
-                      </Text>
-                    )}
-                    <TextInput
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        padding: 12,
-                        fontSize: 16,
-                        marginBottom: 12,
-                      }}
-                      className='text-gray-900'
-                      placeholderTextColor={"#000"}
-                      placeholder="Enter your address"
-                      onChangeText={handleChange('address')}
-                      onBlur={handleBlur('address')}
-                      value={values.address}
-                      accessible
-                      accessibilityLabel="Address input"
-                    />
-                    {touched.address && errors.address && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.address}
-                      </Text>
-                    )}
-                    <TextInput
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        padding: 12,
-                        fontSize: 16,
-                        marginBottom: 12,
-                      }}
-                      className='text-gray-900'
-                      placeholderTextColor={"#000"}
-                      placeholder="Enter your zip code"
-                      onChangeText={handleChange('zip_code')}
-                      onBlur={handleBlur('zip_code')}
-                      value={values.zip_code}
-                      keyboardType="numeric"
-                      accessible
-                      accessibilityLabel="Zip Code"
-                    />
-                    {touched.zip_code && errors.zip_code && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.zip_code}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* About Shop */}
-                  <View style={{ marginBottom: 12 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}>
-                      About Shop
-                    </Text>
-                    <TextInput
-                      style={{
-                        borderWidth: 1,
-                        borderColor: '#D1D5DB',
-                        backgroundColor: '#F3F4F6',
-                        borderRadius: 8,
-                        padding: 12,
-                        fontSize: 16,
-                        height: 100,
-                        textAlignVertical: 'top',
-                      }}
-                      className='text-gray-900'
-                      placeholderTextColor={"#000"}
-                      placeholder="Describe your shop"
-                      onChangeText={handleChange('about_business')}
-                      onBlur={handleBlur('about_business')}
-                      value={values.about_business}
-                      multiline
-                      accessible
-                      accessibilityLabel="About shop textarea"
-                    />
-                    {touched.about_business && errors.about_business && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.about_business}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* Opening Days */}
-                  <View style={{ marginBottom: 12 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}>
-                      Opening Days
-                    </Text>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                      }}>
-                      <TouchableOpacity
-                        className="bg-gray-100"
-                        style={{
-                          flex: 1,
-                          borderWidth: 1,
-                          borderColor: values.single_shift === 'Single Shift' ? '#F97316' : '#D1D5DB',
-                          borderRadius: 8,
-                          padding: 12,
-                          marginRight: 8,
-                          alignItems: 'center',
-                        }}
-                        onPress={() => handleChange('single_shift')('Single Shift')}
-                        accessible
-                        accessibilityLabel="Select Single Shift">
-                        <Text style={{ fontSize: 14, color: '#374151' }}>
-                          Single Shift
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        className="bg-gray-100"
-                        style={{
-                          flex: 1,
-                          borderWidth: 1,
-                          borderColor: values.single_shift === 'Double Shift' ? '#F97316' : '#D1D5DB',
-                          borderRadius: 8,
-                          padding: 12,
-                          alignItems: 'center',
-                        }}
-                        onPress={() => handleChange('single_shift')('Double Shift')}
-                        accessible
-                        accessibilityLabel="Select Double Shift">
-                        <Text style={{ fontSize: 14, color: '#374151' }}>
-                          Double Shift
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                    {touched.single_shift && errors.single_shift && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.single_shift}
-                      </Text>
-                    )}
-                    <TouchableOpacity
-                      style={styles.sameForAllButton}
-                      onPress={handleSameForAll}
-                    >
-                      <Text style={styles.sameForAllText}> Same Shift for All</Text>
-                    </TouchableOpacity>
-
-                    {schedules.map((data: any, index: any) => (
-                      <ShiftCard
-                        key={data.day}
-                        shift={values.single_shift !== 'Single Shift' ? 2 : 1}
-                        data={data}
-                        onChange={handleShiftChange(index)}
-                      />
-                    ))}
-                  </View>
-
-                  {/* Dine-in Service */}
-                  <View style={{ marginBottom: 12 }}>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 10,
-                      }}>
-                      Are you Providing Dine-in Service?
-                    </Text>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'flex-start',
-                        gap: 5
-                      }}>
-                      <TouchableOpacity
-                        className="bg-gray-100"
-                        style={{
-                          borderWidth: 1,
-                          borderColor: values.dine_in_service === 'yes' ? '#ac94f4' : '#D1D5DB',
-                          borderRadius: 8,
-                          paddingHorizontal: 12,
-                          paddingVertical: 5,
-                          alignItems: 'center',
-                        }}
-                        onPress={() => handleChange('dine_in_service')('yes')}
-                        accessible
-                        accessibilityLabel="Yes Dine-in Service">
-                        <Text style={{ fontSize: 14, color: '#374151' }}>
-                          Yes
-                        </Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        className="bg-gray-100"
-                        style={{
-                          borderWidth: 1,
-                          borderColor: values.dine_in_service === 'no' ? '#ac94f4' : '#D1D5DB',
-                          borderRadius: 8,
-                          paddingHorizontal: 12,
-                          paddingVertical: 5,
-                          marginRight: 8,
-                          alignItems: 'center',
-                        }}
-                        onPress={() => handleChange('dine_in_service')('no')}
-                        accessible
-                        accessibilityLabel="No Dine-in Service">
-                        <Text style={{ fontSize: 14, color: '#374151' }}>No</Text>
-                      </TouchableOpacity>
-                    </View>
-                    {touched.dine_in_service && errors.dine_in_service && (
-                      <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.dine_in_service}
-                      </Text>
-                    )}
-                  </View>
-
-                  {/* Payment Methods */}
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 8,
-                    }}>
-                    Payment Acceptance By
-                  </Text>
-                  <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
-                    <TouchableOpacity
-                      onPress={() => setPaymentMethods({ ...paymentMethods, cash: !paymentMethods.cash })}
-                      style={styles.checkboxContainer}>
-                      <View
-                        style={[styles.checkbox, paymentMethods.cash && styles.checkboxSelected]}>
-                        {paymentMethods.cash && <IconM name="check" size={13} color="#fff" />}
-                      </View>
-                      <Text style={styles.checkboxText}>Cash</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => setPaymentMethods({ ...paymentMethods, card: !paymentMethods.card })}
-                      style={styles.checkboxContainer}>
-                      <View
-                        style={[styles.checkbox, paymentMethods.card && styles.checkboxSelected]}>
-                        {paymentMethods.card && <IconM name="check" size={13} color="#fff" />}
-                      </View>
-                      <Text style={styles.checkboxText}>Card</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => setPaymentMethods({ ...paymentMethods, upi: !paymentMethods.upi })}
-                      style={styles.checkboxContainer}>
-                      <View
-                        style={[styles.checkbox, paymentMethods.upi && styles.checkboxSelected]}>
-                        {paymentMethods.upi && <IconM name="check" size={13} color="#fff" />}
-                      </View>
-                      <Text style={styles.checkboxText}>UPI</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Submit Button */}
-                  <TouchableOpacity
-                    onPress={() => handleSubmit()}
-                    disabled={isSubmitting}
-                    style={{ marginTop: 16 }}
-                    accessible
-                    accessibilityLabel={shopId ? 'Update shop button' : 'Create shop button'}>
-                    <LinearGradient
-                      colors={['#ac94f4', '#7248B3']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={{ padding: 16, borderRadius: 10, alignItems: 'center' }}>
-                      <Text
-                        style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
-                        {isSubmitting
-                          ? shopId
-                            ? 'Updating...'
-                            : 'Creating...'
-                          : shopId
-                            ? 'Update Shop'
-                            : 'Create Shop'}
-                      </Text>
-                    </LinearGradient>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </Formik>
-          )}
-        </View>
-      </ScrollView>
-
-      {/* Image View Modal */}
-      {viewImageModal && (
-        <Modal
-          visible={!!viewImageModal}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setViewImageModal(null)}>
-          <View
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        {(isLocation || isLoading) && (
+          <View className='w-screen h-screen bg-black/50 absolute left-0 top-0 z-[100000] '>
+            <ActivityIndicator className='m-auto' color={"#B68AD4"} size={"large"} />
+          </View>
+        )}
+        <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+          <Image
+            source={ImagePath.signBg}
             style={{
-              flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            }}>
+              position: 'absolute',
+              top: '-2%',
+              left: '-2%',
+              width: 208,
+              height: 176,
+              tintColor: "#ac94f4"
+            }}
+            resizeMode="contain"
+          />
+          <View style={{ marginTop: 40 }}>
+            <MaskedView
+              maskElement={
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    fontFamily: 'Poppins',
+                  }}>
+                  {shopId ? 'Edit Your Shop' : 'Create Your Shop'}
+                </Text>
+              }>
+              <LinearGradient
+                colors={['#ac94f4', '#7248B3']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}>
+                <Text
+                  style={{
+                    textAlign: 'center',
+                    fontSize: 30,
+                    fontWeight: 'bold',
+                    fontFamily: 'Poppins',
+                    opacity: 0,
+                  }}>
+                  {shopId ? 'Edit Your Shop' : 'Create Your Shop'}
+                </Text>
+              </LinearGradient>
+            </MaskedView>
+            <Text
+              style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
+              {shopId
+                ? 'Update your shop details.'
+                : 'Set up your shop details to get started.'}
+            </Text>
+
+            {loading && shopId ? (
+              <View>
+                <Text className='text-center'>Loading shop data...</Text>
+                <ActivityIndicator size={"large"} color={"#B68AD4"} />
+              </View>
+            ) : (
+              <Formik
+                initialValues={{
+                  business_name: shopId ? user?.shop?.restaurant_name : '',
+                  shop_category: shopId ? user?.shop?.shop_category : [],
+                  phone: shopId ? user?.shop?.phone : '',
+                  gst: shopId ? user?.shop?.gst : '',
+                  address: shopId ? user?.shop?.address : '',
+                  zip_code: shopId ? user?.shop?.zip_code : '',
+                  city: shopId ? user?.shop?.city : '',
+                  state: shopId ? user?.shop?.state : '',
+                  about_business: shopId ? user?.shop?.about_business : '',
+                  single_shift: shopId ? (user?.shop?.single_shift ? "Single Shift" : "Double Shift") : '',
+                  dine_in_service: shopId ? (user?.shop?.dine_in_service ? "yes" : "no") : '',
+                }}
+                validationSchema={validationSchema}
+                onSubmit={handleSubmit}
+                enableReinitialize
+              >
+                {({
+                  handleChange,
+                  handleBlur,
+                  handleSubmit,
+                  values,
+                  errors,
+                  touched,
+                  isSubmitting,
+                  setFieldValue,
+                }: any) => (
+                  <View style={{ marginTop: 16 }}>
+                    {/* Business Name */}
+                    <View style={{ marginBottom: 12 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: 4,
+                        }}>
+                        Business Name
+                      </Text>
+                      <View style={{ position: 'relative' }}>
+                        <TextInput
+                          style={{
+                            borderWidth: 1,
+                            borderColor: '#D1D5DB',
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 8,
+                            padding: 12,
+                            paddingLeft: 40,
+                            fontSize: 16,
+                          }}
+                          className='text-gray-900'
+                          placeholder="Shop Name"
+                          placeholderTextColor={"#252525"}
+                          onChangeText={handleChange('business_name')}
+                          onBlur={handleBlur('business_name')}
+                          value={values.business_name}
+                          accessible
+                          accessibilityLabel="Business name input"
+                        />
+                        <Icon
+                          name="storefront-outline"
+                          size={20}
+                          color="#4B5563"
+                          style={{ position: 'absolute', left: 12, top: 12 }}
+                        />
+                      </View>
+                      {touched.business_name && errors.business_name && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.business_name}
+                        </Text>
+                      )}
+                    </View>
+
+                    <View>
+                      <MultiSelect
+                        hideTags={false}
+                        items={categories}
+                        uniqueKey="id"
+                        onSelectedItemsChange={(selected) => {
+                          setSelectedCategory(selected)
+                        }}
+                        selectedItems={selectedCategory}
+                        selectText="Select shop category"
+                        searchInputPlaceholderText="Search Categories..."
+                        tagRemoveIconColor="#CCC"
+                        tagBorderColor="#CCC"
+                        tagTextColor="#000"
+                        selectedItemTextColor="#000"
+                        selectedItemIconColor="#000"
+                        itemTextColor="#000"
+                        displayKey="name"
+                        searchInputStyle={{ color: '#000' }}
+                        submitButtonColor="#ac94f4"
+                        submitButtonText="Confirm"
+                        styleMainWrapper={{
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          padding: 10,
+                          minHeight: 100,
+                        }}
+                        styleDropdownMenuSubsection={{
+                          paddingLeft: 0,
+                          paddingRight: 0,
+                          height: 50,
+                          backgroundColor: 'transparent',
+                          borderBottomWidth: 0,
+                        }}
+                      />
+
+                      {touched.shop_category && selectedCategory?.length === 0 && (
+                        <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.shop_category}
+                        </Text>
+                      )}
+                    </View>
+
+                    {/* Store Image Upload */}
+                    <View style={{ marginBottom: 12 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: 4,
+                        }}>
+                        Store Images
+                      </Text>
+                      <TouchableOpacity
+                        onPress={handleImageUpload}
+                        style={{
+                          borderWidth: 2,
+                          borderColor: '#D1D5DB',
+                          borderStyle: 'dashed',
+                          borderRadius: 8,
+                          height: 100,
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          backgroundColor: '#F9FAFB',
+                        }}
+                        accessible
+                        accessibilityLabel="Upload store images">
+                        <Icon
+                          name="add-circle-outline"
+                          size={30}
+                          color="#4B5563"
+                        />
+                        <Text
+                          style={{ color: '#4B5563', fontSize: 14, marginTop: 4 }}>
+                          Upload store front and other images
+                        </Text>
+                      </TouchableOpacity>
+                      {images.length > 0 && (
+                        <FlatList
+                          horizontal
+                          data={images}
+                          keyExtractor={(item, index) => index.toString()}
+                          renderItem={({ item }) => (
+                            <View
+                              style={{
+                                marginTop: 8,
+                                marginRight: 8,
+                                position: 'relative',
+                              }}>
+                              <TouchableOpacity
+                                onPress={() => setViewImageModal(item.uri)}
+                                accessible
+                                accessibilityLabel="View uploaded image">
+                                <Image
+                                  source={{ uri: item.uri }}
+                                  style={{ width: 80, height: 80, borderRadius: 8 }}
+                                />
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                style={{ position: 'absolute', top: -8, right: -8 }}
+                                onPress={() => handleRemoveImage(item.id)}
+                                accessible
+                                accessibilityLabel="Remove uploaded image">
+                                <Icon
+                                  name="close-circle"
+                                  size={24}
+                                  color="#EF4444"
+                                />
+                              </TouchableOpacity>
+                            </View>
+                          )}
+                          style={{ marginTop: 8 }}
+                        />
+                      )}
+                    </View>
+
+                    {/* Phone Number */}
+                    <View style={{ marginBottom: 12 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: 4,
+                        }}>
+                        Phone Number
+                      </Text>
+                      <View style={{ position: 'relative' }}>
+                        <TextInput
+                          style={{
+                            borderWidth: 1,
+                            borderColor: '#D1D5DB',
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 8,
+                            padding: 12,
+                            paddingLeft: 40,
+                            fontSize: 16,
+                          }}
+                          className='text-gray-900'
+                          placeholderTextColor={"#252525"}
+                          placeholder="Enter phone number"
+                          onChangeText={handleChange('phone')}
+                          onBlur={handleBlur('phone')}
+                          value={values.phone}
+                          keyboardType="number-pad"
+                          maxLength={10}
+                          accessible
+                          accessibilityLabel="Phone number input"
+                        />
+                        <Icon
+                          name="call-outline"
+                          size={20}
+                          color="#4B5563"
+                          style={{ position: 'absolute', left: 12, top: 12 }}
+                        />
+                      </View>
+                      {touched.phone && errors.phone && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.phone}
+                        </Text>
+                      )}
+                    </View>
+
+                    {/* GST ID */}
+                    <View style={{ marginBottom: 12 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: 4,
+                        }}>
+                        GST ID
+                      </Text>
+                      <TextInput
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          padding: 12,
+                          fontSize: 16,
+                        }}
+                        className='text-gray-900'
+                        placeholderTextColor={"#252525"}
+                        placeholder="Enter GST ID"
+                        onChangeText={handleChange('gst')}
+                        onBlur={handleBlur('gst')}
+                        value={values.gst}
+                        accessible
+                        accessibilityLabel="GST ID input"
+                      />
+                      {touched.gst && errors.gst && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.gst}
+                        </Text>
+                      )}
+                    </View>
+
+                    {/* Address Fields */}
+                    <View style={{ marginBottom: 12 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: 4,
+                        }}>
+                        Address
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => getLiveLocation(setFieldValue)}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          marginBottom: 12,
+                        }}
+                        accessible
+                        accessibilityLabel="Pin your location">
+                        <Icon name="location-outline" size={20} color="#4B5563" />
+                        <Text
+                          style={{
+                            color: '#ac94f4',
+                            fontSize: 14,
+                            marginLeft: 4,
+                            textDecorationLine: 'underline',
+                          }}>
+                          Pin your location
+                        </Text>
+                      </TouchableOpacity>
+                      {apiErrors && (
+                        <Text
+                          className='text-center'
+                          style={{ color: '#EF4444', fontSize: 12, }}>
+                          {"Please enable location services, Try agian"}
+                        </Text>
+                      )}
+                      <View style={{ marginVertical: 8 }}>
+                        <TextInput
+                          style={{
+                            borderWidth: 1,
+                            borderColor: '#D1D5DB',
+                            backgroundColor: '#F3F4F6',
+                            borderRadius: 8,
+                            padding: 12,
+                            fontSize: 16,
+                          }}
+                          className='text-gray-900'
+                          placeholderTextColor={"#252525"}
+                          placeholder="Enter your city"
+                          onChangeText={handleChange('city')}
+                          onBlur={handleBlur('city')}
+                          value={values.city}
+                          accessible
+                          accessibilityLabel="City"
+                        />
+                      </View>
+                      {touched.city && errors.city && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.city}
+                        </Text>
+                      )}
+                      <View
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          paddingHorizontal: 10,
+                          marginVertical: 8,
+                        }}>
+                        <Picker
+                          selectedValue={values.state}
+                          onValueChange={(value) => setFieldValue('state', value)}
+                          style={{ fontSize: 16, height: 50, color: "#000" }}
+                          accessible
+                          accessibilityLabel="Select state">
+                          <Picker.Item label="Select State" value="" />
+                          {states.map((state) => (
+                            <Picker.Item key={state?.id} label={state?.name} value={state?.name} />
+                          ))}
+                        </Picker>
+                      </View>
+                      {touched.state && errors.state && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.state}
+                        </Text>
+                      )}
+                      <TextInput
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          padding: 12,
+                          fontSize: 16,
+                          marginBottom: 12,
+                        }}
+                        className='text-gray-900'
+                        placeholderTextColor={"#252525"}
+                        placeholder="Enter your address"
+                        onChangeText={handleChange('address')}
+                        onBlur={handleBlur('address')}
+                        value={values.address}
+                        accessible
+                        accessibilityLabel="Address input"
+                      />
+                      {touched.address && errors.address && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.address}
+                        </Text>
+                      )}
+                      <TextInput
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          padding: 12,
+                          fontSize: 16,
+                          marginBottom: 12,
+                        }}
+                        className='text-gray-900'
+                        placeholderTextColor={"#252525"}
+                        placeholder="Enter your zip code"
+                        onChangeText={handleChange('zip_code')}
+                        onBlur={handleBlur('zip_code')}
+                        value={values.zip_code}
+                        keyboardType="numeric"
+                        accessible
+                        accessibilityLabel="Zip Code"
+                      />
+                      {touched.zip_code && errors.zip_code && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.zip_code}
+                        </Text>
+                      )}
+                    </View>
+
+                    {/* About Shop */}
+                    <View style={{ marginBottom: 12 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: 4,
+                        }}>
+                        About Shop
+                      </Text>
+                      <TextInput
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#D1D5DB',
+                          backgroundColor: '#F3F4F6',
+                          borderRadius: 8,
+                          padding: 12,
+                          fontSize: 16,
+                          height: 100,
+                          textAlignVertical: 'top',
+                        }}
+                        className='text-gray-900'
+                        placeholderTextColor={"#252525"}
+                        placeholder="Describe your shop"
+                        onChangeText={handleChange('about_business')}
+                        onBlur={handleBlur('about_business')}
+                        value={values.about_business}
+                        multiline
+                        accessible
+                        accessibilityLabel="About shop textarea"
+                      />
+                      {touched.about_business && errors.about_business && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.about_business}
+                        </Text>
+                      )}
+                    </View>
+
+                    {/* Opening Days */}
+                    <View style={{ marginBottom: 12 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: 4,
+                        }}>
+                        Opening Days
+                      </Text>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                        }}>
+                        <TouchableOpacity
+                          className="bg-gray-100"
+                          style={{
+                            flex: 1,
+                            borderWidth: 1,
+                            borderColor: values.single_shift === 'Single Shift' ? '#F97316' : '#D1D5DB',
+                            borderRadius: 8,
+                            padding: 12,
+                            marginRight: 8,
+                            alignItems: 'center',
+                          }}
+                          onPress={() => handleChange('single_shift')('Single Shift')}
+                          accessible
+                          accessibilityLabel="Select Single Shift">
+                          <Text style={{ fontSize: 14, color: '#374151' }}>
+                            Single Shift
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          className="bg-gray-100"
+                          style={{
+                            flex: 1,
+                            borderWidth: 1,
+                            borderColor: values.single_shift === 'Double Shift' ? '#F97316' : '#D1D5DB',
+                            borderRadius: 8,
+                            padding: 12,
+                            alignItems: 'center',
+                          }}
+                          onPress={() => handleChange('single_shift')('Double Shift')}
+                          accessible
+                          accessibilityLabel="Select Double Shift">
+                          <Text style={{ fontSize: 14, color: '#374151' }}>
+                            Double Shift
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                      {touched.single_shift && errors.single_shift && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.single_shift}
+                        </Text>
+                      )}
+                      <TouchableOpacity
+                        style={styles.sameForAllButton}
+                        onPress={handleSameForAll}
+                      >
+                        <Text style={styles.sameForAllText}> Same Shift for All</Text>
+                      </TouchableOpacity>
+
+                      {schedules.map((data: any, index: any) => (
+                        <ShiftCard
+                          key={data.day}
+                          shift={values.single_shift !== 'Single Shift' ? 2 : 1}
+                          data={data}
+                          onChange={handleShiftChange(index)}
+                        />
+                      ))}
+                    </View>
+
+                    {/* Dine-in Service */}
+                    <View style={{ marginBottom: 12 }}>
+                      <Text
+                        style={{
+                          fontSize: 14,
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: 10,
+                        }}>
+                        Are you Providing Dine-in Service?
+                      </Text>
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          justifyContent: 'flex-start',
+                          gap: 5
+                        }}>
+                        <TouchableOpacity
+                          className="bg-gray-100"
+                          style={{
+                            borderWidth: 1,
+                            borderColor: values.dine_in_service === 'yes' ? '#ac94f4' : '#D1D5DB',
+                            borderRadius: 8,
+                            paddingHorizontal: 12,
+                            paddingVertical: 5,
+                            alignItems: 'center',
+                          }}
+                          onPress={() => handleChange('dine_in_service')('yes')}
+                          accessible
+                          accessibilityLabel="Yes Dine-in Service">
+                          <Text style={{ fontSize: 14, color: '#374151' }}>
+                            Yes
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          className="bg-gray-100"
+                          style={{
+                            borderWidth: 1,
+                            borderColor: values.dine_in_service === 'no' ? '#ac94f4' : '#D1D5DB',
+                            borderRadius: 8,
+                            paddingHorizontal: 12,
+                            paddingVertical: 5,
+                            marginRight: 8,
+                            alignItems: 'center',
+                          }}
+                          onPress={() => handleChange('dine_in_service')('no')}
+                          accessible
+                          accessibilityLabel="No Dine-in Service">
+                          <Text style={{ fontSize: 14, color: '#374151' }}>No</Text>
+                        </TouchableOpacity>
+                      </View>
+                      {touched.dine_in_service && errors.dine_in_service && (
+                        <Text
+                          style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                          {errors.dine_in_service}
+                        </Text>
+                      )}
+                    </View>
+
+                    {/* Payment Methods */}
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 8,
+                      }}>
+                      Payment Acceptance By
+                    </Text>
+                    <View style={{ flexDirection: 'row', gap: 16, marginBottom: 16 }}>
+                      <TouchableOpacity
+                        onPress={() => setPaymentMethods({ ...paymentMethods, cash: !paymentMethods.cash })}
+                        style={styles.checkboxContainer}>
+                        <View
+                          style={[styles.checkbox, paymentMethods.cash && styles.checkboxSelected]}>
+                          {paymentMethods.cash && <IconM name="check" size={13} color="#fff" />}
+                        </View>
+                        <Text style={styles.checkboxText}>Cash</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setPaymentMethods({ ...paymentMethods, card: !paymentMethods.card })}
+                        style={styles.checkboxContainer}>
+                        <View
+                          style={[styles.checkbox, paymentMethods.card && styles.checkboxSelected]}>
+                          {paymentMethods.card && <IconM name="check" size={13} color="#fff" />}
+                        </View>
+                        <Text style={styles.checkboxText}>Card</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => setPaymentMethods({ ...paymentMethods, upi: !paymentMethods.upi })}
+                        style={styles.checkboxContainer}>
+                        <View
+                          style={[styles.checkbox, paymentMethods.upi && styles.checkboxSelected]}>
+                          {paymentMethods.upi && <IconM name="check" size={13} color="#fff" />}
+                        </View>
+                        <Text style={styles.checkboxText}>UPI</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Submit Button */}
+                    <TouchableOpacity
+                      onPress={() => handleSubmit()}
+                      disabled={isSubmitting}
+                      style={{ marginTop: 16 }}
+                      accessible
+                      accessibilityLabel={shopId ? 'Update shop button' : 'Create shop button'}>
+                      <LinearGradient
+                        colors={['#ac94f4', '#7248B3']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={{ padding: 16, borderRadius: 10, alignItems: 'center' }}>
+                        <Text
+                          style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                          {isSubmitting
+                            ? shopId
+                              ? 'Updating...'
+                              : 'Creating...'
+                            : shopId
+                              ? 'Update Shop'
+                              : 'Create Shop'}
+                        </Text>
+                      </LinearGradient>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </Formik>
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Image View Modal */}
+        {viewImageModal && (
+          <Modal
+            visible={!!viewImageModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setViewImageModal(null)}>
             <View
               style={{
-                backgroundColor: '#fff',
-                borderRadius: 8,
-                padding: 16,
+                flex: 1,
+                justifyContent: 'center',
                 alignItems: 'center',
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
               }}>
-              <Image
-                source={{ uri: viewImageModal }}
+              <View
                 style={{
-                  width: width * 0.8,
-                  height: width * 0.8,
+                  backgroundColor: '#fff',
                   borderRadius: 8,
-                }}
-              />
-              <TouchableOpacity
-                style={{ position: 'absolute', top: 8, right: 8 }}
-                onPress={() => setViewImageModal(null)}
-                accessible
-                accessibilityLabel="Close image modal">
-                <Icon name="close-circle" size={24} color="#EF4444" />
-              </TouchableOpacity>
+                  padding: 16,
+                  alignItems: 'center',
+                }}>
+                <Image
+                  source={{ uri: viewImageModal }}
+                  style={{
+                    width: width * 0.8,
+                    height: width * 0.8,
+                    borderRadius: 8,
+                  }}
+                />
+                <TouchableOpacity
+                  style={{ position: 'absolute', top: 8, right: 8 }}
+                  onPress={() => setViewImageModal(null)}
+                  accessible
+                  accessibilityLabel="Close image modal">
+                  <Icon name="close-circle" size={24} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </Modal>
-      )
-      }
-    </KeyboardAvoidingView >
+          </Modal>
+        )
+        }
+      </KeyboardAvoidingView >
+    </SafeAreaView>
   );
 };
 

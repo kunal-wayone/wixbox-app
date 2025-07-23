@@ -19,6 +19,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { Fetch, Post, Delete, IMAGE_URL } from '../../utils/apiUtils';
 import { loadingSpinner } from '../otherScreen/LoadingComponent';
 import Switch from '../../components/common/Switch';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Define types
 interface Category {
@@ -57,7 +58,7 @@ const CategorySchema = Yup.object().shape({
 const fetchCategories = async (setLoading: (loading: boolean) => void): Promise<Category[]> => {
   try {
     setLoading(true);
-    const response: any = await Fetch('/user/categories', {}, 5000);
+    const response: any = await Fetch('/user/menu-item/inventory', {}, 5000);
     if (!response.success) throw new Error('Failed to fetch categories');
     return response.data;
   } catch (error: any) {
@@ -381,153 +382,155 @@ const ManageStockScreen = () => {
 
 
   return (
-    <View className="flex-1 bg-white">
-      {isLoading && loadingSpinner}
-      {/* Header */}
-      <View className="flex-row items-center p-4">
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          className="p-2 absolute left-2"
-        >
-          <Icon name="arrow-back" size={24} color="black" />
-        </TouchableOpacity>
-        <View className="flex-1 items-center">
-          <Text className="text-2xl font-bold">Your Inventory 📦</Text>
-          <Text className="text-gray-500">Update in real-time, stay stocked</Text>
-        </View>
-      </View>
-
-
-      {/* Confirmation Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={confirmModalVisible}
-        onRequestClose={handleCancelDelete}
-      >
-        <View className="flex-1 justify-center items-center bg-black/50">
-          <View className="bg-white p-6 rounded-xl w-11/12">
-            <Text className="text-xl font-bold mb-2">
-              Delete {confirmAction?.type === 'category' ? 'Category' : 'Product'}
-            </Text>
-            <Text className="text-base mb-4">
-              Are you sure you want to delete "{confirmAction?.name}"?
-            </Text>
-            <View className="flex-row justify-between">
-              <TouchableOpacity
-                onPress={handleCancelDelete}
-                className="flex-1 bg-gray-200 p-3 rounded-lg mr-2"
-                disabled={isLoading}
-              >
-                <Text className="text-center font-medium">Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={handleConfirmDelete}
-                className={`flex-1 bg-red-500 p-3 rounded-lg ${isLoading ? 'opacity-50' : ''}`}
-                disabled={isLoading}
-              >
-                <Text className="text-white text-center font-medium">Delete</Text>
-              </TouchableOpacity>
-            </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View className="flex-1 bg-white">
+        {isLoading && loadingSpinner}
+        {/* Header */}
+        <View className="flex-row items-center p-4">
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            className="p-2 absolute left-2"
+          >
+            <Icon name="arrow-back" size={24} color="black" />
+          </TouchableOpacity>
+          <View className="flex-1 items-center">
+            <Text className="text-2xl font-bold">Your Inventory 📦</Text>
+            <Text className="text-gray-500">Update in real-time, stay stocked</Text>
           </View>
         </View>
-      </Modal>
 
 
-      {/* Summary Boxes */}
-      <View className="flex-row justify-between px-4 py-4">
-        <TouchableOpacity
-          className="w-[48%] bg-yellow-100 rounded-xl p-4 items-center shadow-md"
-          onPress={() => {
-            const lowStockItems = products.filter(item => item.stock_quantity < 5);
-            if (lowStockItems.length) {
-              navigation.navigate('FilteredProductListScreen', {
-                title: 'Low Stock',
-                products: lowStockItems,
-              });
-            } else {
-              ToastAndroid.show('No low stock items found.', ToastAndroid.SHORT);
-            }
-          }}
+        {/* Confirmation Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={confirmModalVisible}
+          onRequestClose={handleCancelDelete}
         >
-          <Feather name="alert-triangle" size={30} color="orange" />
-          <Text className="text-xl font-bold text-gray-800 mt-2">
-            {products.filter(item => item.stock_quantity < 5).length}
-          </Text>
-          <Text className="text-sm text-gray-600">Low Stock</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="w-[48%] bg-red-100 rounded-xl p-4 items-center shadow-md"
-          onPress={() => {
-            const outOfStockItems = products.filter(item => item.stock_quantity === 0);
-            if (outOfStockItems.length) {
-              navigation.navigate('FilteredProductListScreen', {
-                title: 'Out of Stock',
-                products: outOfStockItems,
-              });
-            } else {
-              ToastAndroid.show('No out of stock items found.', ToastAndroid.SHORT);
-            }
-          }}
-        >
-          <Feather name="x-circle" size={30} color="red" />
-          <Text className="text-xl font-bold text-gray-800 mt-2">
-            {products.filter(item => item.stock_quantity === 0).length}
-          </Text>
-          <Text className="text-sm text-gray-600">Out of Stock</Text>
-        </TouchableOpacity>
-      </View>
+          <View className="flex-1 justify-center items-center bg-black/50">
+            <View className="bg-white p-6 rounded-xl w-11/12">
+              <Text className="text-xl font-bold mb-2">
+                Delete {confirmAction?.type === 'category' ? 'Category' : 'Product'}
+              </Text>
+              <Text className="text-base mb-4">
+                Are you sure you want to delete "{confirmAction?.name}"?
+              </Text>
+              <View className="flex-row justify-between">
+                <TouchableOpacity
+                  onPress={handleCancelDelete}
+                  className="flex-1 bg-gray-200 p-3 rounded-lg mr-2"
+                  disabled={isLoading}
+                >
+                  <Text className="text-center font-medium">Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={handleConfirmDelete}
+                  className={`flex-1 bg-red-500 p-3 rounded-lg ${isLoading ? 'opacity-50' : ''}`}
+                  disabled={isLoading}
+                >
+                  <Text className="text-white text-center font-medium">Delete</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
 
-      {/* Categories Section */}
-      <View className="px-4">
-        <View className="flex-row justify-between items-center ">
-          <Text className="text-xl font-bold">Categories</Text>
-        </View>
-        {isLoading && !categories.length ? (
-          <Text className="text-gray-500">Loading categories...</Text>
-        ) : categories.length === 0 ? (
-          <Text className="text-gray-500">No categories added yet</Text>
-        ) : (
-          <FlatList
-            data={categories}
-            renderItem={renderCategoryItem}
-            keyExtractor={item => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="pb-2"
-          />
-        )}
-      </View>
-
-
-      {/* Product List */}
-      <View className="flex-1">
-        <View className="flex-row justify-between items-center mb-3 px-4">
-          <Text className="text-xl font-bold">
-            Products in {selectedCategory?.name || 'Selected Category'}
-          </Text>
+        {/* Summary Boxes */}
+        <View className="flex-row justify-between px-4 py-4">
           <TouchableOpacity
-            onPress={() =>
-              navigation.navigate('AddProductScreen', { categoryId: selectedCategory?.id })
-            }
-            className="bg-primary-100 p-2 rounded-lg"
+            className="w-[48%] bg-yellow-100 rounded-xl p-4 items-center shadow-md"
+            onPress={() => {
+              const lowStockItems = products.filter(item => item.stock_quantity < 5);
+              if (lowStockItems.length) {
+                navigation.navigate('FilteredProductListScreen', {
+                  title: 'Low Stock',
+                  products: lowStockItems,
+                });
+              } else {
+                ToastAndroid.show('No low stock items found.', ToastAndroid.SHORT);
+              }
+            }}
           >
-            <Icon name="add" size={20} color="white" />
+            <Feather name="alert-triangle" size={30} color="orange" />
+            <Text className="text-xl font-bold text-gray-800 mt-2">
+              {products.filter(item => item.stock_quantity < 5).length}
+            </Text>
+            <Text className="text-sm text-gray-600">Low Stock</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="w-[48%] bg-red-100 rounded-xl p-4 items-center shadow-md"
+            onPress={() => {
+              const outOfStockItems = products.filter(item => item.stock_quantity === 0);
+              if (outOfStockItems.length) {
+                navigation.navigate('FilteredProductListScreen', {
+                  title: 'Out of Stock',
+                  products: outOfStockItems,
+                });
+              } else {
+                ToastAndroid.show('No out of stock items found.', ToastAndroid.SHORT);
+              }
+            }}
+          >
+            <Feather name="x-circle" size={30} color="red" />
+            <Text className="text-xl font-bold text-gray-800 mt-2">
+              {products.filter(item => item.stock_quantity === 0).length}
+            </Text>
+            <Text className="text-sm text-gray-600">Out of Stock</Text>
           </TouchableOpacity>
         </View>
-        {products.length > 0 ? (
-          <FlatList
-            data={products}
-            renderItem={renderProductItem}
-            keyExtractor={item => item.id}
-            showsVerticalScrollIndicator={false}
-          />
-        ) : (
-          <Text className="text-gray-500">No products in this category</Text>
-        )}
+
+
+        {/* Categories Section */}
+        <View className="px-4">
+          <View className="flex-row justify-between items-center ">
+            <Text className="text-xl font-bold">Categories</Text>
+          </View>
+          {isLoading && !categories.length ? (
+            <Text className="text-gray-500 text-center">Loading categories...</Text>
+          ) : categories.length === 0 ? (
+            <Text className="text-gray-500 text-center">No categories added yet</Text>
+          ) : (
+            <FlatList
+              data={categories}
+              renderItem={renderCategoryItem}
+              keyExtractor={item => item.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="pb-2"
+            />
+          )}
+        </View>
+
+
+        {/* Product List */}
+        <View className="flex-1">
+          <View className="flex-row justify-between items-center mb-3 px-4">
+            <Text className="text-xl font-bold">
+              Products in {selectedCategory?.name || 'Selected Category'}
+            </Text>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('AddProductScreen', { categoryId: selectedCategory?.id })
+              }
+              className="bg-primary-100 p-2 rounded-lg"
+            >
+              <Icon name="add" size={20} color="white" />
+            </TouchableOpacity>
+          </View>
+          {products.length > 0 ? (
+            <FlatList
+              data={products}
+              renderItem={renderProductItem}
+              keyExtractor={item => item.id}
+              showsVerticalScrollIndicator={false}
+            />
+          ) : (
+            <Text className="text-gray-500 m-4 text-center">No products in this category</Text>
+          )}
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

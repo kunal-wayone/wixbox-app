@@ -18,6 +18,7 @@ import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import FoodItem from '../../components/common/FoodItem';
 import { addToCart } from '../../store/slices/cartSlice';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Define types for clarity (based on wishlistSlice)
 interface Shop {
@@ -246,80 +247,82 @@ const MySavedScreen = () => {
   ];
 
   return (
-    <ScrollView className="flex-1 bg-white pt-6">
-      {/* Error Message */}
-      {error && (
-        <View className="bg-red-100 p-4 mx-4 mb-4 rounded-xl">
-          <Text className="text-red-600">{error}</Text>
-        </View>
-      )}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ScrollView className="flex-1 bg-white pt-6">
+        {/* Error Message */}
+        {error && (
+          <View className="bg-red-100 p-4 mx-4 mb-4 rounded-xl">
+            <Text className="text-red-600">{error}</Text>
+          </View>
+        )}
 
 
 
-      {/* Tabs */}
-      <View className="flex-row justify-center gap-4 mb-2 px-4">
-        <TouchableOpacity
-          className={`flex-1 py-3 rounded-xl ${selectedTab === 'pinned' ? 'bg-primary-80' : 'bg-gray-200'
-            }`}
-          onPress={() => setSelectedTab('pinned')}
-        >
-          <Text
-            className={`text-center font-bold ${selectedTab === 'pinned' ? 'text-white' : 'text-gray-800'
+        {/* Tabs */}
+        <View className="flex-row justify-center gap-4 mb-2 px-4">
+          <TouchableOpacity
+            className={`flex-1 py-3 rounded-xl ${selectedTab === 'pinned' ? 'bg-primary-80' : 'bg-gray-200'
               }`}
+            onPress={() => setSelectedTab('pinned')}
           >
-            Pinned Places
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className={`flex-1 py-3 rounded-xl ${selectedTab === 'saved' ? 'bg-primary-80' : 'bg-gray-200'
-            }`}
-          onPress={() => setSelectedTab('saved')}
-        >
-          <Text
-            className={`text-center font-bold ${selectedTab === 'saved' ? 'text-white' : 'text-gray-800'
+            <Text
+              className={`text-center font-bold ${selectedTab === 'pinned' ? 'text-white' : 'text-gray-800'
+                }`}
+            >
+              Pinned Places
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`flex-1 py-3 rounded-xl ${selectedTab === 'saved' ? 'bg-primary-80' : 'bg-gray-200'
               }`}
+            onPress={() => setSelectedTab('saved')}
           >
-            Saved Products
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Section Title */}
-      <Text className="text-lg font-bold px-6">
-        {selectedTab === 'pinned' ? 'Pinned spots to visit' : 'Saved products'}
-      </Text>
-      {/* Loading Indicator */}
-      {status === 'loading' && (
-        <View className="flex-1 justify-center items-center">
-          <Text>Loading...</Text>
+            <Text
+              className={`text-center font-bold ${selectedTab === 'saved' ? 'text-white' : 'text-gray-800'
+                }`}
+            >
+              Saved Products
+            </Text>
+          </TouchableOpacity>
         </View>
-      )}
-      {/* Card List */}
-      {selectedTab === 'pinned' ? (
-        shop_ids.length > 0 ? (
-          shop_ids?.map((shopId) => {
-            // const shop = menu_items.find((item) => item?.store_id === shopId)?.shop; // Find shop data
-            return shopId ? renderShopCard(shopId, true) : null;
-          })
-        ) : (
-          <Text className="text-center text-gray-500">No pinned places yet.</Text>
-        )
-      ) : (
-        menu_items.length > 0 ? (
-          menu_items.map((item: any) => renderItem({ item }))
-        ) : (
-          <Text className="text-center text-gray-500">No saved products yet.</Text>
-        )
-      )}
 
-      {/* Suggested Section (only for pinned tab) */}
-      {/* {selectedTab === 'pinned' && (
+        {/* Section Title */}
+        <Text className="text-lg font-bold px-6">
+          {selectedTab === 'pinned' ? 'Pinned spots to visit' : 'Saved products'}
+        </Text>
+        {/* Loading Indicator */}
+        {status === 'loading' && (
+          <View className="flex-1 justify-center items-center">
+            <Text>Loading...</Text>
+          </View>
+        )}
+        {/* Card List */}
+        {selectedTab === 'pinned' ? (
+          shop_ids.length > 0 ? (
+            shop_ids?.map((shopId) => {
+              // const shop = menu_items.find((item) => item?.store_id === shopId)?.shop; // Find shop data
+              return shopId ? renderShopCard(shopId, true) : null;
+            })
+          ) : (
+            <Text className="text-center text-gray-500">No pinned places yet.</Text>
+          )
+        ) : (
+          menu_items.length > 0 ? (
+            menu_items.map((item: any) => renderItem({ item }))
+          ) : (
+            <Text className="text-center text-gray-500">No saved products yet.</Text>
+          )
+        )}
+
+        {/* Suggested Section (only for pinned tab) */}
+        {/* {selectedTab === 'pinned' && (
         <>
           <Text className="text-lg font-bold px-6 mb-4 mt-6">Suggested for you</Text>
           {suggestedShops.map((shop) => renderShopCard(shop, false))}
         </>
       )} */}
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

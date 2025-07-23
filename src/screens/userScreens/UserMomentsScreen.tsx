@@ -24,6 +24,7 @@ import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
 import { RootState } from '../../store/store';
 import { ImagePath } from '../../constants/ImagePath';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Type Definitions
 interface Location {
@@ -269,182 +270,184 @@ const UserMomentsScreen: React.FC = () => {
   }, [animateMarker, liveLocation?.address, liveLocation?.country]);
 
   return (
-    <View style={styles.container}>
-      {isLoading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator color="#B68AD4" size="large" />
-        </View>
-      )}
-      {/* {errorMessage && (
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <View style={styles.container}>
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator color="#B68AD4" size="large" />
+          </View>
+        )}
+        {/* {errorMessage && (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{errorMessage}</Text>
         </View>
       )} */}
-      {liveLocation?.address && (
-        <View style={styles.addressContainer}>
-          <Text style={styles.addressText}>{liveLocation.address.city + ", " + liveLocation.address.state + " (" + liveLocation.address?.pincode + ")"}</Text>
-        </View>
-      )}
-      <MapView
-        ref={mapRef}
-        provider={PROVIDER_GOOGLE}
-        style={styles.map}
-        initialRegion={getDefaultRegion()}
-        mapType={mapType}
-        showsUserLocation={false}
-        rotateEnabled={false}
-        pitchEnabled={false}
-      >
-        {liveLocation && (
-          <Marker
-            coordinate={{
-              latitude: liveLocation.latitude,
-              longitude: liveLocation.longitude,
-            }}
-            anchor={{ x: 0.5, y: 0.5 }}
-            rotation={liveLocation.heading || 0}
-            flat
-            tracksViewChanges={false}
-          >
-            <Animated.View style={[styles.userMarker, { transform: [{ scale: markerScale }] }]}>
-              <Ionicons name="navigate" size={30} color="#B68AD4" />
-            </Animated.View>
-          </Marker>
+        {liveLocation?.address && (
+          <View style={styles.addressContainer}>
+            <Text style={styles.addressText}>{liveLocation.address.city + ", " + liveLocation.address.state + " (" + liveLocation.address?.pincode + ")"}</Text>
+          </View>
         )}
-
-        {restaurantData?.length > 0 &&
-          restaurantData.map((store, index) => (
+        <MapView
+          ref={mapRef}
+          provider={PROVIDER_GOOGLE}
+          style={styles.map}
+          initialRegion={getDefaultRegion()}
+          mapType={mapType}
+          showsUserLocation={false}
+          rotateEnabled={false}
+          pitchEnabled={false}
+        >
+          {liveLocation && (
             <Marker
-              key={index}
               coordinate={{
-                latitude: Number(store?.latitude) || 0,
-                longitude: Number(store?.longitude) || 0,
+                latitude: liveLocation.latitude,
+                longitude: liveLocation.longitude,
               }}
-              title={store?.restaurant_name}
-              description={store?.about_business}
-              onPress={() => setSelectedStore(store)}
-              image={ImagePath.home3}
-            />
-          ))}
-      </MapView>
+              anchor={{ x: 0.5, y: 0.5 }}
+              rotation={liveLocation.heading || 0}
+              flat
+              tracksViewChanges={false}
+            >
+              <Animated.View style={[styles.userMarker, { transform: [{ scale: markerScale }] }]}>
+                <Ionicons name="navigate" size={30} color="#B68AD4" />
+              </Animated.View>
+            </Marker>
+          )}
 
-      {/* Floating Buttons */}
-      <View style={styles.floatingButtonContainer}>
-        <TouchableOpacity style={styles.floatingButton} onPress={centerToUserLocation}>
-          <Ionicons name="locate" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.floatingButton} onPress={getLiveLocation}>
-          <Ionicons name="refresh" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity className='hidden' style={styles.floatingButton} onPress={saveFavoriteLocation}>
-          <Ionicons name="heart" size={24} color={favoriteLocation ? '#FF4D4F' : '#fff'} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.floatingButton} onPress={toggleMapType}>
-          <Ionicons
-            name={mapType === 'standard' ? 'map' : mapType === 'satellite' ? 'globe' : 'layers'}
-            size={24}
-            color="#fff"
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.floatingButton} onPress={zoomIn}>
-          <Ionicons name="add" size={24} color="#fff" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.floatingButton} onPress={zoomOut}>
-          <Ionicons name="remove" size={24} color="#fff" />
-        </TouchableOpacity>
-      </View>
+          {restaurantData?.length > 0 &&
+            restaurantData.map((store, index) => (
+              <Marker
+                key={index}
+                coordinate={{
+                  latitude: Number(store?.latitude) || 0,
+                  longitude: Number(store?.longitude) || 0,
+                }}
+                title={store?.restaurant_name}
+                description={store?.about_business}
+                onPress={() => setSelectedStore(store)}
+                image={ImagePath.home3}
+              />
+            ))}
+        </MapView>
 
-      {/* Filter Controls */}
-      <View style={styles.filterContainer}>
-        <View style={styles.filterRow}>
-          <Text style={styles.filterLabel}>Radius (km):</Text>
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() => setSearchRadius((prev) => Math.min(prev + 1, 20))}
-          >
-            <Text style={styles.filterButtonText}>+1</Text>
+        {/* Floating Buttons */}
+        <View style={styles.floatingButtonContainer}>
+          <TouchableOpacity style={styles.floatingButton} onPress={centerToUserLocation}>
+            <Ionicons name="locate" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text style={styles.filterValue}>{searchRadius}</Text>
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() => setSearchRadius((prev) => Math.max(prev - 1, 1))}
-          >
-            <Text style={styles.filterButtonText}>-1</Text>
+          <TouchableOpacity style={styles.floatingButton} onPress={getLiveLocation}>
+            <Ionicons name="refresh" size={24} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity className='hidden' style={styles.floatingButton} onPress={saveFavoriteLocation}>
+            <Ionicons name="heart" size={24} color={favoriteLocation ? '#FF4D4F' : '#fff'} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.floatingButton} onPress={toggleMapType}>
+            <Ionicons
+              name={mapType === 'standard' ? 'map' : mapType === 'satellite' ? 'globe' : 'layers'}
+              size={24}
+              color="#fff"
+            />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.floatingButton} onPress={zoomIn}>
+            <Ionicons name="add" size={24} color="#fff" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.floatingButton} onPress={zoomOut}>
+            <Ionicons name="remove" size={24} color="#fff" />
           </TouchableOpacity>
         </View>
-        <View style={styles.filterRow}>
-          <Text style={styles.filterLabel}>Min Rating:</Text>
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() => setMinRating((prev) => Math.min(prev + 0.5, 5))}
-          >
-            <Text style={styles.filterButtonText}>+0.5</Text>
-          </TouchableOpacity>
-          <Text style={styles.filterValue}>{minRating.toFixed(1)}</Text>
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() => setMinRating((prev) => Math.max(prev - 0.5, 0))}
-          >
-            <Text style={styles.filterButtonText}>-0.5</Text>
-          </TouchableOpacity>
+
+        {/* Filter Controls */}
+        <View style={styles.filterContainer}>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Radius (km):</Text>
+            <TouchableOpacity
+              style={styles.filterButton}
+              onPress={() => setSearchRadius((prev) => Math.min(prev + 1, 20))}
+            >
+              <Text style={styles.filterButtonText}>+1</Text>
+            </TouchableOpacity>
+            <Text style={styles.filterValue}>{searchRadius}</Text>
+            <TouchableOpacity
+              style={styles.filterButton}
+              onPress={() => setSearchRadius((prev) => Math.max(prev - 1, 1))}
+            >
+              <Text style={styles.filterButtonText}>-1</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.filterRow}>
+            <Text style={styles.filterLabel}>Min Rating:</Text>
+            <TouchableOpacity
+              style={styles.filterButton}
+              onPress={() => setMinRating((prev) => Math.min(prev + 0.5, 5))}
+            >
+              <Text style={styles.filterButtonText}>+0.5</Text>
+            </TouchableOpacity>
+            <Text style={styles.filterValue}>{minRating.toFixed(1)}</Text>
+            <TouchableOpacity
+              style={styles.filterButton}
+              onPress={() => setMinRating((prev) => Math.max(prev - 0.5, 0))}
+            >
+              <Text style={styles.filterButtonText}>-0.5</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      {selectedStore && (
-        <View style={styles.cardContainer}>
-          <TouchableOpacity
-            onPress={() => setSelectedStore(null)}
-            style={styles.closeButton}
-          >
-            <Ionicons name="close" size={20} />
-          </TouchableOpacity>
+        {selectedStore && (
+          <View style={styles.cardContainer}>
+            <TouchableOpacity
+              onPress={() => setSelectedStore(null)}
+              style={styles.closeButton}
+            >
+              <Ionicons name="close" size={20} />
+            </TouchableOpacity>
 
-          <View style={styles.cardContent}>
-            <Image
-              source={selectedStore?.restaurant_images.length > 0 ? { uri: IMAGE_URL + selectedStore?.restaurant_images[0] } : ImagePath.restaurant1}
-              style={styles.storeImage}
-              resizeMode="cover"
-            // defaultSource={ImagePath.restaurant1}
-            />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.storeName}>{selectedStore?.restaurant_name}</Text>
-              <Text style={{ marginBottom: 4 }}>{selectedStore?.about_business}</Text>
-              <View style={styles.ratingLocationRow}>
-                <View style={styles.inlineRow}>
-                  <FontAwesome name="star" size={16} color="gold" />
-                  <Text style={{ marginLeft: 5 }}>{selectedStore?.average_rating || 'N/A'}</Text>
-                </View>
-                <View style={styles.inlineRow}>
-                  <Ionicons name="location-sharp" size={16} color="gray" />
-                  <Text style={{ marginLeft: 5 }}>{selectedStore.distance_km || '0'} Km</Text>
-                </View>
-                <View style={styles.inlineRow}>
-                  <Ionicons name="timer-outline" size={16} color="gray" />
-                  <Text style={{ marginLeft: 5 }}>{selectedStore.travel_time_mins || '0'} min</Text>
+            <View style={styles.cardContent}>
+              <Image
+                source={selectedStore?.restaurant_images.length > 0 ? { uri: IMAGE_URL + selectedStore?.restaurant_images[0] } : ImagePath.restaurant1}
+                style={styles.storeImage}
+                resizeMode="cover"
+              // defaultSource={ImagePath.restaurant1}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.storeName}>{selectedStore?.restaurant_name}</Text>
+                <Text style={{ marginBottom: 4 }}>{selectedStore?.about_business}</Text>
+                <View style={styles.ratingLocationRow}>
+                  <View style={styles.inlineRow}>
+                    <FontAwesome name="star" size={16} color="gold" />
+                    <Text style={{ marginLeft: 5 }}>{selectedStore?.average_rating || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.inlineRow}>
+                    <Ionicons name="location-sharp" size={16} color="gray" />
+                    <Text style={{ marginLeft: 5 }}>{selectedStore.distance_km || '0'} Km</Text>
+                  </View>
+                  <View style={styles.inlineRow}>
+                    <Ionicons name="timer-outline" size={16} color="gray" />
+                    <Text style={{ marginLeft: 5 }}>{selectedStore.travel_time_mins || '0'} min</Text>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.visitButton, { backgroundColor: '#B68AD4' }]}
-              onPress={() => navigation.navigate('ShopDetailsScreen', { shop_info: selectedStore })}
-            >
-              <Ionicons name="storefront" color="#fff" size={15} />
-              <Text style={styles.visitText}>Tap to view</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.visitButton, { backgroundColor: '#4CAF50' }]}
-              onPress={() => openGoogleMapsDirections(selectedStore)}
-            >
-              <Entypo name="direction" size={18} color="#fff" />
-              <Text style={styles.visitText}>Get Direction</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.visitButton, { backgroundColor: '#B68AD4' }]}
+                onPress={() => navigation.navigate('ShopDetailsScreen', { shop_info: selectedStore })}
+              >
+                <Ionicons name="storefront" color="#fff" size={15} />
+                <Text style={styles.visitText}>Tap to view</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.visitButton, { backgroundColor: '#4CAF50' }]}
+                onPress={() => openGoogleMapsDirections(selectedStore)}
+              >
+                <Entypo name="direction" size={18} color="#fff" />
+                <Text style={styles.visitText}>Get Direction</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      )}
-    </View>
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 

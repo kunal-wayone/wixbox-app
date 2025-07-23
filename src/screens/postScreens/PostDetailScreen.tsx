@@ -11,6 +11,7 @@ import {
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Post {
   id: string;
@@ -78,49 +79,51 @@ const PostDetailScreen = () => {
   }
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      {/* Header with back button */}
-      <View className="flex-row items-center px-4 py-3 mb-2  border-gray-200">
-        <TouchableOpacity className='absolute z-50 left-5 top-5' onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text className="text-xl py-4 font-semibold text-center w-full ">Post Details</Text>
-      </View>
-
-      {/* Post image */}
-      <Image
-        source={{ uri: IMAGE_URL + post.image }}
-        className="w-11/12 h-52 m-auto rounded-2xl "
-        resizeMode="cover"
-      />
-
-      {/* Post Content */}
-      <View className="p-4 space-y-4">
-        <View className="flex-row justify-between items-center mb-2">
-          <Text className="text-xl font-bold text-gray-800">{post.title}</Text>
-          <Text className="text-sm text-gray-500">{formatDate(post.created_at)}</Text>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ScrollView className="flex-1 bg-white">
+        {/* Header with back button */}
+        <View className="flex-row items-center px-4 py-3 mb-2  border-gray-200">
+          <TouchableOpacity className='absolute z-50 left-5 top-5' onPress={() => navigation.goBack()}>
+            <Icon name="arrow-back" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text className="text-xl py-4 font-semibold text-center w-full ">Post Details</Text>
         </View>
 
-        {post.badge && (
-          <Text className="text-sm text-white bg-primary-80 px-3 py-1 rounded-md self-start">
-            {post.badge}
-          </Text>
-        )}
+        {/* Post image */}
+        <Image
+          source={{ uri: IMAGE_URL + post.image }}
+          className="w-11/12 h-52 m-auto rounded-2xl "
+          resizeMode="cover"
+        />
 
-        <View className="flex-row gap-6 mb-3 hidden ">
-          <Text className="text-gray-600 text-sm"><Icon name='eye' /> {post.views} Views</Text>
-          <Text className="text-gray-600 text-sm"><Icon name='chatbox-ellipses' /> {post.comments} Comments</Text>
-        </View>
-
-        {post.content ? (
-          <View>
-            <Text className="text-gray-700 leading-relaxed">{post.content}</Text>
+        {/* Post Content */}
+        <View className="p-4 space-y-4">
+          <View className="flex-row justify-between items-center mb-2">
+            <Text className="text-xl font-bold text-gray-800">{post.title}</Text>
+            <Text className="text-sm text-gray-500">{formatDate(post.created_at)}</Text>
           </View>
-        ) : (
-          <Text className="text-gray-400 italic">No description provided.</Text>
-        )}
-      </View>
-    </ScrollView>
+
+          {post.badge && (
+            <Text className="text-sm text-white bg-primary-80 px-3 py-1 rounded-md self-start">
+              {post.badge}
+            </Text>
+          )}
+
+          <View className="flex-row gap-6 mb-3 hidden ">
+            <Text className="text-gray-600 text-sm"><Icon name='eye' /> {post.views} Views</Text>
+            <Text className="text-gray-600 text-sm"><Icon name='chatbox-ellipses' /> {post.comments} Comments</Text>
+          </View>
+
+          {post.content ? (
+            <View>
+              <Text className="text-gray-700 leading-relaxed">{post.content}</Text>
+            </View>
+          ) : (
+            <Text className="text-gray-400 italic">No description provided.</Text>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

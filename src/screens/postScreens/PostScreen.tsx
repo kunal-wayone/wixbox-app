@@ -20,6 +20,7 @@ import * as ImagePicker from 'react-native-image-picker';
 import { Post, Put, Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { ImagePath } from '../../constants/ImagePath'; // Assuming ImagePath is defined elsewhere
 import { useSelector } from 'react-redux';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const validationSchema = Yup.object().shape({
   title: Yup.string()
@@ -144,311 +145,313 @@ const PostScreen = () => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
-    >
-      {/* Loading Overlay */}
-      {isFetching && (
-        <View
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-          }}
-        >
-          <ActivityIndicator size="large" color="#B68AD4" />
-          <Text style={{ color: '#fff', marginTop: 10, fontSize: 16 }}>
-            Loading...
-          </Text>
-        </View>
-      )}
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: 16,
-          backgroundColor: '#fff',
-        }}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
-        {/* Header */}
-        <View className="flex-row items-center border-gray-200">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-            <Ionicons name="arrow-back" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
-        <View style={{ marginTop: 10 }}>
-          <Text
+        {/* Loading Overlay */}
+        {isFetching && (
+          <View
             style={{
-              textAlign: 'center',
-              fontSize: 30,
-              fontWeight: 'bold',
-              fontFamily: 'Poppins',
-              color: '#374151',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.7)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 1000,
             }}
           >
-            {postDetails ? 'Edit Post' : 'Create Post'}
-          </Text>
-          <Text
-            style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}
-          >
-            {postDetails
-              ? 'Update the post details below.'
-              : 'Enter the post details to create a new post.'}
-          </Text>
+            <ActivityIndicator size="large" color="#B68AD4" />
+            <Text style={{ color: '#fff', marginTop: 10, fontSize: 16 }}>
+              Loading...
+            </Text>
+          </View>
+        )}
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: 16,
+            backgroundColor: '#fff',
+          }}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header */}
+          <View className="flex-row items-center border-gray-200">
+            <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+              <Ionicons name="arrow-back" size={24} color="black" />
+            </TouchableOpacity>
+          </View>
+          <View style={{ marginTop: 10 }}>
+            <Text
+              style={{
+                textAlign: 'center',
+                fontSize: 30,
+                fontWeight: 'bold',
+                fontFamily: 'Poppins',
+                color: '#374151',
+              }}
+            >
+              {postDetails ? 'Edit Post' : 'Create Post'}
+            </Text>
+            <Text
+              style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}
+            >
+              {postDetails
+                ? 'Update the post details below.'
+                : 'Enter the post details to create a new post.'}
+            </Text>
 
-          <Formik
-            initialValues={{
-              title: fetchedPostDetails?.title || '',
-              slug: fetchedPostDetails?.slug || '',
-              content: fetchedPostDetails?.content || '',
-              excerpt: fetchedPostDetails?.excerpt || '',
-              status: fetchedPostDetails?.status || 'draft',
-            }}
-            enableReinitialize
-            validationSchema={validationSchema}
-            onSubmit={handleSavePost}
-          >
-            {({
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-              isSubmitting,
-              setFieldValue,
-            }: any) => (
-              <View style={{ marginTop: 16 }}>
-                {/* Image Upload Container */}
-                <View style={{ marginBottom: 12 }}>
-                  {!image && <TouchableOpacity
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 16,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      height: 100,
-                      marginBottom: 12,
-                    }}
-                    onPress={pickImage}
-                  >
-                    <Image
-                      source={ImagePath.uploadIcon}
-                      style={{ width: 30, height: 30 }}
-                      resizeMode="contain"
-                    />
-                    <Text style={{ color: '#4B5563', marginTop: 8 }}>
-                      {image ? 'Replace Image' : 'Add Image'}
-                    </Text>
-                  </TouchableOpacity>}
-
-                  {/* Display Selected Image */}
-                  {image && (
-                    <View style={{ marginBottom: 8, alignItems: 'center' }}>
+            <Formik
+              initialValues={{
+                title: fetchedPostDetails?.title || '',
+                slug: fetchedPostDetails?.slug || '',
+                content: fetchedPostDetails?.content || '',
+                excerpt: fetchedPostDetails?.excerpt || '',
+                status: fetchedPostDetails?.status || 'draft',
+              }}
+              enableReinitialize
+              validationSchema={validationSchema}
+              onSubmit={handleSavePost}
+            >
+              {({
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                values,
+                errors,
+                touched,
+                isSubmitting,
+                setFieldValue,
+              }: any) => (
+                <View style={{ marginTop: 16 }}>
+                  {/* Image Upload Container */}
+                  <View style={{ marginBottom: 12 }}>
+                    {!image && <TouchableOpacity
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#D1D5DB',
+                        backgroundColor: '#F3F4F6',
+                        borderRadius: 8,
+                        padding: 16,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        height: 100,
+                        marginBottom: 12,
+                      }}
+                      onPress={pickImage}
+                    >
                       <Image
-                        source={{ uri: image }}
-                        resizeMode='stretch'
-                        style={{ width: "100%", height: 200, borderRadius: 8 }}
+                        source={ImagePath.uploadIcon}
+                        style={{ width: 30, height: 30 }}
+                        resizeMode="contain"
                       />
-                      <TouchableOpacity
-                        style={{
-                          position: 'absolute',
-                          top: 0,
-                          right: 0,
-                          backgroundColor: 'rgba(0,0,0,0.5)',
-                          borderRadius: 12,
-                        }}
-                        onPress={removeImage}
-                      >
-                        <Ionicons name="close" size={20} color="white" />
-                      </TouchableOpacity>
-                    </View>
-                  )}
-                </View>
+                      <Text style={{ color: '#4B5563', marginTop: 8 }}>
+                        {image ? 'Replace Image' : 'Add Image'}
+                      </Text>
+                    </TouchableOpacity>}
 
-                {/* Title */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Title
-                  </Text>
-                  <TextInput
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 12,
-                      fontSize: 16,
-                    }}
-                    placeholder="Enter post title"
-                    onChangeText={handleChange('title')}
-                    onBlur={handleBlur('title')}
-                    value={values.title}
-                  />
-                  {touched.title && errors.title && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
-                    >
-                      {errors.title}
-                    </Text>
-                  )}
-                </View>
-
-
-
-                {/* Content */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Content
-                  </Text>
-                  <TextInput
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 12,
-                      fontSize: 16,
-                      minHeight: 150,
-                      textAlignVertical: 'top',
-                    }}
-                    placeholder="Enter post content"
-                    onChangeText={handleChange('content')}
-                    onBlur={handleBlur('content')}
-                    value={values.content}
-                    multiline
-                  />
-                  {touched.content && errors.content && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
-                    >
-                      {errors.content}
-                    </Text>
-                  )}
-                </View>
-
-                {/* Excerpt */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Short Description
-                  </Text>
-                  <TextInput
-                    style={{
-                      borderWidth: 1,
-                      borderColor: '#D1D5DB',
-                      backgroundColor: '#F3F4F6',
-                      borderRadius: 8,
-                      padding: 12,
-                      fontSize: 16,
-                      minHeight: 100,
-                      textAlignVertical: 'top',
-                    }}
-                    placeholder="Enter post short description"
-                    onChangeText={handleChange('excerpt')}
-                    onBlur={handleBlur('excerpt')}
-                    value={values.excerpt}
-                    multiline
-                  />
-                  {touched.excerpt && errors.excerpt && (
-                    <Text
-                      style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
-                    >
-                      {errors.excerpt}
-                    </Text>
-                  )}
-                </View>
-
-                {/* Status Switch */}
-                <View style={{ marginBottom: 12 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: '#374151',
-                      marginBottom: 4,
-                    }}
-                  >
-                    Post Status
-                  </Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Switch
-                      value={values.status === 'published'}
-                      onValueChange={value => {
-                        setFieldValue('status', value ? 'published' : 'draft')
-                      }
-                      }
-                      trackColor={{ false: '#D1D5DB', true: '#B68AD4' }}
-                      thumbColor={values.status === 'published' ? '#fff' : '#f4f3f4'}
-                    />
-                    <Text style={{ marginLeft: 8, color: '#374151' }}>
-                      {values.status === 'published' ? 'Published' : 'Draft'}
-                    </Text>
+                    {/* Display Selected Image */}
+                    {image && (
+                      <View style={{ marginBottom: 8, alignItems: 'center' }}>
+                        <Image
+                          source={{ uri: image }}
+                          resizeMode='stretch'
+                          style={{ width: "100%", height: 200, borderRadius: 8 }}
+                        />
+                        <TouchableOpacity
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            right: 0,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            borderRadius: 12,
+                          }}
+                          onPress={removeImage}
+                        >
+                          <Ionicons name="close" size={20} color="white" />
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
-                </View>
 
-                {/* Submit Button */}
-                <TouchableOpacity
-                  onPress={() => handleSubmit()}
-                  disabled={isSubmitting || isFetching}
-                  style={{
-                    backgroundColor:
-                      isSubmitting || isFetching ? '#B68AD480' : '#B68AD4',
-                    padding: 16,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                    marginTop: 16,
-                    marginBottom: 20,
-                  }}
-                >
-                  <Text
-                    style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}
+                  {/* Title */}
+                  <View style={{ marginBottom: 12 }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Title
+                    </Text>
+                    <TextInput
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#D1D5DB',
+                        backgroundColor: '#F3F4F6',
+                        borderRadius: 8,
+                        padding: 12,
+                        fontSize: 16,
+                      }}
+                      placeholder="Enter post title"
+                      onChangeText={handleChange('title')}
+                      onBlur={handleBlur('title')}
+                      value={values.title}
+                    />
+                    {touched.title && errors.title && (
+                      <Text
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
+                      >
+                        {errors.title}
+                      </Text>
+                    )}
+                  </View>
+
+
+
+                  {/* Content */}
+                  <View style={{ marginBottom: 12 }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Content
+                    </Text>
+                    <TextInput
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#D1D5DB',
+                        backgroundColor: '#F3F4F6',
+                        borderRadius: 8,
+                        padding: 12,
+                        fontSize: 16,
+                        minHeight: 150,
+                        textAlignVertical: 'top',
+                      }}
+                      placeholder="Enter post content"
+                      onChangeText={handleChange('content')}
+                      onBlur={handleBlur('content')}
+                      value={values.content}
+                      multiline
+                    />
+                    {touched.content && errors.content && (
+                      <Text
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
+                      >
+                        {errors.content}
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* Excerpt */}
+                  <View style={{ marginBottom: 12 }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Short Description
+                    </Text>
+                    <TextInput
+                      style={{
+                        borderWidth: 1,
+                        borderColor: '#D1D5DB',
+                        backgroundColor: '#F3F4F6',
+                        borderRadius: 8,
+                        padding: 12,
+                        fontSize: 16,
+                        minHeight: 100,
+                        textAlignVertical: 'top',
+                      }}
+                      placeholder="Enter post short description"
+                      onChangeText={handleChange('excerpt')}
+                      onBlur={handleBlur('excerpt')}
+                      value={values.excerpt}
+                      multiline
+                    />
+                    {touched.excerpt && errors.excerpt && (
+                      <Text
+                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
+                      >
+                        {errors.excerpt}
+                      </Text>
+                    )}
+                  </View>
+
+                  {/* Status Switch */}
+                  <View style={{ marginBottom: 12 }}>
+                    <Text
+                      style={{
+                        fontSize: 14,
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Post Status
+                    </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <Switch
+                        value={values.status === 'published'}
+                        onValueChange={value => {
+                          setFieldValue('status', value ? 'published' : 'draft')
+                        }
+                        }
+                        trackColor={{ false: '#D1D5DB', true: '#B68AD4' }}
+                        thumbColor={values.status === 'published' ? '#fff' : '#f4f3f4'}
+                      />
+                      <Text style={{ marginLeft: 8, color: '#374151' }}>
+                        {values.status === 'published' ? 'Published' : 'Draft'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Submit Button */}
+                  <TouchableOpacity
+                    onPress={() => handleSubmit()}
+                    disabled={isSubmitting || isFetching}
+                    style={{
+                      backgroundColor:
+                        isSubmitting || isFetching ? '#B68AD480' : '#B68AD4',
+                      padding: 16,
+                      borderRadius: 10,
+                      alignItems: 'center',
+                      marginTop: 16,
+                      marginBottom: 20,
+                    }}
                   >
-                    {isSubmitting
-                      ? 'Saving...'
-                      : postDetails
-                        ? 'Update Post'
-                        : 'Create Post'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </Formik>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+                    <Text
+                      style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}
+                    >
+                      {isSubmitting
+                        ? 'Saving...'
+                        : postDetails
+                          ? 'Update Post'
+                          : 'Create Post'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </Formik>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 

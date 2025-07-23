@@ -15,6 +15,9 @@ import { TokenStorage } from '../utils/apiUtils';
 import { logout } from '../store/slices/authSlice';
 import { RootState } from '../store/store';
 import { googleSignOut } from '../utils/authentication/googleAuth';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import Feather from 'react-native-vector-icons/Feather';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const ProfileScreen = () => {
   const dispatch = useDispatch<any>();
@@ -28,14 +31,6 @@ const ProfileScreen = () => {
 
 
   const tabs = [
-    {
-      name: 'Edit My Profile',
-      icon: 'person-outline',
-      link: 'EditProfileScreen',
-    },
-    { name: 'Manage Stock', icon: 'cube-outline', link: 'ManageStockScreen' },
-    { name: 'Manage Ads', icon: 'cube-outline', link: 'AdsListScreen' },
-    { name: 'Manage Orders', icon: 'people-outline', link: 'AddCustomerScreen' },
     {
       name: 'My Transection',
       icon: 'wallet-outline',
@@ -110,169 +105,174 @@ const ProfileScreen = () => {
   }, []);
 
   return (
-    <ScrollView className="flex-1 bg-white">
-      <View className="p-4 pt-10">
-        {/* Notification Icon */}
-        <TouchableOpacity className="absolute top-10 right-4">
-          <Image source={ImagePath.what} className="w-5 h-5" />
-        </TouchableOpacity>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+      <ScrollView className="flex-1 bg-white">
+        <View className="p-4 pt-10">
+          {/* Notification Icon */}
+          <TouchableOpacity className="absolute top-10 right-4">
+            <Image source={ImagePath.what} className="w-5 h-5" />
+          </TouchableOpacity>
 
-        {/* Profile Image */}
-        <View className="items-center mt-8">
-          <Image
-            source={ImagePath.profile1} // Replace with actual image
-            className="w-24 h-24 rounded-full"
-          />
-        </View>
+          {/* Profile Image */}
+          <View className="items-center mt-8">
+            <Image
+              source={ImagePath.profile1} // Replace with actual image
+              className="w-24 h-24 rounded-full"
+            />
+            <TouchableOpacity onPress={() => navigation.navigate('EditProfileScreen')} className=''>
+              <Feather name="edit" size={22} className='ml-24 mt-[-6%]' color={"#ac94f4"} />
+            </TouchableOpacity>
+          </View>
 
-        {/* Name and Email */}
-        <Text className="text-xl font-bold text-center mt-4">
-          {user?.name || 'John Doe'}
-        </Text>
-        <Text className="text-base text-center text-gray-600">
-          {user?.email || 'john.doe@example.com'}
-        </Text>
+          {/* Name and Email */}
+          <Text className="text-xl font-bold text-center mt-3">
+            {user?.name || 'John Doe'}
+          </Text>
+          <Text className="text-base text-center text-gray-600">
+            {user?.email || 'john.doe@example.com'}
+          </Text>
 
-        {/* Tabs */}
-        <View className="mt-6">
-          {user?.role === 'vendor'
-            ? tabs?.map((tab, index) => (
-              <TouchableOpacity
-                key={index}
-                className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
-                onPress={() => navigation.navigate(tab?.link)}>
-                <View className="flex-row items-center">
-                  <Icon
-                    name={tab?.icon}
-                    size={20}
-                    color="#000"
-                    className="bg-primary-20 p-2 rounded-full"
-                  />
-                  <Text className="ml-3 text-base text-gray-900">
-                    {tab?.name}
-                  </Text>
-                </View>
-                <Icon name="chevron-forward-outline" size={20} color="#000" />
-              </TouchableOpacity>
-            ))
-            : userTabs?.map((tab, index) => (
+          {/* Tabs */}
+          <View className="mt-6">
+            {user?.role === 'vendor'
+              ? tabs?.map((tab, index) => (
+                <TouchableOpacity
+                  key={index}
+                  className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
+                  onPress={() => navigation.navigate(tab?.link)}>
+                  <View className="flex-row items-center">
+                    <Icon
+                      name={tab?.icon}
+                      size={20}
+                      color="#000"
+                      className="bg-primary-20 p-2 rounded-full"
+                    />
+                    <Text className="ml-3 text-base text-gray-900">
+                      {tab?.name}
+                    </Text>
+                  </View>
+                  <Icon name="chevron-forward-outline" size={20} color="#000" />
+                </TouchableOpacity>
+              ))
+              : userTabs?.map((tab, index) => (
+                <TouchableOpacity
+                  key={index}
+                  className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
+                  onPress={() => navigation.navigate(tab.link)}>
+                  <View className="flex-row items-center">
+                    <Icon
+                      name={tab?.icon}
+                      size={20}
+                      color="#000"
+                      className="bg-primary-20 p-2 rounded-full"
+                    />
+                    <Text className="ml-3 text-base text-gray-900">
+                      {tab?.name}
+                    </Text>
+                  </View>
+                  <Icon name="chevron-forward-outline" size={20} color="#000" />
+                </TouchableOpacity>
+              ))}
+          </View>
+
+          {/* More Links */}
+          <View className="mt-6">
+            <Text className="text-lg font-bold  mb-2">More Us</Text>
+            {moreLinks.map((tab, index) => (
               <TouchableOpacity
                 key={index}
                 className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
                 onPress={() => navigation.navigate(tab.link)}>
                 <View className="flex-row items-center">
-                  <Icon
-                    name={tab?.icon}
-                    size={20}
-                    color="#000"
-                    className="bg-primary-20 p-2 rounded-full"
-                  />
-                  <Text className="ml-3 text-base text-gray-900">
-                    {tab?.name}
-                  </Text>
+                  <Text className="ml-3 text-base text-gray-900">{tab.name}</Text>
                 </View>
                 <Icon name="chevron-forward-outline" size={20} color="#000" />
               </TouchableOpacity>
             ))}
-        </View>
+          </View>
 
-        {/* More Links */}
-        <View className="mt-6">
-          <Text className="text-lg font-bold  mb-2">More Us</Text>
-          {moreLinks.map((tab, index) => (
+          {/* Logout and Delete Buttons */}
+          <View className="mt-6">
             <TouchableOpacity
-              key={index}
-              className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
-              onPress={() => navigation.navigate(tab.link)}>
-              <View className="flex-row items-center">
-                <Text className="ml-3 text-base text-gray-900">{tab.name}</Text>
-              </View>
-              <Icon name="chevron-forward-outline" size={20} color="#000" />
+              className="p-4 bg-primary-100 rounded-xl mb-2"
+              onPress={() => handleAction('Logout')}>
+              <Text className="text-base text-center text-white">Logout</Text>
             </TouchableOpacity>
-          ))}
+            <TouchableOpacity
+              className="p-4 border border-red-500 rounded-xl"
+              onPress={() => handleAction('Delete')}>
+              <Text className="text-base text-center text-red-500">
+                Delete Account
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Logout and Delete Buttons */}
-        <View className="mt-6">
-          <TouchableOpacity
-            className="p-4 bg-primary-100 rounded-xl mb-2"
-            onPress={() => handleAction('Logout')}>
-            <Text className="text-base text-center text-white">Logout</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="p-4 border border-red-500 rounded-xl"
-            onPress={() => handleAction('Delete')}>
-            <Text className="text-base text-center text-red-500">
-              Delete Account
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Confirmation Modal */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View
-          style={{
-            flex: 1,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: 'rgba(0,0,0,0.3)',
-          }}
+        {/* Confirmation Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
         >
           <View
             style={{
-              backgroundColor: 'white',
-              padding: 24,
-              borderRadius: 16,
-              width: '80%',
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0,0,0,0.3)',
             }}
           >
-            <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#B68AD4' }}>
-              {modalAction === 'Logout' ? 'Confirm Logout' : 'Confirm Account Deletion'}
-            </Text>
-            <Text style={{ fontSize: 16, textAlign: 'center', marginTop: 8, color: '#666' }}>
-              {modalAction === 'Logout'
-                ? 'Are you sure you want to log out?'
-                : 'Are you sure you want to delete your account? This action cannot be undone.'}
-            </Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 }}>
-              <TouchableOpacity
-                style={{
-                  padding: 12,
-                  backgroundColor: '#e5e5e5',
-                  borderRadius: 12,
-                  flex: 1,
-                  marginRight: 8,
-                }}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={{ fontSize: 16, textAlign: 'center', color: '#000' }}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  padding: 12,
-                  backgroundColor: 'red',
-                  borderRadius: 12,
-                  flex: 1,
-                  marginLeft: 8,
-                }}
-                onPress={confirmAction}
-              >
-                <Text style={{ fontSize: 16, textAlign: 'center', color: '#fff' }}>
-                  {modalAction === 'Logout' ? 'Logout' : 'Delete'}
-                </Text>
-              </TouchableOpacity>
+            <View
+              style={{
+                backgroundColor: 'white',
+                padding: 24,
+                borderRadius: 16,
+                width: '80%',
+              }}
+            >
+              <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#B68AD4' }}>
+                {modalAction === 'Logout' ? 'Confirm Logout' : 'Confirm Account Deletion'}
+              </Text>
+              <Text style={{ fontSize: 16, textAlign: 'center', marginTop: 8, color: '#666' }}>
+                {modalAction === 'Logout'
+                  ? 'Are you sure you want to log out?'
+                  : 'Are you sure you want to delete your account? This action cannot be undone.'}
+              </Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 }}>
+                <TouchableOpacity
+                  style={{
+                    padding: 12,
+                    backgroundColor: '#e5e5e5',
+                    borderRadius: 12,
+                    flex: 1,
+                    marginRight: 8,
+                  }}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <Text style={{ fontSize: 16, textAlign: 'center', color: '#000' }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    padding: 12,
+                    backgroundColor: 'red',
+                    borderRadius: 12,
+                    flex: 1,
+                    marginLeft: 8,
+                  }}
+                  onPress={confirmAction}
+                >
+                  <Text style={{ fontSize: 16, textAlign: 'center', color: '#fff' }}>
+                    {modalAction === 'Logout' ? 'Logout' : 'Delete'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
