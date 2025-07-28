@@ -154,6 +154,7 @@ const CreateShopScreen = ({ route }: any) => {
     }));
     setImages(remoteImgs);
 
+
     if (user.shop.shift_details) {
       setSchedules(revertShiftData(user?.shop?.shift_details && JSON.parse(user?.shop?.shift_details)));
     }
@@ -385,7 +386,7 @@ const CreateShopScreen = ({ route }: any) => {
                           }}
                           className='text-gray-900'
                           placeholder="Shop Name"
-                          placeholderTextColor={"#252525"}
+                          placeholderTextColor={"gray"}
                           onChangeText={handleChange('business_name')}
                           onBlur={handleBlur('business_name')}
                           value={values.business_name}
@@ -779,7 +780,7 @@ const CreateShopScreen = ({ route }: any) => {
                           textAlignVertical: 'top',
                         }}
                         className='text-gray-900'
-                        placeholderTextColor={"#252525"}
+                        placeholderTextColor={"gray"}
                         placeholder="Describe your shop"
                         onChangeText={handleChange('about_business')}
                         onBlur={handleBlur('about_business')}
@@ -1071,6 +1072,7 @@ const styles = StyleSheet.create({
   checkboxText: {
     fontSize: 14,
     color: '#374151',
+    fontFamily: 'Raleway-Regular',
   },
   sameForAllButton: {
     marginTop: 10,
@@ -1085,6 +1087,6 @@ const styles = StyleSheet.create({
     padding: 4,
     textAlign: "center",
     color: '#000',
-    fontWeight: 'semibold',
+    fontFamily: 'Raleway-SemiBold',
   },
 });

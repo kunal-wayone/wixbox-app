@@ -27,14 +27,14 @@ const ShiftCard: React.FC<ShiftProps> = ({
   if (!status)
     return (
       <View className="flex-row items-center gap-4 mb-8 hidden">
-        <Text className="px-3 py-2 w-16 text-center bg-primary-50 rounded-lg text-black">
+        <Text style={{fontFamily:'Raleway-Regular'}} className="px-3 py-2 w-16 text-center bg-primary-50 rounded-lg text-black">
           {day}
         </Text>
-        <Text className="text-black  text-center font-poppins">
+        <Text style={{fontFamily:'Raleway-Regular'}} className="text-black  text-center   ">
           {'....................'}
         </Text>
-        <Text className="text-black font-poppins">{'   '}</Text>
-        <Text className="text-black text-center font-poppins">
+        <Text style={{fontFamily:'Raleway-Regular'}} className="text-black   ">{'   '}</Text>
+        <Text style={{fontFamily:'Raleway-Regular'}} className="text-black text-center   ">
           {'....................'}
         </Text>
       </View>
@@ -42,13 +42,13 @@ const ShiftCard: React.FC<ShiftProps> = ({
 
   return (
     <View className="flex-row items-center gap-4 mb-4">
-      <Text className="px-3 py-2 w-16 text-center bg-primary-50 rounded-lg text-black">
+      <Text style={{fontFamily:'Raleway-Regular'}} className="px-3 py-2 w-16 text-center bg-primary-50 rounded-lg text-black">
         {day}
       </Text>
 
       {first_shift_start && first_shift_end && !second_shift_start && !second_shift_end && (
         <View className='flex-row items-center justify-start w-2/3'>
-          <Text className="text-black text-sm font-poppins text-left">
+          <Text style={{fontFamily:'Raleway-Regular'}} className="text-black text-sm  text-left">
             {first_shift_start + " - " + first_shift_end}
           </Text>
         </View>
@@ -56,9 +56,9 @@ const ShiftCard: React.FC<ShiftProps> = ({
 
       {second_shift_start && second_shift_end && (
         <View className="flex-row items-center gap-1">
-          <Text className="text-black text-sm font-poppins">{first_shift_start + " - " + first_shift_end}</Text>
-          <Text className="text-black text-sm font-poppins mx-2">&</Text>
-          <Text className="text-black text-sm font-poppins">{second_shift_start + " - " + second_shift_end}</Text>
+          <Text style={{fontFamily:'Raleway-Regular'}} className="text-black text-sm   ">{first_shift_start + " - " + first_shift_end}</Text>
+          <Text style={{fontFamily:'Raleway-Regular'}} className="text-black text-sm  mx-2">&</Text>
+          <Text style={{fontFamily:'Raleway-Regular'}} className="text-black text-sm   ">{second_shift_start + " - " + second_shift_end}</Text>
         </View>
       )}
     </View>

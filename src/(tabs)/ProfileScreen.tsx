@@ -39,17 +39,17 @@ const ProfileScreen = () => {
   ];
 
   const userTabs = [
-    {
-      name: 'Edit My Profile',
-      icon: 'person-outline',
-      link: 'EditProfileScreen',
-    },
+    // {
+    //   name: 'Edit My Profile',
+    //   icon: 'person-outline',
+    //   link: 'EditProfileScreen',
+    // },
     // {
     //   name: 'Visited Stores',
     //   icon: 'storefront-outline',
     //   link: 'CreateShopScreen',
     // },
-    { name: 'Order History', icon: 'grid-outline', link: 'ManageAllOrders' },
+    { name: 'Order History', icon: 'grid-outline', link: 'AddCustomerScreen' },
     {
       name: 'Booked Table',
       icon: 'restaurant-outline',
@@ -125,10 +125,10 @@ const ProfileScreen = () => {
           </View>
 
           {/* Name and Email */}
-          <Text className="text-xl font-bold text-center mt-3">
+          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl text-center mt-3">
             {user?.name || 'John Doe'}
           </Text>
-          <Text className="text-base text-center text-gray-600">
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-center text-gray-600">
             {user?.email || 'john.doe@example.com'}
           </Text>
 
@@ -147,7 +147,7 @@ const ProfileScreen = () => {
                       color="#000"
                       className="bg-primary-20 p-2 rounded-full"
                     />
-                    <Text className="ml-3 text-base text-gray-900">
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-3 text-base text-gray-900">
                       {tab?.name}
                     </Text>
                   </View>
@@ -166,7 +166,7 @@ const ProfileScreen = () => {
                       color="#000"
                       className="bg-primary-20 p-2 rounded-full"
                     />
-                    <Text className="ml-3 text-base text-gray-900">
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-3 text-base text-gray-900">
                       {tab?.name}
                     </Text>
                   </View>
@@ -177,14 +177,14 @@ const ProfileScreen = () => {
 
           {/* More Links */}
           <View className="mt-6">
-            <Text className="text-lg font-bold  mb-2">More Us</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg   mb-2">More Us</Text>
             {moreLinks.map((tab, index) => (
               <TouchableOpacity
                 key={index}
                 className="flex-row items-center justify-between p-4 bg-primary-10 rounded-xl mb-2"
                 onPress={() => navigation.navigate(tab.link)}>
                 <View className="flex-row items-center">
-                  <Text className="ml-3 text-base text-gray-900">{tab.name}</Text>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-3 text-base text-gray-900">{tab.name}</Text>
                 </View>
                 <Icon name="chevron-forward-outline" size={20} color="#000" />
               </TouchableOpacity>
@@ -196,12 +196,12 @@ const ProfileScreen = () => {
             <TouchableOpacity
               className="p-4 bg-primary-100 rounded-xl mb-2"
               onPress={() => handleAction('Logout')}>
-              <Text className="text-base text-center text-white">Logout</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-center text-white">Logout</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className="p-4 border border-red-500 rounded-xl"
               onPress={() => handleAction('Delete')}>
-              <Text className="text-base text-center text-red-500">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-center text-red-500">
                 Delete Account
               </Text>
             </TouchableOpacity>
@@ -231,10 +231,10 @@ const ProfileScreen = () => {
                 width: '80%',
               }}
             >
-              <Text style={{ fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#B68AD4' }}>
+              <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 18, textAlign: 'center', color: '#B68AD4' }}>
                 {modalAction === 'Logout' ? 'Confirm Logout' : 'Confirm Account Deletion'}
               </Text>
-              <Text style={{ fontSize: 16, textAlign: 'center', marginTop: 8, color: '#666' }}>
+              <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 16, textAlign: 'center', marginTop: 8, color: '#666' }}>
                 {modalAction === 'Logout'
                   ? 'Are you sure you want to log out?'
                   : 'Are you sure you want to delete your account? This action cannot be undone.'}
@@ -250,7 +250,7 @@ const ProfileScreen = () => {
                   }}
                   onPress={() => setModalVisible(false)}
                 >
-                  <Text style={{ fontSize: 16, textAlign: 'center', color: '#000' }}>Cancel</Text>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 16, textAlign: 'center', color: '#000' }}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={{
@@ -262,7 +262,7 @@ const ProfileScreen = () => {
                   }}
                   onPress={confirmAction}
                 >
-                  <Text style={{ fontSize: 16, textAlign: 'center', color: '#fff' }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 16, textAlign: 'center', color: '#fff' }}>
                     {modalAction === 'Logout' ? 'Logout' : 'Delete'}
                   </Text>
                 </TouchableOpacity>

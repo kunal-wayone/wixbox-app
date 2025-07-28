@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { Fetch, Post } from '../../utils/apiUtils';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import BookedTableCard from '../../components/common/BookedTableCard';
 
 const LIMIT = 5;
 
@@ -94,60 +95,22 @@ const BookedTablesScreen = () => {
         }
     };
 
-    const renderBooking = ({ item }: any) => (
-        <View className="bg-primary-10 m-4 my-2 p-4 rounded-xl shadow-sm">
-            <Text className="font-bold text-lg">{item.name}</Text>
-            <Text className="text-gray-600 mb-1 mt-1 flex-row gap-1">
-                <Ionicons name="calendar-sharp" size={16} color="#B68AD4" /> {item.booking_date}{'  '}
-                <Ionicons name="time-sharp" size={16} color="#B68AD4" /> {item.time_slot}{'  '}
-                <Ionicons name="people-sharp" size={16} color="#B68AD4" /> {item.guests} Guests
-            </Text>
-
-            <Text>
-                Status:{' '}
-                <Text className={item.status === 'pending' ? 'text-yellow-500' : 'text-green-500'}>
-                    {item.status}
-                </Text>
-            </Text>
-
-            {item.table_info.map((table: any, i: number) => (
-                <View key={i} className="mt-2">
-                    <Text>Floor: {table.floor}</Text>
-                    <Text>Table: {table.table_number} ({table.type})</Text>
-                    <Text>Price: ₹{table.price}</Text>
-                </View>
-            ))}
-
-            <View className="flex-row space-x-3 mt-4 hidden ">
-                <TouchableOpacity
-                    className="flex-1 bg-red-500 py-2 rounded-md"
-                    onPress={() => {
-                        setSelectedBooking(item);
-                        setCancelModalVisible(true);
-                    }}
-                >
-                    <Text className="text-white text-center font-medium">Cancel</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    className="flex-1 bg-green-600 py-2 rounded-md"
-                    onPress={() => ToastAndroid.show('Booking Confirmed!', ToastAndroid.SHORT)}
-                >
-                    <Text className="text-white text-center font-medium">Confirm</Text>
-                </TouchableOpacity>
-            </View>
+    const renderBooking = ({ item }: any, index: any) => (
+        <View key={index} className='px-4'>
+            <BookedTableCard bookingData={item} />
         </View>
+
     );
 
     return (
         <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-            <View className="flex-1 bg-gray-100 pt-4">
+            <View className="flex-1 bg-white pt-4">
                 {/* Header */}
                 <View className="flex-row items-center mb-4 px-4">
                     <TouchableOpacity onPress={() => navigation.goBack()} className="pr-2 absolute left-4 z-10">
                         <Ionicons name="arrow-back" size={24} color="#111827" />
                     </TouchableOpacity>
-                    <Text className="text-xl font-bold text-gray-800 text-center flex-1">My Bookings</Text>
+                    <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl text-gray-800 text-center flex-1">My Bookings</Text>
                 </View>
 
                 {loading ? (
@@ -168,7 +131,7 @@ const BookedTablesScreen = () => {
                     />
                 )}
                 <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} className="p-3 rounded-xl w-11/12 m-auto mb-0   bg-primary-80  z-10">
-                    <Text className='text-center text-white font-semibold'>
+                    <Text style={{ fontFamily: 'Raleway-SemiBold' }} className='text-center text-white '>
                         Go To Home
                     </Text>
                 </TouchableOpacity>
@@ -181,9 +144,9 @@ const BookedTablesScreen = () => {
                 >
                     <View className="flex-1 bg-black/40 justify-center items-center">
                         <View className="bg-white rounded-xl w-11/12 p-4">
-                            <Text className="text-lg font-bold mb-2">Cancel Booking</Text>
-                            <Text className="text-gray-600 mb-2">Please enter a reason:</Text>
-                            <TextInput
+                            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg font-bold mb-2">Cancel Booking</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600 mb-2">Please enter a reason:</Text>
+                            <TextInput style={{ fontFamily: 'Raleway-Regular' }}
                                 multiline
                                 numberOfLines={4}
                                 placeholder="Write your reason..."
@@ -196,13 +159,13 @@ const BookedTablesScreen = () => {
                                     onPress={() => setCancelModalVisible(false)}
                                     className="flex-1 bg-gray-400 py-2 rounded-md"
                                 >
-                                    <Text className="text-white text-center font-medium">Close</Text>
+                                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center font-medium">Close</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     onPress={handleCancelBooking}
                                     className="flex-1 bg-red-500 py-2 rounded-md"
                                 >
-                                    <Text className="text-white text-center font-medium">Submit</Text>
+                                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center font-medium">Submit</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>

@@ -50,10 +50,18 @@ const FoodItem = ({
         openingTime: null,
         closingTime: null,
     });
-    const shiftDetails = item?.shop?.shift_details
-        ? JSON.parse(item?.shop?.shift_details)
-        : [];
+    let shiftDetails = [];
+    console.log(isVegetarian)
+    if (item?.shop?.shift_details) {
+        try {
+            shiftDetails = JSON.parse(item.shop.shift_details);
+        } catch (e) {
+            // Optional: Log the error or handle it as needed
+            shiftDetails = [];
+        }
+    }
 
+    console.log(item?.shop?.shift_details)
     const formatToAMPM = (time24: string) => {
         const [hourStr, minute] = time24.split(':');
         let hour = parseInt(hourStr);
@@ -143,7 +151,7 @@ const FoodItem = ({
             name,
             price,
             quantity,
-            image: imageUrl,
+            image: item?.images[0],
             shop_id: item?.shop?.id
         }, item, imageUrl)
         dispatch(
@@ -152,8 +160,9 @@ const FoodItem = ({
                 name,
                 price,
                 quantity,
-                image: imageUrl,
-                shop_id: item?.shop?.id ?? item?.store_id
+                image: item?.images[0],
+                shop_id: item?.shop?.id ?? item?.store_id,
+                tax: item?.tax || 0
             })
         );
         setAddedToCart(true);
@@ -179,7 +188,7 @@ const FoodItem = ({
                 key={index}
                 className="bg-blue-100 rounded-full px-2 py-1 mr-1"
             >
-                <Text className="text-blue-800 text-xs font-semibold">{info}</Text>
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-blue-800 text-xs">{info}</Text>
             </View>
         ));
 
@@ -213,7 +222,7 @@ const FoodItem = ({
                     className="w-4/5 mx-auto mt-[-9%] bg-green-500 px-2 py-1.5 rounded-full"
                     onPress={() => handlePlaceOrder(item)}
                 >
-                    <Text className="text-white text-sm text-center">Buy Now</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-sm text-center">Buy Now</Text>
                 </TouchableOpacity>
                 <View className="absolute top-2 left-2 bg-gray-100 rounded p-0.5">
                     <Image
@@ -227,7 +236,7 @@ const FoodItem = ({
             {/* Content Section */}
             <View className="w-2/3 pl-4 flex-1">
                 <View className="flex-row justify-between items-start">
-                    <Text className=" font-bold text-gray-800 flex-1 " numberOfLines={1} ellipsizeMode='tail'>{name}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Bold' }} className="  text-gray-800 flex-1 " numberOfLines={1} ellipsizeMode='tail'>{name}</Text>
                     <TouchableOpacity onPress={handleFavoriteToggle}>
                         <Icons
                             name="heart"
@@ -243,29 +252,29 @@ const FoodItem = ({
                             size={12}
                             color={'gray'}
                         />
-                        <Text className="text-xs text-gray-600 w-3/5 " numberOfLines={1} ellipsizeMode='tail'>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs text-gray-600 w-3/5 " numberOfLines={1} ellipsizeMode='tail'>
                             {restaurent}
                         </Text>
                     </View>
                     <View className='flex-row items-center mt-1 '>
                         <MaterialIcons name='directions-run' className='mr-0.5' />
-                        <Text className='text-sm'>{item?.shop?.distance_km || "NA"}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-sm'>{item?.shop?.distance_km || "NA"}</Text>
                     </View>
                 </View>
                 {/* <View className="flex-row mt-2 flex-wrap">{renderDietaryBadges()}</View> */}
 
                 <View className="flex-row justify-between items-center mt-1">
-                    <Text className="text-sm text-yellow-600">
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-yellow-600">
                         {/* {'★'.repeat(Math.floor(rating))} */}
                         ★ {rating.toFixed(1)}
                     </Text>
                     <View className='flex-row items-center'>
                         <Icon name='timer-outline' className='mr-0.5' />
-                        <Text className="text-sm text-gray-600">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">
                             {item?.prepration_time || "10-12"} mins
                         </Text>
                     </View>
-                    <Text className=" font-semibold text-green-600">
+                    <Text style={{ fontFamily: 'Raleway-SemiBold' }} className=" text-green-600">
                         ₹{price.toFixed(2)}
                     </Text>
                 </View>
@@ -279,7 +288,7 @@ const FoodItem = ({
                         >
                             <Icons name="remove-outline" size={20} color="black" />
                         </TouchableOpacity>
-                        <Text className="px-3 text-base font-semibold">{quantity}</Text>
+                        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="px-3 text-base">{quantity}</Text>
                         <TouchableOpacity
                             className="p-1"
                             onPress={() => handleQuantityChange('increment')}
@@ -298,7 +307,7 @@ const FoodItem = ({
                         onPress={() => addedToCart ? navigation.navigate("CartScreen") : handleAddToCart()}
                         disabled={!isAvailable}
                     >
-                        <Text className="text-white text-sm font-semibold">
+                        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-sm">
                             {isAvailable ? (addedToCart ? 'View Cart' : 'Add to Cart') : 'Out of Stock'}
                         </Text>
                     </TouchableOpacity>

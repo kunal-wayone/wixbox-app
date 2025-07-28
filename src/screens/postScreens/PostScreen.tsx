@@ -167,7 +167,7 @@ const PostScreen = () => {
             }}
           >
             <ActivityIndicator size="large" color="#B68AD4" />
-            <Text style={{ color: '#fff', marginTop: 10, fontSize: 16 }}>
+            <Text style={{ fontFamily: 'Raleway-Regular', color: '#fff', marginTop: 10, fontSize: 16 }}>
               Loading...
             </Text>
           </View>
@@ -192,8 +192,7 @@ const PostScreen = () => {
               style={{
                 textAlign: 'center',
                 fontSize: 30,
-                fontWeight: 'bold',
-                fontFamily: 'Poppins',
+                fontFamily: 'Raleway-Bold',
                 color: '#374151',
               }}
             >
@@ -251,7 +250,7 @@ const PostScreen = () => {
                         style={{ width: 30, height: 30 }}
                         resizeMode="contain"
                       />
-                      <Text style={{ color: '#4B5563', marginTop: 8 }}>
+                      <Text style={{ fontFamily: 'Raleway-Regular', color: '#4B5563', marginTop: 8 }}>
                         {image ? 'Replace Image' : 'Add Image'}
                       </Text>
                     </TouchableOpacity>}
@@ -288,6 +287,7 @@ const PostScreen = () => {
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: 4,
+                        fontFamily: 'Raleway-Regular',
                       }}
                     >
                       Title
@@ -300,6 +300,7 @@ const PostScreen = () => {
                         borderRadius: 8,
                         padding: 12,
                         fontSize: 16,
+                        fontFamily: 'Raleway-Regular',
                       }}
                       placeholder="Enter post title"
                       onChangeText={handleChange('title')}
@@ -308,7 +309,7 @@ const PostScreen = () => {
                     />
                     {touched.title && errors.title && (
                       <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
+                        style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}
                       >
                         {errors.title}
                       </Text>
@@ -325,6 +326,7 @@ const PostScreen = () => {
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: 4,
+                        fontFamily: 'Raleway-Regular',
                       }}
                     >
                       Content
@@ -339,6 +341,7 @@ const PostScreen = () => {
                         fontSize: 16,
                         minHeight: 150,
                         textAlignVertical: 'top',
+                        fontFamily: 'Raleway-Regular',
                       }}
                       placeholder="Enter post content"
                       onChangeText={handleChange('content')}
@@ -348,7 +351,7 @@ const PostScreen = () => {
                     />
                     {touched.content && errors.content && (
                       <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
+                        style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}
                       >
                         {errors.content}
                       </Text>
@@ -363,6 +366,7 @@ const PostScreen = () => {
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: 4,
+                        fontFamily: 'Raleway-Regular',
                       }}
                     >
                       Short Description
@@ -377,6 +381,7 @@ const PostScreen = () => {
                         fontSize: 16,
                         minHeight: 100,
                         textAlignVertical: 'top',
+                        fontFamily: 'Raleway-Regular',
                       }}
                       placeholder="Enter post short description"
                       onChangeText={handleChange('excerpt')}
@@ -386,7 +391,7 @@ const PostScreen = () => {
                     />
                     {touched.excerpt && errors.excerpt && (
                       <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}
+                        style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}
                       >
                         {errors.excerpt}
                       </Text>
@@ -401,6 +406,7 @@ const PostScreen = () => {
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: 4,
+                        fontFamily: 'Raleway-Regular',
                       }}
                     >
                       Post Status
@@ -415,7 +421,7 @@ const PostScreen = () => {
                         trackColor={{ false: '#D1D5DB', true: '#B68AD4' }}
                         thumbColor={values.status === 'published' ? '#fff' : '#f4f3f4'}
                       />
-                      <Text style={{ marginLeft: 8, color: '#374151' }}>
+                      <Text style={{ fontFamily: 'Raleway-Regular', marginLeft: 8, color: '#374151' }}>
                         {values.status === 'published' ? 'Published' : 'Draft'}
                       </Text>
                     </View>
@@ -436,7 +442,7 @@ const PostScreen = () => {
                     }}
                   >
                     <Text
-                      style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}
+                      style={{ fontFamily: 'Raleway-Bold', color: '#fff', fontSize: 16, }}
                     >
                       {isSubmitting
                         ? 'Saving...'

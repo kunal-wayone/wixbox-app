@@ -130,8 +130,8 @@ const FreshStoreSection = () => {
     <View className="pt-6">
       {/* Header */}
       <View className="mb-3">
-        <Text className="text-lg font-semibold text-gray-900">Fresh Stores</Text>
-        <Text className="text-sm text-gray-500">Discover the latest additions</Text>
+        <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg font-semibold text-gray-900">Fresh Stores</Text>
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-500">Discover the latest additions</Text>
       </View>
 
       {/* Horizontal Scrollable Store List */}
@@ -153,11 +153,11 @@ const FreshStoreSection = () => {
           </>
         ) : error ? (
           <View style={{ width }} className="justify-center items-center">
-            <Text className="text-sm text-red-500">{error}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-red-500">{error}</Text>
           </View>
         ) : products.length === 0 ? (
           <View style={{ width }} className="justify-center items-center">
-            <Text className="text-sm text-gray-500">No stores available</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-500">No stores available</Text>
           </View>
         ) : (
           <>
@@ -196,7 +196,7 @@ const FreshStoreSection = () => {
             )}
             {!hasMore && products.length > 0 && (
               <View style={{ width: CARD_WIDTH }} className="justify-center items-center">
-                <Text className="text-gray-400 mt-4">No more stores</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-400 mt-4">No more stores</Text>
               </View>
             )}
           </>

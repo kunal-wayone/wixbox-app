@@ -1,16 +1,17 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_BASE_URL, IMAGE_BASE_URL } from "@env"
+// import { API_BASE_URL, IMAGE_BASE_URL } from "@env"
 
 
 
-export const IMAGE_URL = IMAGE_BASE_URL;
+export const IMAGE_URL =  'https://wisbox.wayone.co.in/';
+// "https://wixbox.aaademosites.com/"
 // Define API base URL
-export const BASE_URL =
-    API_BASE_URL || 'https://wisbox.volvrit.in/api/v1';
+export const BASE_URL = 'https://wisbox.wayone.co.in/api/v1';
+// "https://wixbox.aaademosites.com/api/v1"
 
 const api = axios.create({
-    baseURL: BASE_URL,
+    baseURL: "https://wisbox.wayone.co.in/api/v1",//BASE_URL,
     timeout: 5000, // Default timeout in milliseconds
 });
 
@@ -54,7 +55,7 @@ const request = async <T>(
             url: BASE_URL + config.url,
             signal: controller.signal,
         });
-        console.log("response", "res")
+        console.log("response", "res", response)
         if (response.data.code === 200) {
             const token = response?.data?.tokan || response?.data?.data?.tokan;
             if (token) await TokenStorage.setToken(token);
@@ -97,7 +98,7 @@ export const Post = async <T>(
     data: Record<string, unknown> | FormData,
     timeout?: number,
 ): Promise<T> => {
-    console.log(API_BASE_URL, url, data, timeout)
+    console.log(BASE_URL, url, data, timeout)
     try {
         const response = await request<T>({
             method: 'POST',
@@ -105,7 +106,7 @@ export const Post = async <T>(
             data,
             timeout,
         });
-        console.log("response",response)
+        console.log("response", response)
         return response.data;
     } catch (error: unknown) {
         console.log(error, "ppst error")
@@ -129,6 +130,7 @@ export const Put = async <T>(
         });
         return response.data;
     } catch (error: unknown) {
+        console.log(error)
         throw error;
     }
 };

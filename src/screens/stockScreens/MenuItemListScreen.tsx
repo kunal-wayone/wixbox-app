@@ -34,6 +34,7 @@ interface MenuItem {
     dietary_info?: string[];
     shop?: { id: string };
     store_id?: string;
+    tax: number
 }
 
 interface RouteParams {
@@ -151,6 +152,7 @@ const MenuItemListScreen = () => {
                     quantity: 1,
                     image: item.images?.length ? item.images[0] : ImagePath.item1,
                     shop_id: item.shop?.id ?? item.store_id,
+                    tax: item?.tax || 0
                 }),
             );
             ToastAndroid.show('Added to cart', ToastAndroid.SHORT);
@@ -166,7 +168,7 @@ const MenuItemListScreen = () => {
                 quantity: 1,
                 price: Math.floor(Number(item.price)),
                 name: item.item_name,
-                image: item.images?.length ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1,
+                image: item.images?.length ? item.images[0] : ImagePath.item1,
                 shop_id: item.shop?.id ?? item.store_id,
             }],
         });
@@ -199,7 +201,7 @@ const MenuItemListScreen = () => {
             imageUrl={item.images?.length ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
             dietaryInfo={item.dietary_info || []}
             rating={item.average_rating || 0}
-            isVegetarian={item.is_vegetarian || false}
+            isVegetarian={item.isVegetarian || false}
             isAvailable={item.is_available !== false}
             onAddToCart={() => handleAddToCart(item)}
             handlePlaceOrder={() => handlePlaceOrder(item)}
@@ -224,15 +226,15 @@ const MenuItemListScreen = () => {
                     className="h-40 justify-center"
                 >
                     <View className="px-6">
-                        <Text className="text-2xl font-bold text-gray-800">{categoryName || 'Uncategorized'}</Text>
-                        <Text>Crunchy, tangy & fresh from the street! 🌶️✨</Text>
+                        <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-2xl  text-gray-800">{categoryName || 'Uncategorized'}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} >Crunchy, tangy & fresh from the street! 🌶️✨</Text>
                     </View>
                 </LinearGradient>
 
                 <View className="flex-row items-center gap-2 mb-2 px-4">
                     <View className="flex-row items-center flex-1 bg-white px-3 border border-gray-300 rounded-xl shadow-sm">
-                        <Text>🍝</Text>
-                        <TextInput
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} >🍝</Text>
+                        <TextInput style={{ fontFamily: 'Raleway-Regular' }}
                             value={search}
                             onChangeText={setSearch}
                             placeholder="Search Item..."
@@ -256,7 +258,7 @@ const MenuItemListScreen = () => {
                             className={`rounded-full px-3 py-1 h-8 mr-2 border border-gray-300 ${selectedTags.includes(tag.id) ? 'bg-green-600' : 'bg-white'
                                 }`}
                         >
-                            <Text className={`text-sm ${selectedTags.includes(tag.id) ? 'text-white' : 'text-gray-900'}`}>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-sm ${selectedTags.includes(tag.id) ? 'text-white' : 'text-gray-900'}`}>
                                 {tag.label}
                             </Text>
                         </TouchableOpacity>
@@ -269,7 +271,7 @@ const MenuItemListScreen = () => {
                         <SkeletonLoader />
                     ) : (
                         <View className="flex-1 justify-center items-center">
-                            <Text className="text-gray-500 text-base">{error || 'No items found'}</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-base">{error || 'No items found'}</Text>
                         </View>
                     )
                 ) : (

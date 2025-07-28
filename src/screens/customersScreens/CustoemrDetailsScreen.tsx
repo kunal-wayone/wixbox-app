@@ -43,7 +43,7 @@ const CustomerDetailsScreen = () => {
         </View>
 
         {/* Title */}
-        <Text className={`text-2xl font-poppins text-center mb-4 `}>
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-2xl  text-center mb-4 `}>
           Customer Details
         </Text>
 
@@ -54,15 +54,15 @@ const CustomerDetailsScreen = () => {
             className="w-20 h-20 rounded-full mr-4"
           />
           <View>
-            <Text className="text-xl font-bold">{orderDetails?.name}</Text>
-            <Text className="text-sm">{orderDetails?.email}</Text>
-            <Text className="text-sm">{orderDetails?.phone}</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl">{orderDetails?.name}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm">{orderDetails?.email}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm">{orderDetails?.phone}</Text>
 
           </View>
         </View>
 
         {/* Ordered Items Title */}
-        <Text className="text-lg font-semibold mb-3">Ordered Items</Text>
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg  mb-3">Ordered Items</Text>
 
         {/* Ordered Items List */}
         {orderDetails?.order?.map((item: any) => (
@@ -73,12 +73,12 @@ const CustomerDetailsScreen = () => {
               resizeMode="cover"
             />
             <View className="flex-1">
-              <Text className="text-base font-medium mb-2">{item?.name}</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base font-medium mb-2">{item?.name}</Text>
               <View className='flex-row items-center  gap-4'>
 
-                <Text className="text-sm text-gray-600">Qnt: {item?.quantity}</Text>
-                <Text className="text-sm text-gray-600">₹ {item?.price}/-</Text>
-                <Text className="text-sm text-gray-600">Sub Total: ₹ {item?.sub_total}/-</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Qnt: {item?.quantity}</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">₹ {item?.price}/-</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Sub Total: ₹ {item?.sub_total}/-</Text>
 
               </View>
 
@@ -87,13 +87,13 @@ const CustomerDetailsScreen = () => {
         ))}
 
         {/* Arrival Info */}
-        <Text className="text-base font-semibold mt-4">Arrived at</Text>
-        <Text className="text-sm text-gray-700 mb-4">{orderDetails?.arrived_at}</Text>
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base  mt-4">Arriving at</Text>
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-700 mb-4">{orderDetails?.arrived_at}</Text>
 
         {/* Total Amount */}
         <View className='flex-row items-center justify-between mb-6 p-4 bg-primary-10 rounded-xl'>
-          <Text className="text-base font-semibold">Total Amount</Text>
-          <Text className="text-lg font-bold text-green-600">
+          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base ">Total Amount</Text>
+          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg text-green-600">
             {orderDetails?.total_amount}/-
           </Text>
         </View>
@@ -104,14 +104,14 @@ const CustomerDetailsScreen = () => {
           onPress={() => {
             navigation.navigate('OrderSummaryScreen', { orderDetails })
           }}>
-          <Text className="text-gray-800 font-bold text-base">View Order Details</Text>
+          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-gray-800 text-base">View Order Details</Text>
         </TouchableOpacity>
         <TouchableOpacity
           className="bg-primary-80 py-3 rounded-lg items-center mb-8"
           onPress={() => {
             navigation.navigate('AddCustomerFormScreen', { orderDetails })
           }}>
-          <Text className="text-white font-bold text-base">Add New Order</Text>
+          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white  text-base">Add New Order</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

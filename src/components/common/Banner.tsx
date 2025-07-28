@@ -47,23 +47,23 @@ const Banner = ({
         {showOverlay && <View className="absolute inset-0 bg-black" style={{ opacity: overlayOpacity }} />}
         <View className="flex-1 justify-center p-6">
           {item.subtitle && (
-            <Text className="text-white text-sm font-semibold uppercase mb-1">{item.subtitle}</Text>
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-sm uppercase mb-1">{item.subtitle}</Text>
           )}
           {item.title && (
-            <Text className="text-white text-2xl font-bold mb-2">{item.title}</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-2xl mb-2">{item.title}</Text>
           )}
           {item.description && (
-            <Text className="text-white text-base mb-2">{item.description}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-base mb-2">{item.description}</Text>
           )}
           {item.subDescription && (
-            <Text className="text-gray-300 text-sm">{item.subDescription}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-300 text-sm">{item.subDescription}</Text>
           )}
           {showNavigation && navigationRoute && (
             <TouchableOpacity
               className="mt-4 bg-blue-600 px-4 py-2 rounded-lg w-32"
               onPress={() => navigation.navigate(navigationRoute)}
             >
-              <Text className="text-white text-center font-semibold">{buttonText}</Text>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-center">{buttonText}</Text>
             </TouchableOpacity>
           )}
         </View>

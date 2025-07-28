@@ -197,8 +197,7 @@ const VerifyOtpScreen = () => {
                   style={{
                     textAlign: 'center',
                     fontSize: 30,
-                    fontWeight: 'bold',
-                    fontFamily: 'Poppins',
+                    fontFamily: 'Raleway-Regular',
                   }}>
                   Verify OTP
                 </Text>
@@ -211,8 +210,7 @@ const VerifyOtpScreen = () => {
                   style={{
                     textAlign: 'center',
                     fontSize: 30,
-                    fontWeight: 'bold',
-                    fontFamily: 'Poppins',
+                    fontFamily: 'Raleway-Regular',
                     opacity: 0,
                   }}>
                   Verify OTP
@@ -220,10 +218,10 @@ const VerifyOtpScreen = () => {
               </LinearGradient>
             </MaskedView>
             <Text
-              style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
+              style={{ fontFamily: 'Raleway-Regular', textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
               Enter the 4-digit OTP sent to{' '}
               <Text style={{ fontWeight: 'bold' }}>{email}</Text>.
-              {otpHint && <Text> Hint: OTP starts with {otpHint}</Text>}
+              {otpHint && <Text style={{ fontFamily: 'Raleway-Regular' }}> Hint: OTP starts with {otpHint}</Text>}
             </Text>
 
             <Formik
@@ -247,6 +245,7 @@ const VerifyOtpScreen = () => {
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: 4,
+                        fontFamily: 'Raleway-Regular',
                       }}>
                       Enter OTP
                     </Text>
@@ -269,7 +268,9 @@ const VerifyOtpScreen = () => {
                             textAlign: 'center',
                             fontSize: 18,
                             marginHorizontal: 4,
-                            color: "#000"
+                            color: "#000",
+                            fontFamily: 'Raleway-Regular',
+
                           }}
                           placeholder="0"
                           placeholderTextColor={"#000"}
@@ -285,14 +286,14 @@ const VerifyOtpScreen = () => {
                     {touched.otp && errors.otp && (
                       <Text
                         className='text-center'
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.otp}
                       </Text>
                     )}
                     {apiErrors.otp && (
                       <Text
                         className='text-center'
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {apiErrors.otp}
                       </Text>
                     )}
@@ -309,6 +310,7 @@ const VerifyOtpScreen = () => {
                         textDecorationLine: 'underline',
                         fontWeight: 'bold',
                         textAlign: 'center',
+                        fontFamily: 'Raleway-Regular',
                       }}>
                       {canResend ? 'Resend OTP' : `Resend OTP in ${resendTimer}s`}
                     </Text>
@@ -328,7 +330,7 @@ const VerifyOtpScreen = () => {
                         alignItems: 'center',
                       }}>
                       <Text
-                        style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                        style={{ fontFamily: 'Raleway-Regular', color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
                         {isSubmitting ? 'Verifying...' : 'Verify'}
                       </Text>
                     </LinearGradient>
@@ -344,7 +346,7 @@ const VerifyOtpScreen = () => {
                 justifyContent: 'center',
                 marginTop: 16,
               }}>
-              <Text style={{ fontSize: 14, color: '#4B5563' }}>Back to</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, color: '#4B5563' }}>Back to</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('LoginScreen')}>
                 <Text
@@ -353,7 +355,7 @@ const VerifyOtpScreen = () => {
                     marginLeft: 4,
                     fontSize: 14,
                     textDecorationLine: 'underline',
-                    fontWeight: 'bold',
+                    fontFamily: 'Raleway-Regular',
                   }}>
                   Login
                 </Text>

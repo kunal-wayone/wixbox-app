@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Raleway-Bold',
   },
   addressContainer: {
     position: 'absolute',
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
   },
   addressText: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Raleway-Bold',
     color: '#333',
   },
   userMarker: {
@@ -539,7 +539,7 @@ const styles = StyleSheet.create({
   },
   storeName: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: 'Raleway-Bold',
     marginBottom: 4,
   },
   ratingLocationRow: {
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
   visitText: {
     color: '#fff',
     textAlign: 'center',
-    fontWeight: 'bold',
+    fontFamily: 'Raleway-Bold',
   },
   floatingButtonContainer: {
     position: 'absolute',
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Raleway-Bold',
   },
   filterButton: {
     backgroundColor: '#B68AD4',
@@ -617,11 +617,11 @@ const styles = StyleSheet.create({
   },
   filterButtonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontFamily: 'Raleway-Bold',
   },
   filterValue: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: 'Raleway-Bold',
     minWidth: 30,
     textAlign: 'center',
   },

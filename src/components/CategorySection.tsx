@@ -147,13 +147,13 @@ const CategorySection = () => {
       {/* Header */}
       <View className="flex-row justify-between items-start mb-3 ">
         <View>
-          <Text className="text-lg font-semibold text-gray-900">🎉 Category</Text>
+          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg font-semibold text-gray-900">🎉 Category</Text>
         </View>
         <TouchableOpacity
           className="flex-row items-center mt-1"
           onPress={() => navigation.navigate('AllCategoriesScreen')}
         >
-          <Text className="text-sm font-medium">View All</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium">View All</Text>
           <Icon name="chevron-forward-outline" size={16} color="#000" />
         </TouchableOpacity>
       </View>
@@ -161,7 +161,7 @@ const CategorySection = () => {
       {/* Error Message */}
       {error && (
         <View className="px-4 py-2">
-          <Text className="text-red-500 text-center">{error}</Text>
+          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-red-500 text-center">{error}</Text>
         </View>
       )}
 
@@ -191,7 +191,7 @@ const CategorySection = () => {
               resizeMode="cover"
               onError={() => handleImageError(category?.id)}
             />
-            <Text numberOfLines={1} ellipsizeMode='tail' className="text-sm text-center text-gray-700 max-w-[100px]">
+            <Text style={{ fontFamily: 'Raleway-Regular' }} numberOfLines={1} ellipsizeMode='tail' className="text-sm text-center text-gray-700 max-w-[80px]">
               {category?.name}
             </Text>
           </TouchableOpacity>

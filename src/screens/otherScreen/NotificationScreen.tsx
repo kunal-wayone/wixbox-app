@@ -63,11 +63,11 @@ const NotificationCard: React.FC<{
         />
       </View>
       <View className="flex-1">
-        <Text className="text-black font-poppins font-medium">{notification.title}</Text>
-        <Text className="text-gray-600 font-poppins text-sm" numberOfLines={2}>
+        <Text style={{fontFamily:'Raleway-Regular'}}  className="text-black  font-medium">{notification.title}</Text>
+        <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-600  text-sm" numberOfLines={2}>
           {notification.message}
         </Text>
-        <Text className="text-gray-400 font-poppins text-xs">
+        <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-400  text-xs">
           {new Date(notification.time).toLocaleString('en-IN', {
             timeZone: 'Asia/Kolkata',
             month: 'short',
@@ -102,20 +102,20 @@ const NotificationDetailModal: React.FC<{
       <View className="flex-1 bg-black/50 justify-end">
         <View className="bg-white rounded-t-2xl p-6 max-h-[80%]">
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-poppins font-semibold text-black">
+            <Text style={{fontFamily:'Raleway-SemiBold'}}  className="text-xl text-black">
               {notification.title}
             </Text>
             <TouchableOpacity onPress={onClose}>
               <Ionicons name="close" size={24} color="black" />
             </TouchableOpacity>
           </View>
-          <Text className="text-gray-600 font-poppins mb-4">
+          <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-600  mb-4">
             {notification.message}
           </Text>
-          <Text className="text-gray-400 font-poppins text-sm mb-4">
+          <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-400  text-sm mb-4">
             Type: {notification.type}
           </Text>
-          <Text className="text-gray-400 font-poppins text-sm">
+          <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-400  text-sm">
             {new Date(notification.time).toLocaleString('en-IN', {
               timeZone: 'Asia/Kolkata',
               month: 'long',
@@ -130,7 +130,7 @@ const NotificationDetailModal: React.FC<{
             className="mt-6 bg-primary-80 py-3 rounded-lg"
             onPress={onClose}
           >
-            <Text className="text-white font-poppins text-center font-medium">
+            <Text style={{fontFamily:'Raleway-Regular'}}  className="text-white  text-center font-medium">
               Close
             </Text>
           </TouchableOpacity>
@@ -234,7 +234,7 @@ const NotificationScreen: React.FC = () => {
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-xl font-poppins font-semibold text-black">
+        <Text style={{fontFamily:'Raleway-SemiBold'}}  className="flex-1 text-center text-xl   text-black">
           Notifications
         </Text>
         <View className="p-2 w-10" />
@@ -243,12 +243,12 @@ const NotificationScreen: React.FC = () => {
       {/* Error State */}
       {error && !isLoading && (
         <View className="flex-1 justify-center items-center p-4">
-          <Text className="text-red-500 font-poppins mb-4">{error}</Text>
+          <Text style={{fontFamily:'Raleway-Regular'}}  className="text-red-500  mb-4">{error}</Text>
           <TouchableOpacity
             onPress={fetchNotifications}
             className="bg-primary-80 py-2 px-4 rounded-lg"
           >
-            <Text className="text-white font-poppins">Retry</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}}  className="text-white   ">Retry</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -259,7 +259,7 @@ const NotificationScreen: React.FC = () => {
       {/* Notifications List */}
       {!isLoading && !error && notifications.length === 0 && (
         <View className="flex-1 justify-center items-center p-4">
-          <Text className="text-gray-500 font-poppins text-lg">
+          <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-500  text-lg">
             No notifications found
           </Text>
         </View>

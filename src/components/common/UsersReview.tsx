@@ -122,8 +122,8 @@ const UsersReview = ({ shopId, average_rating }: any) => {
             className="w-10 h-10 rounded-full mr-3"
           />
           <View>
-            <Text className="text-sm font-semibold text-gray-800">{item?.user?.name || 'Anonymous'}</Text>
-            <Text className="text-xs text-gray-500">
+            <Text style={{fontFamily:'Raleway-SemiBold'}} className="text-sm text-gray-800">{item?.user?.name || 'Anonymous'}</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}} className="text-xs text-gray-500">
               {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}
             </Text>
           </View>
@@ -134,10 +134,10 @@ const UsersReview = ({ shopId, average_rating }: any) => {
             .map((_, index) => (
               <AntDesign key={index} name="star" color="#FBBF24" size={16} />
             ))}
-          <Text className="ml-1 text-sm text-gray-800">{item?.rating || 0}</Text>
+          <Text style={{fontFamily:'Raleway-Regular'}} className="ml-1 text-sm text-gray-800">{item?.rating || 0}</Text>
         </View>
       </View>
-      <Text className="text-sm text-gray-700">{item?.comment || 'No comment provided'}</Text>
+      <Text style={{fontFamily:'Raleway-Regular'}} className="text-sm text-gray-700">{item?.comment || 'No comment provided'}</Text>
     </View>
   );
 
@@ -156,7 +156,7 @@ const UsersReview = ({ shopId, average_rating }: any) => {
             onPress={handleLoadMore}
             className="bg-primary-90 py-3 px-4 rounded-lg my-4 mx-4"
           >
-            <Text className="text-white text-center text-md font-medium">Load More</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}} className="text-white text-center text-md font-medium">Load More</Text>
           </TouchableOpacity>
         </View>
       );
@@ -168,7 +168,7 @@ const UsersReview = ({ shopId, average_rating }: any) => {
     <View className='w-full'>
       <View className=" rounded-lg w-full mb-10" style={{ width: "100%" }}>
         <View className="mb-2 flex-row items-center justify-between gap-4">
-          <Text className="text-sm">Add Your Rating</Text>
+          <Text style={{fontFamily:'Raleway-Regular'}} className="text-sm">Add Your Rating</Text>
           <View className="flex-row">
             {[1, 2, 3, 4, 5].map((star) => (
               <TouchableOpacity key={star} onPress={() => setRating(star)}>
@@ -197,14 +197,14 @@ const UsersReview = ({ shopId, average_rating }: any) => {
             onPress={() => setModalVisible(false)}
             className="px-4 py-2 mr-2"
           >
-            <Text className="text-gray-600">Cancel</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}} className="text-gray-600">Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleSubmitReview}
             disabled={isSubmitting}
             className={`px-4 py-2 rounded-full ${isSubmitting ? 'bg-gray-400' : 'bg-primary-80'}`}
           >
-            <Text className="text-white">Submit</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}} className="text-white">Submit</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -216,7 +216,7 @@ const UsersReview = ({ shopId, average_rating }: any) => {
         </View>
       ) : reviews.length === 0 ? (
         <View className="justify-center items-center mt-10">
-          <Text className="text-gray-500 mb-auto">No reviews found</Text>
+          <Text style={{fontFamily:'Raleway-Regular'}} className="text-gray-500 mb-auto">No reviews found</Text>
         </View>
       ) : (
         <FlatList

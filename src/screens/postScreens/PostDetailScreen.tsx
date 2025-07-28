@@ -73,7 +73,7 @@ const PostDetailScreen = () => {
   if (!post) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
-        <Text className="text-gray-500">Post not found</Text>
+        <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-500">Post not found</Text>
       </View>
     );
   }
@@ -86,7 +86,7 @@ const PostDetailScreen = () => {
           <TouchableOpacity className='absolute z-50 left-5 top-5' onPress={() => navigation.goBack()}>
             <Icon name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text className="text-xl py-4 font-semibold text-center w-full ">Post Details</Text>
+          <Text style={{fontFamily:'Raleway-SemiBold'}}  className="text-xl py-4 text-center w-full ">Post Details</Text>
         </View>
 
         {/* Post image */}
@@ -99,27 +99,27 @@ const PostDetailScreen = () => {
         {/* Post Content */}
         <View className="p-4 space-y-4">
           <View className="flex-row justify-between items-center mb-2">
-            <Text className="text-xl font-bold text-gray-800">{post.title}</Text>
-            <Text className="text-sm text-gray-500">{formatDate(post.created_at)}</Text>
+            <Text style={{fontFamily:'Raleway-Bold'}}  className="text-xl text-gray-800">{post.title}</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}}  className="text-sm text-gray-500">{formatDate(post.created_at)}</Text>
           </View>
 
           {post.badge && (
-            <Text className="text-sm text-white bg-primary-80 px-3 py-1 rounded-md self-start">
+            <Text style={{fontFamily:'Raleway-Regular'}}  className="text-sm text-white bg-primary-80 px-3 py-1 rounded-md self-start">
               {post.badge}
             </Text>
           )}
 
           <View className="flex-row gap-6 mb-3 hidden ">
-            <Text className="text-gray-600 text-sm"><Icon name='eye' /> {post.views} Views</Text>
-            <Text className="text-gray-600 text-sm"><Icon name='chatbox-ellipses' /> {post.comments} Comments</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-600 text-sm"><Icon name='eye' /> {post.views} Views</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-600 text-sm"><Icon name='chatbox-ellipses' /> {post.comments} Comments</Text>
           </View>
 
           {post.content ? (
             <View>
-              <Text className="text-gray-700 leading-relaxed">{post.content}</Text>
+              <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-700 leading-relaxed">{post.content}</Text>
             </View>
           ) : (
-            <Text className="text-gray-400 italic">No description provided.</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}}  className="text-gray-400 italic">No description provided.</Text>
           )}
         </View>
       </ScrollView>

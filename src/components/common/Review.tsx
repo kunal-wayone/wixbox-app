@@ -62,10 +62,10 @@ const Review = () => {
             className="w-10 h-10 rounded-full mr-3"
           />
           <View>
-            <Text className="text-base font-semibold text-gray-800">
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-800">
               {item?.user?.name || 'Anonymous'}
             </Text>
-            <Text className="text-xs text-gray-500">{item?.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs text-gray-500">{item?.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}</Text>
           </View>
         </View>
 
@@ -76,12 +76,12 @@ const Review = () => {
             .map((_, index) => (
               <AntDesign key={index} name="star" color="#FBBF24" size={16} />
             ))}
-          <Text className="ml-1 text-sm text-gray-800">{item?.rating || 0}</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-1 text-sm text-gray-800">{item?.rating || 0}</Text>
         </View>
       </View>
 
       {/* Bottom: Review Description */}
-      <Text className="text-sm text-gray-700">{item?.comment || 'No comment provided'}</Text>
+      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-700">{item?.comment || 'No comment provided'}</Text>
     </View>
   );
 
@@ -99,7 +99,7 @@ const Review = () => {
           onPress={loadMoreReviews}
           className="bg-primary-90 py-3 px-4 rounded-lg my-4 mx-4"
         >
-          <Text className="text-white text-center text-md font-medium">Load More</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center text-md font-medium">Load More</Text>
         </TouchableOpacity>
       );
     }
@@ -110,23 +110,23 @@ const Review = () => {
     <View className="mt-5 min-h-[83vh]">
       {/* Title and Rating */}
       <View className="flex-row justify-between items-center mb-3">
-        <Text className="text-lg font-semibold text-gray-700" numberOfLines={1} ellipsizeMode="tail">
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg text-gray-700" numberOfLines={1} ellipsizeMode="tail">
           {user?.shop?.restaurant_name || "Burger One (Cafe & Bakery)"}
         </Text>
         <View className="flex-row items-center px-2 py-1 rounded-md">
           {[1, 2, 3, 4, 5].map((_, index) => (
             <AntDesign key={index} name="star" color="#FBBF24" size={16} />
           ))}
-          <Text className="ml-1 text-base text-gray-800 font-medium">
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-1 text-base text-gray-800 font-medium">
             {user?.shop?.average_rating || 0}
           </Text>
         </View>
-    </View>
+      </View>
       {/* SubTitle and Total Count */}
-      <Text className="text-xl text-gray-900 font-semibold font-poppins mb-1">
+      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-xl text-gray-900 font-raleway mb-1">
         Reviews
       </Text>
-      <Text className="text-sm text-gray-600 mb-4">
+      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600 mb-4">
         {reviews?.length || 0} Reviews
       </Text>
       {/* Review List */}
@@ -136,7 +136,7 @@ const Review = () => {
         </View>
       ) : reviews?.length === 0 ? (
         <View className="flex-1 justify-center items-center mt-10">
-          <Text className="text-gray-500 text-lg mb-auto">No reviews found</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-lg mb-auto">No reviews found</Text>
         </View>
       ) : (
         <FlatList

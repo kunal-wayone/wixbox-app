@@ -26,6 +26,7 @@ import { googleAuth, signup } from '../../store/slices/authSlice';
 import { fetchUser } from '../../store/slices/userSlice';
 import { getFcmToken } from '../../utils/notification/firebase';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Post } from '../../utils/apiUtils';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -61,14 +62,14 @@ const SignUpScreen = ({ route }: any) => {
     password: '',
     password_confirmation: '',
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignUp = async (values: any, { setSubmitting, resetForm }: any) => {
+  const handleSignUp = async (values: any, { setSubmitting, resetForm, setErrors }: any) => {
     if (!isCheck) {
       ToastAndroid.show('Required to check the Terms & Conditions.', ToastAndroid.SHORT);
       return;
     }
-    setIsSubmitting(true);
+    setIsLoading(true);
     console.log(isCheck)
     try {
       if (!accountType) {
@@ -83,6 +84,7 @@ const SignUpScreen = ({ route }: any) => {
         role: accountType,
         fcm_token: await getFcmToken(),
       };
+      // const response: any = await Post('/auth/signin', payload, 10000);
 
       const response = await dispatch(signup(payload)).unwrap();
       console.log(response)
@@ -110,26 +112,25 @@ const SignUpScreen = ({ route }: any) => {
       navigation.navigate(response.user?.role === 'user' ? 'HomeScreen' : 'CreateShopScreen');
     } catch (error: any) {
       console.log(true, error)
-      const errorData = error?.errors || {};
-      setApiErrors({
-        name: errorData.name?.[0] || '',
-        email: errorData.email?.[0] || '',
-        password: errorData.password?.[0] + errorData.password?.[1] || '',
-        password_confirmation: errorData.password_confirmation?.[0] + errorData.password?.[1] || '',
-      });
-
+      if (error.errors) {
+        const formattedErrors: any = {};
+        for (const key in error.errors) {
+          formattedErrors[key] = error.errors[key][0];
+        }
+        setErrors(formattedErrors);
+      }
       ToastAndroid.show(
         error.message || 'Registration failed. Please try again.',
         ToastAndroid.LONG
       );
     } finally {
       setSubmitting(false);
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   const handleGoogleSignUp = async () => {
-    setIsSubmitting(true);
+    setIsLoading(true);
 
     try {
       if (!accountType) {
@@ -170,7 +171,7 @@ const SignUpScreen = ({ route }: any) => {
         ToastAndroid.LONG
       );
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -197,7 +198,7 @@ const SignUpScreen = ({ route }: any) => {
             <View className="mt-20">
               <MaskedView
                 maskElement={
-                  <Text className="text-center text-3xl font-bold font-poppins">
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center text-3xl font-bold   ">
                     Create an Account
                   </Text>
                 }>
@@ -205,14 +206,14 @@ const SignUpScreen = ({ route }: any) => {
                   colors={['#ac94f4', '#7248B3']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}>
-                  <Text
-                    className="text-center text-3xl font-bold font-poppins"
-                    style={{ opacity: 0 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', opacity: 0 }}
+                    className="text-center text-3xl font-bold   "
+                  >
                     Create an Account
                   </Text>
                 </LinearGradient>
               </MaskedView>
-              <Text className="text-center my-2 text-gray-600">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center my-2 text-gray-600">
                 Create your account to get started
               </Text>
 
@@ -237,30 +238,30 @@ const SignUpScreen = ({ route }: any) => {
                 }) => (
                   <View className="mt-4">
                     <View className="mb-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">
                         Full Name
                       </Text>
-                      <TextInput
+                      <TextInput style={{ fontFamily: 'Raleway-Regular' }}
                         className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
                         placeholder="Enter your full name"
                         placeholderTextColor={"#000"}
                         onChangeText={handleChange('fullName')}
                         onBlur={handleBlur('fullName')}
                         value={values.fullName}
-                        editable={!isSubmitting}
+                        editable={!isLoading}
                       />
-                      {(touched.fullName || apiErrors.name) && (
-                        <Text className="text-red-500 text-xs mt-1">
-                          {errors.fullName || apiErrors.name}
+                      {(touched.fullName) && (
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-red-500 text-xs mt-1 ${errors.fullName ? "" : "hidden"}`}>
+                          {errors.fullName}
                         </Text>
                       )}
                     </View>
 
                     <View className="mb-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">
                         Email Address
                       </Text>
-                      <TextInput
+                      <TextInput style={{ fontFamily: 'Raleway-Regular' }}
                         className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
                         placeholder="Enter your email"
                         placeholderTextColor={"#000"}
@@ -269,21 +270,21 @@ const SignUpScreen = ({ route }: any) => {
                         value={values.email}
                         keyboardType="email-address"
                         autoCapitalize="none"
-                        editable={!isSubmitting}
+                        editable={!isLoading}
                       />
-                      {(touched.email || apiErrors.email) && (
-                        <Text className="text-red-500 text-xs mt-1">
-                          {errors.email || apiErrors.email}
+                      {(touched.email) && (
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-red-500 text-xs mt-1 ${errors.email ? "" : "hidden"}`}>
+                          {errors.email}
                         </Text>
                       )}
                     </View>
 
                     <View className="mb-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">
                         Create Password
                       </Text>
                       <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
-                        <TextInput
+                        <TextInput style={{ fontFamily: 'Raleway-Regular' }}
                           className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
                           placeholder="Enter your password"
                           placeholderTextColor={"#000"}
@@ -291,12 +292,12 @@ const SignUpScreen = ({ route }: any) => {
                           onBlur={handleBlur('password')}
                           value={values.password}
                           secureTextEntry={!showPassword}
-                          editable={!isSubmitting}
+                          editable={!isLoading}
                         />
                         <TouchableOpacity
                           onPress={() => setShowPassword(!showPassword)}
                           className="p-3 bg-gray-100"
-                          disabled={isSubmitting}>
+                          disabled={isLoading}>
                           <Icon
                             name={showPassword ? 'eye-off' : 'eye'}
                             size={20}
@@ -304,19 +305,19 @@ const SignUpScreen = ({ route }: any) => {
                           />
                         </TouchableOpacity>
                       </View>
-                      {(touched.password || apiErrors.password) && (
-                        <Text className="text-red-500 text-xs mt-1">
-                          {errors.password || apiErrors.password}
+                      {(touched.password) && (
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-red-500 text-xs mt-1 ${errors.password ? "" : "hidden"}`}>
+                          {errors.password}
                         </Text>
                       )}
                     </View>
 
                     <View className="mb-1">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">
                         Confirm Password
                       </Text>
                       <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
-                        <TextInput
+                        <TextInput style={{ fontFamily: 'Raleway-Regular' }}
                           className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
                           placeholder="Confirm your password"
                           placeholderTextColor={"#000"}
@@ -324,12 +325,12 @@ const SignUpScreen = ({ route }: any) => {
                           onBlur={handleBlur('confirmPassword')}
                           value={values.confirmPassword}
                           secureTextEntry={!showConfirmPassword}
-                          editable={!isSubmitting}
+                          editable={!isLoading}
                         />
                         <TouchableOpacity
                           onPress={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="p-3 bg-gray-100"
-                          disabled={isSubmitting}>
+                          disabled={isLoading}>
                           <Icon
                             name={showConfirmPassword ? 'eye-off' : 'eye'}
                             size={20}
@@ -337,9 +338,9 @@ const SignUpScreen = ({ route }: any) => {
                           />
                         </TouchableOpacity>
                       </View>
-                      {(touched.confirmPassword || apiErrors.password_confirmation) && (
-                        <Text className="text-red-500 text-xs mt-1">
-                          {errors.confirmPassword || apiErrors.password_confirmation}
+                      {(touched.confirmPassword) && (
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-red-500 text-xs mt-1 ${errors.confirmPassword ? "" : "hidden"}`}>
+                          {errors.confirmPassword}
                         </Text>
                       )}
                     </View>
@@ -354,20 +355,20 @@ const SignUpScreen = ({ route }: any) => {
                         }}
                         tintColors={{ true: '#7248B3', false: '#666' }}
                       />
-                      <Text className="ml-2 text-sm text-gray-600">
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-2 text-sm text-gray-600">
                         I agree to the Terms & Conditions
                       </Text>
                     </View>
 
-                    {touched.confirmPassword && !isCheck && (
-                      <Text className="text-red-500 text-xs mb-3">
+                    {touched.agreeTerms && !isCheck && (
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mb-3">
                         {"Required to check the Terms & Conditions"}
                       </Text>
                     )}
 
                     <TouchableOpacity
                       onPress={() => handleSubmit()}
-                      disabled={isSubmitting || formikSubmitting}
+                      disabled={isLoading || formikSubmitting}
                       className="mt-4">
                       <LinearGradient
                         colors={['#ac94f4', '#7248B3']}
@@ -377,9 +378,9 @@ const SignUpScreen = ({ route }: any) => {
                           padding: 16,
                           borderRadius: 10,
                           alignItems: 'center',
-                          opacity: isSubmitting || formikSubmitting ? 0.7 : 1,
+                          opacity: isLoading || formikSubmitting ? 0.7 : 1,
                         }}>
-                        <Text className="text-white text-base font-bold">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-base font-bold">
                           Create Account
                         </Text>
                       </LinearGradient>
@@ -388,7 +389,7 @@ const SignUpScreen = ({ route }: any) => {
                 )}
               </Formik>
 
-              <Text className="text-center my-4 text-gray-600">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center my-4 text-gray-600">
                 -------- Or Continue with --------
               </Text>
 
@@ -396,7 +397,7 @@ const SignUpScreen = ({ route }: any) => {
                 <TouchableOpacity
                   className="p-3 w-1/2 bg-primary-10 rounded-2xl"
                   onPress={handleGoogleSignUp}
-                  disabled={isSubmitting}>
+                  disabled={isLoading}>
                   <Image
                     source={ImagePath.google}
                     className="w-8 h-8 m-auto"
@@ -405,7 +406,7 @@ const SignUpScreen = ({ route }: any) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   className="p-3 w-1/2 bg-primary-10 rounded-2xl hidden"
-                  disabled={isSubmitting}>
+                  disabled={isLoading}>
                   <Image
                     source={ImagePath.facebook}
                     className="w-8 h-8 m-auto"
@@ -415,13 +416,13 @@ const SignUpScreen = ({ route }: any) => {
               </View>
 
               <View className="flex-row justify-center items-center mb-4">
-                <Text className="text-sm text-gray-600">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">
                   Already have an account?{' '}
                 </Text>
                 <TouchableOpacity
                   onPress={() => navigation.navigate('LoginScreen')}
-                  disabled={isSubmitting}>
-                  <Text className="text-primary-100 text-sm ml-1 font-bold underline">
+                  disabled={isLoading}>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-primary-100 text-sm ml-1 font-bold underline">
                     Login
                   </Text>
                 </TouchableOpacity>
@@ -429,13 +430,13 @@ const SignUpScreen = ({ route }: any) => {
             </View>
           </View>
         </ScrollView>
-
-        {isSubmitting && (
+        {/* 
+        {isLoading && (
           <View style={styles.loadingOverlay}>
             <ActivityIndicator size="large" color="#FFFFFF" />
-            <Text style={styles.loadingText}>Creating Account...</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}}  style={styles.loadingText}>Creating Account...</Text>
           </View>
-        )}
+        )} */}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

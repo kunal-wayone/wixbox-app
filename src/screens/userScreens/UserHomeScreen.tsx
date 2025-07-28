@@ -16,7 +16,7 @@ import {
 import React, { useEffect, useState, useCallback } from 'react';
 import SkeletonPlaceholder from 'react-native-skeleton-placeholder';
 import { ImagePath } from '../../constants/ImagePath';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Banner from '../../components/common/Banner';
 import CategorySection from '../../components/CategorySection';
@@ -31,6 +31,7 @@ import { getCurrentLocationWithAddress } from '../../utils/tools/locationService
 import GetLocationButton from '../../components/common/GetLocationButton';
 import Feather from 'react-native-vector-icons/Feather';
 import LinearGradient from 'react-native-linear-gradient';
+import { fetchWishlist } from '../../store/slices/wishlistSlice';
 
 const tastyBrightGradients = [
   ['#fdba74', '#f97316'],
@@ -40,38 +41,40 @@ const tastyBrightGradients = [
   ['#fde68a', '#f59e0b'],
   ['#34d399', '#059669'],
 ];
+const featureData = [
+  {
+    id: 1,
+    name: 'Near Me',
+    image: ImagePath.location,
+    link: 'Moment',
+  },
+  {
+    id: 2,
+    name: 'Top Cafes',
+    image: ImagePath.cofee,
+    link: 'TopCafesScreen',
+  },
+  {
+    id: 3,
+    name: 'High On Demands',
+    image: ImagePath.fire,
+    link: 'HighOnDemandScreen',
+  },
+  {
+    id: 4,
+    name: 'Book a Table',
+    image: ImagePath.calender,
+    link: 'BookATableScreen',
+  },
+]
 
 const UserHomeScreen = () => {
   const navigation = useNavigation<any>();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<any>();
   const [searchQuery, setSearchQuery] = useState('');
-  const [feature, setFeature] = useState([
-    {
-      id: 1,
-      name: 'Near Me',
-      image: ImagePath.location,
-      link: 'Moment',
-    },
-    {
-      id: 2,
-      name: 'Top Cafes',
-      image: ImagePath.cofee,
-      link: 'TopCafesScreen',
-    },
-    {
-      id: 3,
-      name: 'High On Demands',
-      image: ImagePath.fire,
-      link: 'HighOnDemandScreen',
-    },
-    {
-      id: 4,
-      name: 'Book a Table',
-      image: ImagePath.calender,
-      link: 'BookATableScreen',
-    },
-  ]);
+  const [feature, setFeature] = useState(featureData);
   const [userData, setUserData] = useState<any>(null);
+  const isFocused = useIsFocused()
   const [isLoading, setIsLoading] = useState(true);
   const [isLocation, setIsLocation] = useState(false)
   const [locationData, setLocationData] = useState<any>(null)
@@ -79,6 +82,15 @@ const UserHomeScreen = () => {
   const { status: userStatus, data: user }: any = useSelector(
     (state: RootState) => state.user,
   );
+  const { shop_ids, menu_items, status, error } = useSelector((state: any) => state.wishlist);
+  console.log(menu_items, shop_ids)
+  // Fetch wishlist on component mount
+  useEffect(() => {
+    if (isFocused) {
+      dispatch(fetchWishlist());
+    }
+  }, [dispatch, refreshing, isFocused]);
+
 
   // Fetch user data
   const fetchUserData = async () => {
@@ -194,18 +206,18 @@ const UserHomeScreen = () => {
                   <Image source={ImagePath.eater} className='w-7 h-7' style={{ tintColor: "white" }} resizeMode='contain' />
                 </View>
                 <View>
-                  <Text className="text-lg font-bold font-poppins pl-1" numberOfLines={1} ellipsizeMode='tail'>
+                  <Text className="text-lg  pl-1" style={{ fontFamily: 'Raleway-Bold' }} numberOfLines={1} ellipsizeMode='tail'>
                     {user?.name || 'Guest User'}
                   </Text>
                   <View className='flex-row items-center gap-1'>
                     <Ionicons name='location-outline' size={16} />
-                    <Text className='text-sm ' numberOfLines={1} ellipsizeMode='tail' >
+                    <Text className='text-sm' style={{ fontFamily: 'Raleway-Regular' }} numberOfLines={1} ellipsizeMode='tail' >
                       {(user?.user_addresses[0]?.city || '') +
                         ', ' +
                         (user?.user_addresses[0]?.state || '') + ", (" + (user?.user_addresses[0]?.pincode || '') + ")"}
                     </Text>
                   </View>
-                  <Text className='text-sm hidden'>
+                  <Text className='text-sm hidden' style={{ fontFamily: 'Raleway-Regular' }}>
                     {(user?.user_addresses[0]?.longitude || '') +
                       ', ' +
                       (user?.user_addresses[0]?.latitude || '')}
@@ -219,15 +231,16 @@ const UserHomeScreen = () => {
               </View>
             </View>
             <View>
-              <Text className="mb-2 mt-3">What’s your plan for today?</Text>
+              <Text className="mb-2   mt-3" style={{ fontFamily: 'Raleway-Regular' }}>What’s your plan for today?</Text>
               <View className="flex-row justify-between mb-6">
                 <View className="flex-1 flex-row items-center px-1.5 border border-gray-300 bg-gray-100 rounded-xl">
                   <Ionicons name="search" size={20} color="#4B5563" className="ml-2" />
                   <TextInput
-                    className="w-full text-gray-900"
+                    className="w-full text-gray-900   "
                     placeholder="Search Food, Restaurants, Dishes"
                     placeholderTextColor={"#000"}
                     value={searchQuery}
+                    style={{ fontFamily: 'Raleway-Regular' }}
                     onChangeText={setSearchQuery}
                     onSubmitEditing={handleSearchSubmit}
                     returnKeyType="search"
@@ -241,10 +254,10 @@ const UserHomeScreen = () => {
             <Banner position="Middle" showOverlay={false} />
             <View>
               <View className="mb-3">
-                <Text className="text-lg font-semibold text-gray-900">
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg   font-semibold text-gray-900">
                   Picked For You
                 </Text>
-                <Text className="text-sm text-gray-500">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm   text-gray-500">
                   Discover nearby picks tailored for you
                 </Text>
               </View>
@@ -272,7 +285,7 @@ const UserHomeScreen = () => {
                         className="w-10 h-10 mb-2"
                         style={{ tintColor: "#fff" }}
                       />
-                      <Text className="text-xs font-semibold text-white text-center">
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs   font-semibold text-white text-center">
                         {cat.name}
                       </Text>
                     </LinearGradient>

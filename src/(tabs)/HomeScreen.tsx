@@ -108,16 +108,16 @@ const HomeScreen = () => {
         return (
           <View className="py-4 pb-8">
             <View className=' p-2 rounded-xl shadow-xl'>
-              <Text className="text-base text-gray-800 font-semibold font-poppins hidden">
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-800   hidden">
                 About Us
               </Text>
-              <Text className="font-poppins text-base text-gray-600 mb-2">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="   text-base text-gray-600 mb-2">
                 {user?.shop?.about_business}
               </Text>
 
 
             </View>
-            <Text className="text-xl text-gray-600 font-semibold font-poppins mb-2">
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-xl text-gray-600  mb-2">
               Business Hours
             </Text>
             {user?.shop?.shift_details && JSON.parse(user?.shop?.shift_details).map((item: any, index: any) => (
@@ -134,17 +134,17 @@ const HomeScreen = () => {
                 status={item?.status}
               />
             ))}
-            <Text className="text-base text-gray-600 font-semibold font-poppins mb-1 mt-2">
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-600  mb-1 mt-2">
               Address
             </Text>
-            <Text className="font-poppins ml-1 text-gray-600 mb-2">
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="   ml-1 text-gray-600 mb-2">
               {user?.shop?.address + ", " + user?.shop?.city + ", " + user?.shop?.state + ", " + "(" + user?.shop?.zip_code + ")" || "Store No - 002, Belagere Rd, Near Hilife Pearl Shell, Varthur,Bangalore"}
             </Text>
-            <Text className="text-base text-gray-600 font-semibold font-poppins ">
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-600  ">
               Business Contact
             </Text>
-            <Text className="font-poppins text-sm text-gray-600 ml-1">{user?.shop?.phone ?? "NA"}</Text>
-            {/* <Text className="font-poppins text-sm text-gray-600 ml-1">{user?.shop?.email ?? "NA"}</Text> */}
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="   text-sm text-gray-600 ml-1">{user?.shop?.phone ?? "NA"}</Text>
+            {/* <Text className="   text-sm text-gray-600 ml-1">{user?.shop?.email ?? "NA"}</Text> */}
 
           </View>
         );
@@ -243,10 +243,10 @@ const HomeScreen = () => {
           <Animated.View style={{ transform: [{ translateY }] }}>
             <View className="flex-row items-center justify-between mb-4" >
               <View>
-                <Text className="text-lg font-semibold font-poppins" numberOfLines={1} ellipsizeMode='tail'>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg " numberOfLines={1} ellipsizeMode='tail'>
                   {user?.shop?.restaurant_name || ' Burger One (Cafe & Bakery)'}
                 </Text>
-                <Text className='text-sm pl-1' numberOfLines={2} ellipsizeMode='tail'>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-sm pl-1' numberOfLines={2} ellipsizeMode='tail'>
                   {user?.shop?.address + ", " + user?.shop?.city}
                 </Text>
               </View>
@@ -303,7 +303,7 @@ const HomeScreen = () => {
                 disabled={!shopStatus}
                 className={`${shopStatus ? 'bg-primary-90' : 'bg-primary-50'
                   } p-4 w-1/2 rounded-xl justify-center items-center`}>
-                <Text className="text-white font-bold font-poppins">
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white ">
                   Add Orders
                 </Text>
               </TouchableOpacity>
@@ -313,7 +313,8 @@ const HomeScreen = () => {
                 className={`${shopStatus ? 'bg-white' : ' '
                   } p-4 w-1/2 border rounded-xl justify-center items-center`}>
                 <Text
-                  className={`font-bold font-poppins ${shopStatus ? '' : 'text-gray-500'
+                  style={{ fontFamily: 'Raleway-Bold' }}
+                  className={`  ${shopStatus ? '' : 'text-gray-500'
                     }`}>
                   Manage Stocks
                 </Text>
@@ -335,7 +336,8 @@ const HomeScreen = () => {
               {['About', 'Menu', 'Reviews', 'Post'].map((d, i) => (
                 <TouchableOpacity key={i} onPress={() => setActiveTab(d)}>
                   <Text
-                    className={`text-lg px-2 font-poppins ${activeTab === d ? 'font-bold' : 'text-gray-500'
+                    style={{ fontFamily: 'Raleway-Regular' }}
+                    className={`text-lg px-2  ${activeTab === d ? 'font-bold' : 'text-gray-500'
                       }`}>
                     {d}
                   </Text>

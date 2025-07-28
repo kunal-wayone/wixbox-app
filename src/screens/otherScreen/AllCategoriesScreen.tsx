@@ -191,7 +191,8 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#333',
         textAlign: 'center',
-        width: "100%"
+        width: "100%",
+        fontFamily: 'Raleway-Regular',
     },
     card: {
         backgroundColor: '#0f0f0f',
@@ -213,11 +214,13 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         textAlign: 'center',
         color: '#fff',
+        fontFamily: 'Raleway-Regular',
     },
     errorText: {
         textAlign: 'center',
         color: 'red',
         marginVertical: 10,
+        fontFamily: 'Raleway-Regular',
     },
     loaderContainer: {
         flex: 1,

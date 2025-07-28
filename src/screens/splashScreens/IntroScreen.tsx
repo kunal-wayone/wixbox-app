@@ -347,7 +347,7 @@ const IntroScreen = () => {
   if (!isImagesLoaded) {
     return (
       <View className="w-full h-full bg-white flex justify-center items-center">
-        <Text className="text-lg font-poppins text-gray-600">Loading...</Text>
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-lg  text-gray-600">Loading...</Text>
       </View>
     );
   }
@@ -383,7 +383,7 @@ const IntroScreen = () => {
         <TouchableOpacity
           className="absolute z-50 top-8 right-10"
           onPress={handleSkip}>
-          <Text className="font-poppins font-semibold text-base text-gray-600">
+          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className=" text-base text-gray-600">
             Skip
           </Text>
         </TouchableOpacity>
@@ -402,9 +402,10 @@ const IntroScreen = () => {
 
         <View className="p-4 pt-16">
           <Animated.Text
-            className="text-2xl text-center font-poppins font-semibold w-3/5 mx-auto text-gray-800"
+            className="text-2xl text-center  font-semibold w-3/5 mx-auto text-gray-800"
             style={{
               opacity: fadeAnimText,
+              fontFamily: 'Raleway-Regular',
               transform: [{ translateY: slideAnimText }],
             }}>
             {shi[index]?.title}

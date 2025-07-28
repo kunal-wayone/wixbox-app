@@ -122,7 +122,7 @@ const RenderTableItem = ({ item }: { item: any }) => {
                 <View
                     className={`w-10/12 h-14 rounded-xl flex-row justify-center items-center ${item.isBooked ? 'bg-green-500' : item.premium ? 'bg-primary-40' : 'bg-gray-200'
                         }`}>
-                    <Text className="text-black text-sm font-semibold">
+                    <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-black text-sm">
                         {item.table_number} ({item.seats})
                     </Text>
                 </View>

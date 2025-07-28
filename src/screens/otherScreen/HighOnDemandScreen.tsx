@@ -126,7 +126,8 @@ const HighOnDemandScreen = () => {
       price: item.price,
       quantity: 1,
       image: item.images[0] ? IMAGE_URL + item.images[0] : undefined,
-      shop_id: item?.shop?.id ?? item?.store_id
+      shop_id: item?.shop?.id ?? item?.store_id,
+      tax: item?.tax || 0
     };
     dispatch(addToCart(cartItem));
     ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
@@ -142,7 +143,7 @@ const HighOnDemandScreen = () => {
           quantity: 1,
           price: Math.floor(Number(item.price)),
           name: item.item_name,
-          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          image: item?.images?.length ? item.images[0] : '',
           shop_id: item?.shop?.id ?? item?.store_id
         },
       ],
@@ -165,7 +166,7 @@ const HighOnDemandScreen = () => {
         }
         dietaryInfo={item?.dietary_info || []}
         rating={item.average_rating || 0}
-        isVegetarian={item.is_vegetarian || false}
+        isVegetarian={item.isVegetarian === 1 ? true : false}
         isAvailable={item.is_available !== false}
         onAddToCart={() => handleAddToCart}
         handlePlaceOrder={handlePlaceOrder}
@@ -192,10 +193,10 @@ const HighOnDemandScreen = () => {
       />
 
       <View className="bg-primary-80 px-4 py-14 justify-end h-56 rounded-b-[2.5rem] ">
-        <Text className="text-white mb-1 font-bold text-2xl">
+        <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white mb-1 font-bold text-2xl">
           High On Demand
         </Text>
-        <Text className="text-white">
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white">
           Discover what everyone is ordering the most
         </Text>
         <Image
@@ -212,7 +213,7 @@ const HighOnDemandScreen = () => {
     if (loadingMore) return (<><SkeletonCard /><SkeletonCard /></>);
 
     if (!hasMore && data.length > 0) {
-      return <Text className="text-center text-gray-400 py-4">No more data found.</Text>;
+      return <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center text-gray-400 py-4">No more data found.</Text>;
     }
 
     if (hasMore && data.length > 0) {
@@ -221,7 +222,7 @@ const HighOnDemandScreen = () => {
           onPress={() => fetchItems(page)}
           className="my-4 py-3 bg-primary-80 w-1/3 m-auto rounded-xl"
         >
-          <Text className="text-center text-white font-semibold">Load More</Text>
+          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-center text-white font-semibold">Load More</Text>
         </TouchableOpacity>
       );
     }

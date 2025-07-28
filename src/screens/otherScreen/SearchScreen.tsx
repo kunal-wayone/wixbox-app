@@ -118,8 +118,8 @@ const SearchScreen = () => {
       price: item.price,
       quantity: 1,
       image: item.images[0] ? IMAGE_URL + item.images[0] : undefined,
-      shop_id: item?.shop?.id ?? item?.store_id
-
+      shop_id: item?.shop?.id ?? item?.store_id,
+      tax: item?.tax || 0
     };
     dispatch(addToCart(cartItem));
     ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
@@ -153,7 +153,7 @@ const SearchScreen = () => {
           className="bg-primary-80 rounded-lg px-6 py-2"
           onPress={handleLoadMore}
         >
-          <Text className="text-white">Load More</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white">Load More</Text>
         </TouchableOpacity>
         {loadingMore && <ActivityIndicator size="small" className="mt-2" />}
       </View>
@@ -170,7 +170,7 @@ const SearchScreen = () => {
           quantity: 1,
           price: Math.floor(Number(item.price)),
           name: item.item_name,
-          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          image: item?.images?.length ? item.images[0] : '',
           shop_id: item?.shop?.id ?? item?.store_id
         },
       ],
@@ -193,7 +193,7 @@ const SearchScreen = () => {
         }
         dietaryInfo={item?.dietary_info || []}
         rating={item.average_rating || 0}
-        isVegetarian={item.is_vegetarian || false}
+        isVegetarian={item.isVegetarian || false}
         isAvailable={item.is_available !== false}
         onAddToCart={() => handleAddToCart}
         handlePlaceOrder={handlePlaceOrder}
@@ -221,6 +221,7 @@ const SearchScreen = () => {
               value={searchQuery}
               onChangeText={setSearchQuery}
               returnKeyType="search"
+              style={{ fontFamily: 'Ralewat-Regular' }}
               onSubmitEditing={() => handleSearch(active)}
             />
             <Ionicons name="search" size={20} color="gray" />
@@ -243,7 +244,7 @@ const SearchScreen = () => {
                 className={`rounded-full px-3 py-1 h-8 mr-2 border border-gray-300 ${selectedTags.includes(tag.id) ? 'bg-green-600' : 'bg-white'
                   }`}
               >
-                <Text className={`text-sm ${selectedTags.includes(tag.id) ? 'text-white' : 'text-gray-900'}`}>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-sm ${selectedTags.includes(tag.id) ? 'text-white' : 'text-gray-900'}`}>
                   {tag.label}
                 </Text>
               </TouchableOpacity>
@@ -256,13 +257,13 @@ const SearchScreen = () => {
               onPress={() => handleSearch('product')}
               className={`pb-1 ${active === "product" ? "border-b-2 border-primary-100" : ""}`}
             >
-              <Text className="text-md font-semibold">Dishes</Text>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-md ">Dishes</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => handleSearch('shop')}
               className={`pb-1 ${active === "shop" ? "border-b-2 border-primary-100" : ""}`}
             >
-              <Text className="text-md font-semibold">Restaurants</Text>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-md ">Restaurants</Text>
             </TouchableOpacity>
           </View>
 
@@ -323,7 +324,7 @@ const SearchScreen = () => {
           )}
         </View>
       </KeyboardAvoidingView>
-      </SafeAreaView>
+    </SafeAreaView>
   );
 };
 

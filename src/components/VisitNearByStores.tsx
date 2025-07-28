@@ -96,7 +96,7 @@ const VisitNearByStores = () => {
     fetchProducts(1);
   }, [user?.latitude, user?.longitude]);
 
-  // Handle scroll for pagination
+  // Handle scroll for paginations
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { layoutMeasurement, contentOffset, contentSize } = e.nativeEvent;
     const isCloseToEnd = layoutMeasurement.width + contentOffset.x >= contentSize.width - 50;
@@ -112,10 +112,10 @@ const VisitNearByStores = () => {
     <View className="pt-6">
       {/* Section Header */}
       <View className="mb-3">
-        <Text className="text-lg font-semibold text-gray-900">
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg text-gray-900">
           Visit Nearby Stores
         </Text>
-        <Text className="text-sm text-gray-500">
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-500">
           Check out the newest additions near you
         </Text>
       </View>
@@ -123,11 +123,11 @@ const VisitNearByStores = () => {
       {/* Content */}
       {error ? (
         <View className="flex-1 justify-center items-center">
-          <Text className="text-gray-500 text-base">{error}</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-base">{error}</Text>
         </View>
       ) : stores.length === 0 && !isLoading ? (
         <View className="flex-1 justify-center items-center">
-          <Text className="text-gray-500 text-base">No stores found nearby</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-base">No stores found nearby</Text>
         </View>
       ) : (
         <ScrollView

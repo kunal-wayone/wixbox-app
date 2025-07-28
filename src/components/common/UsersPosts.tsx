@@ -131,7 +131,7 @@ const UsersPost = ({ vendor_id }: any) => {
               className={`${item?.status?.toUpperCase() === 'DRAFT' ? 'bg-red-500' : 'bg-green-600'
                 } px-3 py-1 rounded-lg hidden`}
             >
-              <Text className="text-xs font-semibold text-white">
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-xs text-white">
                 {item?.status?.toUpperCase() || 'PUBLISHED'}
               </Text>
             </View>
@@ -140,13 +140,13 @@ const UsersPost = ({ vendor_id }: any) => {
             </TouchableOpacity>
           </View>
           <View className="z-10">
-            <Text className="text-white font-bold text-lg mb-1">{item.title}</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-lg mb-1">{item.title}</Text>
             <View className="flex-row justify-between items-center">
               <View className="flex-row gap-4 hidden">
-                <Text className="text-white text-xs">{item.views || 0} Views</Text>
-                <Text className="text-white text-xs">{item.comments || 0} Comments</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-xs">{item.views || 0} Views</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-xs">{item.comments || 0} Comments</Text>
               </View>
-              <Text className="text-white text-xs font-bold opacity-80">
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-xs opacity-80">
                 {formatDate(item.created_at)}
               </Text>
             </View>
@@ -173,7 +173,7 @@ const UsersPost = ({ vendor_id }: any) => {
             onPress={handleLoadMore}
             className="bg-primary-90 py-3 px-4 rounded-lg my-4 mx-4"
           >
-            <Text className="text-white text-center text-md font-medium">Load More</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center text-md font-medium">Load More</Text>
           </TouchableOpacity>
         </View>
       );
@@ -191,7 +191,7 @@ const UsersPost = ({ vendor_id }: any) => {
         </View>
       ) : posts.length === 0 ? (
         <View className="justify-center items-center">
-          <Text className="text-gray-500">No posts found</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500">No posts found</Text>
         </View>
       ) : (
         <FlatList

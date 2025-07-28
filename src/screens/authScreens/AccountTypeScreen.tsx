@@ -40,7 +40,7 @@ const AccountTypeScreen = () => {
                   resizeMode="contain"
                 />
               </View>
-              <Text className="text-center my-4 font-poppins font-bold">
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-center my-4">
                 Enter As Business
               </Text>
             </View>
@@ -63,7 +63,7 @@ const AccountTypeScreen = () => {
                   resizeMode="contain"
                 />
               </View>
-              <Text className="text-center my-4 font-poppins font-bold">
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-center my-4 ">
                 Enter As Customer
               </Text>
             </View>

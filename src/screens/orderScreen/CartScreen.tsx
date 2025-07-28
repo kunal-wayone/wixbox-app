@@ -25,6 +25,7 @@ const CartScreen = () => {
                 quantity: 1,
                 image: product?.images[0],
                 shop_id: product?.images[0],
+                tax: product?.tax || 0
             })
         );
     };
@@ -62,10 +63,10 @@ const CartScreen = () => {
                     resizeMode="cover"
                 />
                 <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 4 }}>
+                    <Text style={{ fontSize: 16, fontFamily: 'Raleway-Regular', marginBottom: 4 }}>
                         {item?.name}
                     </Text>
-                    <Text style={{ color: '#6B7280', marginBottom: 4 }}>
+                    <Text style={{ color: '#6B7280', fontFamily: 'Raleway-Regular', marginBottom: 4 }}>
                         ₹{item?.price}
                     </Text>
                     <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }} className='gap-2'>
@@ -76,9 +77,9 @@ const CartScreen = () => {
                                 paddingHorizontal: 10,
                             }}
                             onPress={() => updateQuantity(item.id, -1)}>
-                            <Text style={{ fontSize: 18 }}>-</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 18 }}>-</Text>
                         </TouchableOpacity>
-                        <Text style={{ color: '#6B7280', marginBottom: 4 }}>
+                        <Text style={{ color: '#6B7280', fontFamily: 'Raleway-Regular', marginBottom: 4 }}>
                             {item?.quantity}
                         </Text>
                         <TouchableOpacity
@@ -88,7 +89,7 @@ const CartScreen = () => {
                                 paddingHorizontal: 10,
                             }}
                             onPress={() => updateQuantity(item?.id, 1)}>
-                            <Text style={{ fontSize: 18 }}>+</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 18 }}>+</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -106,7 +107,7 @@ const CartScreen = () => {
                     borderTopRightRadius: 20,
                     padding: 16,
                 }}>
-                <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 5 }}>Your Cart</Text>
+                <Text style={{ fontSize: 18, fontFamily: 'Raleway-Regular', marginBottom: 5 }}>Your Cart</Text>
                 <FlatList
                     data={cartItems}
                     renderItem={renderCartItem}
@@ -114,10 +115,10 @@ const CartScreen = () => {
                     showsVerticalScrollIndicator={false}
                 />
                 <TouchableOpacity className='bg-primary-90 p-4 rounded-xl' onPress={() => navigation.navigate("AddCustomerFormScreen")}>
-                    <Text className='text-center text-white'>Place Order</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-center text-white'>Place Order</Text>
                 </TouchableOpacity>
             </View>
-            </SafeAreaView>
+        </SafeAreaView>
     )
 }
 

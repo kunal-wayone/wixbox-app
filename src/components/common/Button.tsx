@@ -1,6 +1,6 @@
 import React from 'react';
-import {View, Text, Image, TouchableOpacity} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const Button = ({
   text,
@@ -29,17 +29,17 @@ const Button = ({
       activeOpacity={0.9}>
       {iconUrl && iconPosition === 'left' && (
         <Image
-          source={{uri: iconUrl}}
+          source={{ uri: iconUrl }}
           className="w-5 h-5 mr-2"
           resizeMode="contain"
         />
       )}
       {text && (
-        <Text className="text-foreground text-base font-semibold">{text}</Text>
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-foreground text-base">{text}</Text>
       )}
       {iconUrl && iconPosition === 'right' && (
         <Image
-          source={{uri: iconUrl}}
+          source={{ uri: iconUrl }}
           className="w-5 h-5 ml-2"
           resizeMode="contain"
         />

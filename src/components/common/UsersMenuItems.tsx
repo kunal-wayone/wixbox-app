@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { useIsFocused, useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { ImagePath } from '../../constants/ImagePath';
 import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { useDispatch, useSelector } from 'react-redux';
@@ -21,36 +21,21 @@ import { RootState } from '../../store/store';
 import FoodItem from './FoodItem';
 
 const SkeletonLoader = () => (
-  <View className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm animate-pulse">
-    <View className="w-2/5 mr-3">
-      <View className="w-full h-40 bg-gray-300 rounded-lg mb-2" />
-      <View className="flex-row items-center h-10">
-        <View className="w-12 h-4 bg-gray-300 rounded mr-2" />
-        <View className="w-12 h-6 bg-gray-300 rounded" />
-      </View>
-    </View>
-    <View className="flex-1">
-      <View className="w-24 h-4 bg-gray-300 rounded mb-2" />
-      <View className="w-full h-6 bg-gray-300 rounded mb-2" />
-      <View className="flex-row justify-between">
-        <View className="w-16 h-4 bg-gray-300 rounded" />
-        <View className="w-20 h-4 bg-gray-300 rounded" />
-      </View>
-      <View className="w-16 h-4 bg-gray-300 rounded mt-2" />
-      <View className="flex-row items-center mt-2">
-        <View className="w-12 h-4 bg-gray-300 rounded" />
-      </View>
-      <View className="flex-row justify-between mt-2">
-        <View className="w-20 h-4 bg-gray-300 rounded" />
-        <View className="w-12 h-4 bg-gray-300 rounded" />
-      </View>
-      <View className="w-full h-10 bg-gray-300 rounded mt-2" />
+  <View className="flex-row gap-4 bg-gray-200 rounded-xl p-4 mx-4 my-2 animate-pulse">
+    <View className="w-24 h-28 bg-gray-300 rounded-xl" />
+    <View className="flex-1 justify-between py-1">
+      <View className="h-4 bg-gray-300 w-2/3 mb-2 rounded" />
+      <View className="h-3 bg-gray-300 w-1/2 mb-2 rounded" />
+      <View className="h-3 bg-gray-300 w-3/5 mb-2 rounded" />
+      <View className="h-3 bg-gray-300 w-2/4 mb-2 rounded" />
     </View>
   </View>
 );
 
-const UsersMenuItems = ({ shopId }: any) => {
+const UsersMenuItems = () => {
   const navigation = useNavigation<any>();
+  const route: any = useRoute()
+  const shopId = route.params?.shopId;
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cart.items);
@@ -125,21 +110,6 @@ const UsersMenuItems = ({ shopId }: any) => {
     []
   );
 
-  // const handleAddToCart = useCallback(
-  //   (item: any) => {
-  //     const cartItem = {
-  //       id: item.id,
-  //       name: item.item_name,
-  //       price: item.price,
-  //       quantity: 1,
-  //       image: item.images?.length > 0 ? IMAGE_URL + item.images[0] : ImagePath.item1,
-  //     };
-  //     dispatch(addToCart(cartItem));
-  //     ToastAndroid.show(`${item.item_name} added to cart!`, ToastAndroid.SHORT);
-  //   },
-  //   [dispatch]
-  // );
-
   const handleLoadMore = useCallback(() => {
     if (!isFetchingMore && currentPage < lastPage) {
       const nextPage = currentPage + 1;
@@ -167,8 +137,8 @@ const UsersMenuItems = ({ shopId }: any) => {
       price: item.price,
       quantity: 1,
       image: item.images[0] ? IMAGE_URL + item.images[0] : undefined,
-      shop_id: item?.shop?.id ?? item?.store_id
-
+      shop_id: item?.shop?.id ?? item?.store_id,
+      tax: item?.tax || 0
     };
     dispatch(addToCart(cartItem));
     ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
@@ -184,7 +154,7 @@ const UsersMenuItems = ({ shopId }: any) => {
           quantity: 1,
           price: Math.floor(Number(item.price)),
           name: item.item_name,
-          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          image: item?.images?.length ? item.images[0] : '',
           shop_id: item?.shop?.id ?? item?.store_id
         },
       ],
@@ -207,7 +177,7 @@ const UsersMenuItems = ({ shopId }: any) => {
         }
         dietaryInfo={item?.dietary_info || []}
         rating={item.average_rating || 0}
-        isVegetarian={item.is_vegetarian || false}
+        isVegetarian={item.isVegetarian || false}
         isAvailable={item.is_available !== false}
         onAddToCart={() => handleAddToCart}
         handlePlaceOrder={handlePlaceOrder}
@@ -233,7 +203,7 @@ const UsersMenuItems = ({ shopId }: any) => {
             onPress={handleLoadMore}
             className="bg-primary-90 py-3 px-4 rounded-lg my-4 mx-4"
           >
-            <Text className="text-white text-center text-md font-medium">Load More</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}} className="text-white text-center text-md font-medium">Load More</Text>
           </TouchableOpacity>
         </View>
       );
@@ -242,15 +212,15 @@ const UsersMenuItems = ({ shopId }: any) => {
   }, [isFetchingMore, currentPage, lastPage, handleLoadMore]);
 
   return (
-    <View className="min-h-[85vh]">
-      <View className="flex-row items-center gap-3 mt-4 mb-2 px-4">
-        <View className="flex-row items-center flex-1 bg-white px-3 py-0.5 border rounded-xl shadow-sm">
+    <View className="px-2">
+      <View className="flex-row items-center gap-3 mt-4 mb-2 px-3">
+        <View className="flex-row items-center flex-1 bg-white px-3 py-0.5 border border-gray-300 rounded-xl shadow-sm">
           <AntDesign name="search1" color="#6B7280" size={20} />
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Search Item..."
-            className="ml-2 flex-1 text-sm text-gray-700"
+            className="ml-2 flex-1 text-sm  text-gray-700"
             autoCapitalize="none"
           />
         </View>
@@ -266,14 +236,18 @@ const UsersMenuItems = ({ shopId }: any) => {
       </View>
 
       {isLoading ? (
-        <View className="flex-1 justify-center items-center mt-10 px-4">
+        <>
           <SkeletonLoader />
           <SkeletonLoader />
           <SkeletonLoader />
-        </View>
+          <SkeletonLoader />
+          <SkeletonLoader />
+          <SkeletonLoader />
+        </>
+
       ) : filteredProducts.length === 0 ? (
         <View className="flex-1 justify-center items-center mt-10 px-4">
-          <Text className="text-gray-500 text-lg">No products found</Text>
+          <Text style={{fontFamily:'Raleway-Regular'}} className="text-gray-500 text-lg">No products found</Text>
         </View>
       ) : (
         <FlatList

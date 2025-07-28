@@ -70,8 +70,8 @@ const WalletScreen = () => {
 
     const renderInfoCard = (title: string, value: string | number, color = '#7D6AFF') => (
         <View className="w-[48%] bg-white shadow-md p-4 rounded-xl mb-4 border" style={{ borderColor: color }}>
-            <Text className="text-gray-700 font-medium text-sm">{title}</Text>
-            <Text className="text-xl font-bold mt-1 text-black">{value}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-700 font-medium text-sm">{title}</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl  mt-1 text-black">{value}</Text>
         </View>
     );
 
@@ -82,7 +82,7 @@ const WalletScreen = () => {
                     <Icon name='arrow-back' size={20} />
                 </TouchableOpacity>
 
-                <Text className="text-2xl font-bold text-center mb-4">Wallet & Settlement</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-2xl text-center mb-4">Wallet & Settlement</Text>
 
                 {/* Tabs */}
                 <View className="flex-row justify-around mb-4">
@@ -95,7 +95,7 @@ const WalletScreen = () => {
                             }}
                             className={`px-4 py-2 rounded-lg ${selectedTab === tab ? 'bg-primary-90' : 'bg-white'} shadow`}
                         >
-                            <Text className={`${selectedTab === tab ? 'text-white' : 'text-gray-700'} font-semibold`}>{tab}</Text>
+                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`${selectedTab === tab ? 'text-white' : 'text-gray-700'}`}>{tab}</Text>
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -104,11 +104,11 @@ const WalletScreen = () => {
                 {selectedTab === 'Custom' && (
                     <View className="flex-row justify-between mb-4">
                         <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, from: true })} className="flex-1 mr-2 bg-white py-3 px-4 rounded-lg shadow">
-                            <Text className="text-base text-gray-700">From: {displayDate(dateRange.from)}</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-700">From: {displayDate(dateRange.from)}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity onPress={() => setShowPicker({ ...showPicker, to: true })} className="flex-1 ml-2 bg-white py-3 px-4 rounded-lg shadow">
-                            <Text className="text-base text-gray-700">To: {displayDate(dateRange.to)}</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-700">To: {displayDate(dateRange.to)}</Text>
                         </TouchableOpacity>
                     </View>
                 )}
@@ -116,7 +116,7 @@ const WalletScreen = () => {
                 {loading ? (
                     <View className="items-center justify-center mt-10">
                         <ActivityIndicator size="large" color="#B68AD4" />
-                        <Text className="text-sm mt-2 text-gray-500">Loading wallet info...</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm mt-2 text-gray-500">Loading wallet info...</Text>
                     </View>
                 ) : walletData ? (
                     <>
@@ -128,12 +128,12 @@ const WalletScreen = () => {
                         </View>
 
                         <View className="bg-white p-4 mt-2 rounded-xl shadow">
-                            <Text className="text-base text-gray-800">Statement Period</Text>
-                            <Text className="text-sm text-gray-500">{walletData.from} to {walletData.to}</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-800">Statement Period</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-500">{walletData.from} to {walletData.to}</Text>
                         </View>
                     </>
                 ) : (
-                    <Text className="text-center text-gray-500 mt-10">No wallet data found</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center text-gray-500 mt-10">No wallet data found</Text>
                 )}
 
                 {showPicker.from && (

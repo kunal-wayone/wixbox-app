@@ -16,7 +16,7 @@ const SplashScreen = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  const text = 'Welcome to Wisbox'.split('');
+  const text = 'Wisbox'.split('');
   const charAnims = useRef(text.map(() => new Animated.Value(0))).current;
 
   const getUserData = async () => {
@@ -127,7 +127,7 @@ const SplashScreen = () => {
     };
 
     animateLogo();
-    const timer = setTimeout(checkAuthAndNavigate, 5000);
+    const timer = setTimeout(checkAuthAndNavigate, 2000);
 
     return () => {
       clearTimeout(timer);

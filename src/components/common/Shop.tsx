@@ -83,10 +83,22 @@ const Shop = ({
   });
   const wishlistShopIds = useSelector((state: RootState) => state.wishlist.shop_ids);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const shiftDetails = item?.shift_details
-    ? JSON.parse(item.shift_details)
-    : [];
-  const isWishlisted = wishlistShopIds.includes(id);
+  let shiftDetails = [];
+
+  if (item?.shift_details) {
+    if (typeof item.shift_details === 'string') {
+      try {
+        shiftDetails = JSON.parse(item.shift_details);
+      } catch (error) {
+        console.error("Invalid JSON in shift_details:", error);
+      }
+    } else if (typeof item.shift_details === 'object') {
+      shiftDetails = item.shift_details; // Already parsed
+    } else {
+      console.warn("shift_details is neither a string nor an object.");
+    }
+  }
+  const isWishlisted = wishlistShopIds.some((shop: any) => shop.id === id)
 
   const formatToAMPM = (time24: string) => {
     const [hourStr, minute] = time24.split(':');
@@ -105,11 +117,24 @@ const Shop = ({
       hour: '2-digit',
       minute: '2-digit',
     });
-    const shiftData = item?.shift_details ? JSON.parse(item.shift_details) : null;
-    const todayShift = shiftData?.find(
+    let shiftDetails = [];
+
+    if (item?.shift_details) {
+      if (typeof item.shift_details === 'string') {
+        try {
+          shiftDetails = JSON.parse(item.shift_details);
+        } catch (error) {
+          console.error("Invalid JSON in shift_details:", error);
+        }
+      } else if (typeof item.shift_details === 'object') {
+        shiftDetails = item.shift_details; // Already parsed
+      } else {
+        console.warn("shift_details is neither a string nor an object.");
+      }
+    }
+    const todayShift = shiftDetails?.find(
       (shift: any) => shift.day.toLowerCase() === currentDay && shift.status
     );
-    // console.log(shiftData, item)
 
     if (!todayShift || !todayShift.first_shift_start) return false;
 
@@ -180,23 +205,7 @@ const Shop = ({
     }
   };
 
-  const handleAddFeaturedItemToCart = (itemData: FeaturedItem) => {
-    try {
-      dispatch(
-        addToCart({
-          id: itemData.id,
-          name: itemData.name,
-          price: itemData.price,
-          quantity: 1,
-          image: itemData.image ? IMAGE_URL + itemData.image : ImagePath.item1,
-          shop_id: item?.id || id,
-        })
-      );
-      ToastAndroid.show(`${itemData.name} added to cart`, ToastAndroid.SHORT);
-    } catch (error) {
-      ToastAndroid.show('Error adding to cart', ToastAndroid.SHORT);
-    }
-  };
+
 
   const handleViewShopDetails = () => {
     try {
@@ -211,12 +220,14 @@ const Shop = ({
   };
 
   const renderImageCarousel = () => {
-    if (!images.length) {
+    const safeImages = Array.isArray(images) ? images : [];
+
+    if (images.length === 0) {
       return (
         <View className="w-full h-48 bg-gray-200 rounded-xl justify-center items-center">
-          <Text className="text-gray-500">No images available</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500">No images available</Text>
           <View className="absolute bottom-2 flex-row justify-center space-x-2 w-full">
-            {images.slice(0, maxImages).map((_, index) => (
+            {safeImages?.slice(0, maxImages).map((_, index) => (
               <TouchableOpacity
                 key={index}
                 className={`w-2 h-2 rounded-full mx-1 ${index === selectedImageIndex ? 'bg-green-500' : 'bg-gray-300'}`}
@@ -236,16 +247,16 @@ const Shop = ({
             }}
           />
 
-          <TouchableOpacity className='absolute top-2 right-2' onPress={handleToggleWishlist}>
+          <TouchableOpacity className='absolute z-50 top-2 right-2' onPress={handleToggleWishlist}>
             <Icons name={isWishlisted ? 'heart' : 'heart-outline'} size={24} color={isWishlisted ? 'red' : 'white'} />
           </TouchableOpacity>
           <View className="absolute bottom-0 left-4 right-4 mb-4">
-            <Text className="text-white text-lg font-bold" numberOfLines={1}>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-lg" numberOfLines={1}>
               {name || 'Unknown Restaurant'}
             </Text>
             <View className="flex-row items-center mb-1 ">
               <MaterialIcons name="location-on" size={16} color="white" />
-              <Text className="text-white text-xs ml-1">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-xs ml-1">
                 {`${address}, ${address}`}
               </Text>
             </View>
@@ -255,7 +266,7 @@ const Shop = ({
                   key={tag.id}
                   className={`rounded-full px-3 py-1 bg-primary-80 `}
                 >
-                  <Text className={`text-xs font-medium text-white`}>{tag.label}</Text>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-xs font-medium text-white`}>{tag.label}</Text>
                 </View>
               ))}
 
@@ -271,10 +282,10 @@ const Shop = ({
           source={{ uri: IMAGE_URL + images[selectedImageIndex] }}
           className="w-full h-48 rounded-xl"
           resizeMode="cover"
-          onError={() => ToastAndroid.show('Image failed to load', ToastAndroid.SHORT)}
+        // onError={() => ToastAndroid.show('Image failed to load', ToastAndroid.SHORT)}
         />
         <View className="absolute bottom-2 flex-row justify-center space-x-2 w-full">
-          {images.slice(0, maxImages).map((_, index) => (
+          {safeImages?.slice(0, maxImages).map((_, index) => (
             <TouchableOpacity
               key={index}
               className={`w-2 h-2 rounded-full mx-1 ${index === selectedImageIndex ? 'bg-green-500' : 'bg-gray-300'}`}
@@ -294,16 +305,16 @@ const Shop = ({
           }}
         />
 
-        <TouchableOpacity className='absolute top-2 right-2' onPress={handleToggleWishlist}>
-          <Icons name={isWishlisted ? 'heart' : 'heart-outline'} size={24} color={isWishlisted ? 'red' : 'white'} />
+        <TouchableOpacity className='absolute z-50 bg-white/80 rounded-lg top-2 right-2' onPress={handleToggleWishlist}>
+          <Icons name={isWishlisted ? 'heart' : 'heart-outline'} size={24} color={isWishlisted ? 'red' : 'black'} />
         </TouchableOpacity>
         <View className="absolute bottom-0 left-4 right-4 mb-4">
-          <Text className="text-white text-lg font-bold" numberOfLines={1}>
+          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-lg" numberOfLines={1}>
             {name || 'Unknown Restaurant'}
           </Text>
           <View className="flex-row items-center mb-1 ">
             <MaterialIcons name="location-on" size={16} color="white" />
-            <Text className="text-white text-xs ml-1">
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-xs ml-1">
               {`${address}, ${address}`}
             </Text>
           </View>
@@ -313,7 +324,7 @@ const Shop = ({
                 key={tag.id}
                 className={`rounded-full px-3 py-1 bg-primary-80 `}
               >
-                <Text className={`text-xs font-medium text-white`}>{tag.label}</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-xs font-medium text-white`}>{tag.label}</Text>
               </View>
             ))}
 
@@ -327,7 +338,7 @@ const Shop = ({
   const renderCategories = () => (
     categories.map((category, index) => (
       <View key={index} className="bg-blue-100 rounded-full px-3 py-1 mr-2 mb-1">
-        <Text className="text-blue-800 text-sm font-semibold">{category}</Text>
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-blue-800 text-sm">{category}</Text>
       </View>
     ))
   );
@@ -352,7 +363,7 @@ const Shop = ({
           className={`w-4 h-4 rounded-full ${shopStatus.isOpen ? "bg-green-500" : "bg-red-400"
             }`}
         />
-        <Text className="text-base text-gray-900 ml-2">
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-900 ml-2">
           {shopStatus.openingTime && shopStatus.closingTime ? (
             shopStatus.isOpen ? (
               `Open till ${shopStatus.closingTime}`
@@ -370,8 +381,8 @@ const Shop = ({
         <View className='flex-row items-center gap-1  '>
           <Ionicons name='location-outline' size={22} color={"#ac94f4"} />
           <View className='' >
-            <Text className='text-xs' numberOfLines={1} ellipsizeMode='tail' >{item?.distance_km} Km away   {`${Math.floor((item?.travel_time_mins || 0) / 60)}h ${(item?.travel_time_mins || 0) % 60}m`}</Text>
-            <Text className='text-xs w-32' numberOfLines={1} ellipsizeMode='tail' >{item?.address + ", " + item?.city}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-xs' numberOfLines={1} ellipsizeMode='tail' >{item?.distance_km} Km away   {`${Math.floor((item?.travel_time_mins || 0) / 60)}h ${(item?.travel_time_mins || 0) % 60}m`}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-xs w-32' numberOfLines={1} ellipsizeMode='tail' >{item?.address + ", " + item?.city}</Text>
           </View>
         </View>
         <View className='flex-row items-center justify-between gap-2 '>
@@ -384,10 +395,10 @@ const Shop = ({
       <View className="mt-3 pb-2 hidden">
 
         <View className="flex-row justify-between items-center mt-2 hidden ">
-          <Text className="text-sm text-yellow-500">
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-yellow-500">
             {'★'.repeat(Math.floor(rating))} ({rating.toFixed(1)})
           </Text>
-          <Text className={`text-sm font-semibold p-1 rounded-lg px-2 ${isShopOpen() && item?.status !== 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`text-sm p-1 rounded-lg px-2 ${isShopOpen() && item?.status !== 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
             {isShopOpen() && item?.status !== 0 ? 'Open' : 'Closed'}
           </Text>
         </View>
@@ -402,7 +413,7 @@ const Shop = ({
           className="bg-primary-90 rounded-full px-4 py-3 mt-4"
           onPress={handleViewShopDetails}
         >
-          <Text className="text-white text-center font-semibold">View Shop Details</Text>
+          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-center">View Shop Details</Text>
         </TouchableOpacity>
       </View>
     </Pressable>

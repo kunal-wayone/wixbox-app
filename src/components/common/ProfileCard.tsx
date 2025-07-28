@@ -24,7 +24,7 @@ const ProfileCard = ({
     const stars = [];
     for (let i = 1; i <= 5; i++) {
       stars.push(
-        <Text
+        <Text style={{ fontFamily: 'Raleway-Regular' }}
           key={i}
           className={`text-lg ${i <= rating ? 'text-yellow-400' : 'text-gray-300'
             }`}>
@@ -63,7 +63,7 @@ const ProfileCard = ({
             }`}>
           <View className='flex-row items-center justify-start  '>
             {name && (
-              <Text className="text-lg font-semibold text-gray-800 mr-2">
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg text-gray-800 mr-2">
                 {name}
               </Text>
             )}
@@ -73,14 +73,14 @@ const ProfileCard = ({
           </View>
           {rating && <View className="flex-row mr-auto">{renderStars(rating)}</View>}
           {/* {shopCategory && (
-            <Text className="text-  text-gray-500 mr-auto">{shopCategory}</Text>
+            <Text style={{fontFamily:'Raleway-Regular'}} className="text-  text-gray-500 mr-auto">{shopCategory}</Text>
           )} */}
         </View>
       )}
 
       {/* Section 3: Rating Stars */}
       <View className="flex-col items-center justify-between ml-auto">
-        {/* {rating && <Text className="flex-row gap-1 mr-auto">
+        {/* {rating && <Text style={{fontFamily:'Raleway-Regular'}} className="flex-row gap-1 mr-auto">
           <Icon name='star' size={14} className='text-yellow-400' color={"#FFE015"} />
           {(rating).toFixed(1)}</Text>} */}
 
@@ -95,10 +95,10 @@ const ProfileCard = ({
           />)}
         <Switch
           trackColor={{ false: '#767577', true: '#81b0ff' }}
-          // thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
-          // ios_backgroundColor="#3e3e3e"
-          // onValueChange={toggleSwitch}
-          // value={isEnabled}
+        // thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+        // ios_backgroundColor="#3e3e3e"
+        // onValueChange={toggleSwitch}
+        // value={isEnabled}
         />
       </View>
     </View>

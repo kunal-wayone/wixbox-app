@@ -18,6 +18,7 @@ import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { RootState } from '../../store/store';
 import { useSelector } from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import OrderCard from '../../components/common/OrderCard';
 
 const AddCustomerScreen = () => {
   const navigation = useNavigation<any>();
@@ -33,6 +34,7 @@ const AddCustomerScreen = () => {
     try {
       setIsLoading(true);
       const response: any = await Fetch(`/user/vendor/get-order`, {}, 5000);
+      console.log(response?.data)
       if (!response.success) throw new Error('Failed to fetch orders');
       setOrdersList(response.data || []);
     } catch (error: any) {
@@ -54,50 +56,15 @@ const AddCustomerScreen = () => {
   const filteredOrders = React.useMemo(
     () =>
       ordersList.filter((item: any) =>
-        item?.name?.toLowerCase().includes(searchQuery?.toLowerCase())
+        item?.order?.name?.toLowerCase().includes(searchQuery?.toLowerCase())
       ),
     [ordersList, searchQuery]
   );
+  console.log(filteredOrders)
+  const renderCustomerCard = ({ item }: any, index: any) => (
+    <OrderCard key={index} orderData={item} />
+    // console.log(item)
 
-  const renderCustomerCard = ({ item }: any) => (
-    <View className="bg-white border border-gray-200 rounded-xl p-4 mb-4 shadow-md">
-      <View className="flex-row mb-4">
-        <Image
-          source={ImagePath.profile1}
-          resizeMode="cover"
-          className="w-20 h-20 rounded-full mr-3"
-        />
-        <View className="flex-1 justify-center">
-          <Text className="text-base font-bold mb-1">{item?.name}</Text>
-          <Text className="text-sm text-gray-600">Ordered: {item?.order?.length || 0} items</Text>
-          <Text className="text-sm text-gray-600">Arrived at: {item?.arrived_at}</Text>
-          <Text className="text-sm text-gray-600 font-semibold">Total Amount: ₹{item?.total_amount}</Text>
-          <Text
-            className={` text-sm  absolute top-0 right-0 px-2 py-1 rounded-md
-              ${item?.status === '0' ? 'bg-blue-100 text-blue-700 font-semibold' :
-                item?.status === '1' ? 'bg-green-100 text-green-700 font-semibold' :
-                  item?.status === '2' ? 'bg-red-100 text-red-700 font-semibold' :
-                    item?.status === '3' ? 'bg-yellow-100 text-yellow-700 font-semibold' :
-                      'bg-gray-100 text-gray-800 font-semibold'}
-            `}
-          >
-            {item?.status === '0' ? 'Pending' :
-              item?.status === '1' ? 'Completed' :
-                item?.status === '2' ? 'Cancelled' :
-                  item?.status === '3' ? 'Refund' :
-                    'Unknown'}
-          </Text>
-        </View>
-      </View>
-      <TouchableOpacity
-        className="bg-primary-90 py-2.5 rounded-lg items-center"
-        onPress={() => {
-          setSelectedOrder(item);
-          setModalVisible(true);
-        }}>
-        <Text className="text-white text-sm font-semibold">View Order Details</Text>
-      </TouchableOpacity>
-    </View>
   );
 
   const renderModalContent = () => {
@@ -127,23 +94,23 @@ const AddCustomerScreen = () => {
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View className="flex-1 bg-black/50 justify-center items-center p-4">
           <View className="bg-white w-full rounded-xl p-4 max-h-[85%]">
-            <Text className="text-lg font-bold text-center mb-2">Order Details</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg text-center mb-2">Order Details</Text>
 
             {/* Order Info */}
             <View className="mb-4 p-3 rounded-lg bg-gray-100 relative">
-              <Text className="text-base font-semibold mb-1 text-gray-700">Order Summary</Text>
-              <Text className="text-sm text-gray-600">Total Amount: ₹{selectedOrder?.total_amount}</Text>
-              <Text className="text-sm text-gray-600">Discount: ₹{selectedOrder?.discount}</Text>
-              <Text className="text-sm text-gray-600">Service Tax: ₹{totalServiceTax}</Text>
-              <Text className="text-sm text-gray-900 font-bold mt-1">Final Amount: ₹{finalAmount}</Text>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base mb-1 text-gray-700">Order Summary</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Total Amount: ₹{selectedOrder?.total_amount}</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Discount: ₹{selectedOrder?.discount}</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Service Tax: ₹{totalServiceTax}</Text>
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-sm text-gray-900 mt-1">Final Amount: ₹{finalAmount}</Text>
 
-              <Text
-                className={`absolute top-0 right-0 px-2 py-1 text-sm font-semibold rounded-md ${statusInfo.bg} ${statusInfo.text}`}
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }}
+                className={`absolute top-0 right-0 px-2 py-1 text-sm rounded-md ${statusInfo.bg} ${statusInfo.text}`}
               >
                 {statusInfo.label}
               </Text>
 
-              <Text className="text-sm text-gray-600 mt-1">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600 mt-1">
                 Ordered At: {new Date(selectedOrder?.created_at).toLocaleString()}
               </Text>
             </View>
@@ -158,10 +125,10 @@ const AddCustomerScreen = () => {
                     resizeMode="cover"
                   />
                   <View className="flex-1">
-                    <Text className="text-base font-semibold">{item.name}</Text>
-                    <Text className="text-sm text-gray-600">Qty: {item.quantity}</Text>
-                    <Text className="text-sm text-gray-600">Price: ₹{item.price}</Text>
-                    <Text className="text-sm text-gray-600">Subtotal: ₹{item.sub_total}</Text>
+                    <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base">{item.name}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Qty: {item.quantity}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Price: ₹{item.price}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Subtotal: ₹{item.sub_total}</Text>
                   </View>
                 </View>
               ))}
@@ -171,7 +138,7 @@ const AddCustomerScreen = () => {
               className="mt-4 bg-red-500 py-2 rounded-md items-center"
               onPress={() => setModalVisible(false)}
             >
-              <Text className="text-white font-semibold">Close</Text>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white ">Close</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -189,14 +156,14 @@ const AddCustomerScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <Text className="text-2xl font-semibold text-center mb-4">
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-2xl text-center mb-4">
           {user?.role === 'user' ? 'Orders List' : 'Manage Customer'}
         </Text>
 
-        <View className="flex-row justify-between mb-6">
+        {user?.role !== "user" && <View className="flex-row justify-between mb-6">
           <View className="flex-1 flex-row items-center border border-gray-300 rounded-xl mr-3 px-2">
             <Ionicons name="search" size={20} color="#4B5563" />
-            <TextInput
+            <TextInput style={{ fontFamily: 'Raleway-Regular' }}
               className="flex-1 text-base ml-2"
               placeholder="Search Customer"
               value={searchQuery}
@@ -208,7 +175,7 @@ const AddCustomerScreen = () => {
             className="bg-primary-90 py-2.5 px-3 rounded-lg justify-center">
             <Ionicons name="add" size={20} color="white" />
           </TouchableOpacity>
-        </View>
+        </View>}
 
         {isLoading ? (
           <View className="flex-1 justify-center items-center mt-10">
@@ -216,7 +183,7 @@ const AddCustomerScreen = () => {
           </View>
         ) : filteredOrders.length === 0 ? (
           <View className="flex-1 justify-center items-center mt-10">
-            <Text className="text-gray-500 text-lg">No orders found</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-lg">No orders found</Text>
           </View>
         ) : (
           <FlatList
@@ -229,7 +196,7 @@ const AddCustomerScreen = () => {
 
         {renderModalContent()}
       </View>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 

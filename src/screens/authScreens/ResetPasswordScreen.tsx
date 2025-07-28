@@ -189,8 +189,7 @@ const ResetPasswordScreen = () => {
                   style={{
                     textAlign: 'center',
                     fontSize: 30,
-                    fontWeight: 'bold',
-                    fontFamily: 'Poppins',
+                    fontFamily: 'Raleway-Bold',
                   }}>
                   Reset Password
                 </Text>
@@ -203,8 +202,7 @@ const ResetPasswordScreen = () => {
                   style={{
                     textAlign: 'center',
                     fontSize: 30,
-                    fontWeight: 'bold',
-                    fontFamily: 'Poppins',
+                    fontFamily: 'Raleway-Bold',
                     opacity: 0,
                   }}>
                   Reset Password
@@ -347,7 +345,7 @@ const ResetPasswordScreen = () => {
                         alignItems: 'center',
                       }}>
                       <Text
-                        style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                        style={{ color: '#fff', fontSize: 16, fontFamily: 'Raleway-Regular', }}>
                         {isSubmitting ? 'Resetting...' : 'Reset Password'}
                       </Text>
                     </LinearGradient>
@@ -372,7 +370,7 @@ const ResetPasswordScreen = () => {
                     marginLeft: 4,
                     fontSize: 14,
                     textDecorationLine: 'underline',
-                    fontWeight: 'bold',
+                    fontFamily: 'Raleway-Regular',
                   }}>
                   Login
                 </Text>

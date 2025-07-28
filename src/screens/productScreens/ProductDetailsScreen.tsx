@@ -9,6 +9,7 @@ import {
   ScrollView,
   ToastAndroid,
   StyleSheet,
+  Share,
 } from 'react-native';
 import React, { useEffect, useState } from 'react';
 import IonIcons from 'react-native-vector-icons/Ionicons';
@@ -203,6 +204,30 @@ const ProductDetailsScreen = () => {
     getProductData(productId);
   }, []);
 
+  const shareProduct = async (productName: string, productLink: string, imageUrl: string) => {
+    try {
+      let shareOptions = {
+        title: 'Share Product',
+        message: `Check out this product: ${productName}\nGet it here: ${productLink}`,
+      };
+
+      if (Platform.OS === 'ios') {
+        // iOS can share URL (remote or local image) along with message
+        shareOptions.url = imageUrl;
+      } else {
+        // Android requires local file URI to share images
+        // For remote image URLs on Android, you might need to download the image first 
+        // and get its local path, which requires extra code or libraries.
+        shareOptions.message += `\n${imageUrl}`; // just add image URL in message for Android fallback
+      }
+
+      await Share.share(shareOptions);
+    } catch (error) {
+      alert('Error sharing: ' + error.message);
+    }
+  };
+
+
   // Sample review data
   const reviews = [
     {
@@ -277,7 +302,7 @@ const ProductDetailsScreen = () => {
           quantity: 1,
           price: Math.floor(Number(item.price)),
           name: item.item_name,
-          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          image: item?.images?.length ? item.images[0] : '',
           shop_id: item?.shop?.id ?? item?.store_id
         },
       ],
@@ -304,7 +329,7 @@ const ProductDetailsScreen = () => {
               {!isFavorite ? <Ionicons name='heart-outline' size={22} /> : <Ionicons name='heart' color={"red"} size={22} />}
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => navigation.navigate('NotificationScreen')}
+              onPress={() => shareProduct(itemDetails?.item_name, `https://wisbox.wayone.co.in/${itemDetails?.item_name}`, `${IMAGE_URL}${itemDetails?.images[0]}`)}
               className="bg-gray-100 w-10 h-10 rounded justify-center items-center"
             >
               <Image source={ImagePath.share} className="h-4 w-4" resizeMode="contain" />
@@ -353,12 +378,12 @@ const ProductDetailsScreen = () => {
 
           {/* Info on gradient bottom */}
           <View className="absolute bottom-0 left-4 right-4 mb-4">
-            <Text className="text-white text-xl font-bold" numberOfLines={1}>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-xl" numberOfLines={1}>
               {itemDetails?.item_name || 'Unknown Restaurant'}
             </Text>
             <View className="flex-row items-center gap-2 mb-1 ">
               <Entypo name="shop" size={16} color="white" />
-              <Text className='text-white'>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-white'>
                 {itemDetails?.shop?.restaurant_name || 'The Gourmet Kitchen'}
               </Text>
             </View>
@@ -368,7 +393,7 @@ const ProductDetailsScreen = () => {
                   key={tag.id}
                   className={`rounded-full px-3 py-1 bg-primary-80 `}
                 >
-                  <Text className={`text-xs font-medium text-white`}>{tag.label}</Text>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-xs font-medium text-white`}>{tag.label}</Text>
                 </View>
               ))}
 
@@ -385,11 +410,11 @@ const ProductDetailsScreen = () => {
             {/* Row 1 - Column 1 */}
             <View className="flex-1 mr-2 flex-row items-center gap-2 mb-2">
               <Ionicons name='star' size={18} color={'#eba834'} />
-              <Text className="text- font-semibold text-gray-900">{itemDetails?.average_rating || 0}</Text>
-              <Text className="text-xs text-gray-600">(1.2K reviews)</Text>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text- text-gray-900">{itemDetails?.average_rating || 0}</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs text-gray-600">(1.2K reviews)</Text>
             </View>
             <View className="flex-1 flex-row items-center gap-2 ">
-              <Text className="text-lg font-bold text-green-600">
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg text-green-600">
                 ₹ {itemDetails?.price || 'NA'}/-
               </Text>
             </View>
@@ -399,12 +424,12 @@ const ProductDetailsScreen = () => {
           <View className="flex-row items-center justify-between gap-8 mb-2">
             <View className="flex-1 flex-row items-center gap-2">
               <Image source={ImagePath.chef} className='w-5 h-5' style={{ tintColor: "#000" }} resizeMode='contain' />
-              <Text className="text-sm font-medium text-gray-900">12–15 mins</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-900">12–15 mins</Text>
             </View>
             {/* Row 1 - Column 1 */}
             <View className="flex-1 mr-2 flex-row items-center gap-1 pl-2">
               <MaterialIcons name='directions-run' size={16} />
-              <Text className="text-sm text-gray-900">{itemDetails?.shop?.distance_km || "NA"} Km</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-900">{itemDetails?.shop?.distance_km || "NA"} Km</Text>
             </View>
           </View>
 
@@ -412,7 +437,7 @@ const ProductDetailsScreen = () => {
             {/* Row 2 - Column 1 */}
             <View className="flex-1 flex-row items-center ">
               <View className={`${shopStatus.isOpen ? "bg-green-500" : "bg-red-400"} w-4 h-4 rounded-full`} />
-              <Text className="text-sm text-gray-900 ml-2">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-900 ml-2">
                 {shopStatus.openingTime && shopStatus.closingTime
                   ? shopStatus.isOpen
                     ? `Open till ${shopStatus.closingTime}`
@@ -422,8 +447,8 @@ const ProductDetailsScreen = () => {
             </View>
             <View className="flex-1 flex-row items-center  gap-2">
               <IonIcons name='timer-outline' size={16} />
-              <Text className="text-gray-600">
-                <Text className='text-sm w-32' numberOfLines={1} ellipsizeMode='tail' >
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-sm w-32' numberOfLines={1} ellipsizeMode='tail' >
                   {`${Math.floor((itemDetails?.travel_time_mins || 0) / 60)}h ${(itemDetails?.travel_time_mins || 0) % 60}m`}
                   {/* {itemDetails?.shop?.address + ", " + itemDetails?.shop?.city} */}
                 </Text>
@@ -437,7 +462,7 @@ const ProductDetailsScreen = () => {
         {/* Product Details */}
         <View className="px-4">
           {/* Size Selection */}
-          <Text className="text-gray-700 font-medium mb-2">Variants</Text>
+          {/* <Text style={{fontFamily:'Raleway-Regular'}} className="text-gray-700 font-medium mb-2">Variants</Text>
           <View className="flex-row items-center mb-4">
             {['S', 'M', 'XL'].map(size => (
               <TouchableOpacity
@@ -452,17 +477,17 @@ const ProductDetailsScreen = () => {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </View> */}
 
           {/* Quantity Selector */}
-          <Text className="text-gray-700 font-medium mb-2 hidden">Add Quantity</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-700 font-medium mb-2 hidden">Add Quantity</Text>
           <View className="flex-row items-center justify-between w-2/6 bg-gray-100 mb-4 hidden">
             <TouchableOpacity
               className="bg-gray-200 p-2 rounded"
               onPress={() => handleQuantityChange('decrease')}>
               <IonIcons name="remove" size={20} color="#000" />
             </TouchableOpacity>
-            <Text className="mx-4 text-gray-800 font-semibold">{quantity}</Text>
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="mx-4 text-gray-800">{quantity}</Text>
             <TouchableOpacity
               className="bg-gray-200 p-2 rounded"
               onPress={() => handleQuantityChange('increase')}>
@@ -472,20 +497,20 @@ const ProductDetailsScreen = () => {
 
 
           {/* Detailed Description */}
-          <Text className="text-gray-700 text-lg font-semibold mb-1">Description</Text>
-          <Text className="text-gray-600 mb-1">
+          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-gray-700 text-lg  mb-1">Description</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600 mb-1">
             {showFull ? itemDetails?.description : `${shortDescription}...`}
           </Text>
           <TouchableOpacity className="mb-4" onPress={toggleText}>
-            <Text className="text-gray-800 text-right">
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-800 text-right">
               {showFull ? 'Read less' : 'Read more'}
             </Text>
           </TouchableOpacity>
           {/* Review Section */}
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-lg font-semibold text-gray-800">Reviews</Text>
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg text-gray-800">Reviews</Text>
             <TouchableOpacity onPress={() => setModalVisible(true)}>
-              <Text className="text-gray-800">View All</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-800">View All</Text>
             </TouchableOpacity>
           </View>
 
@@ -509,21 +534,21 @@ const ProductDetailsScreen = () => {
                   />
                   <View className="flex-1">
                     <View className="flex-row justify-between">
-                      <Text className="text-gray-800 font-semibold">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-gray-800">
                         {item?.name}
                       </Text>
                       <View className="flex-row mt-1">
                         {renderStars(item?.rating)}
-                        <Text className="ml-2 text-gray-600">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-2 text-gray-600">
                           {item?.rating}
                         </Text>
                       </View>
                     </View>
-                    <Text className="text-gray-500 text-sm">{item?.time}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-sm">{item?.time}</Text>
                   </View>
                 </View>
 
-                <Text className="text-gray-600 text-sm">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600 text-sm">
                   {isFullShown
                     ? item?.description
                     : `${item?.description?.slice(0, 120)}...`}
@@ -531,7 +556,7 @@ const ProductDetailsScreen = () => {
 
                 {/* Optional Read More/Less toggle text */}
                 {item?.description?.length > 120 && (
-                  <Text className="text-primary mt-1 text-sm">
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-primary mt-1 text-sm">
                     {isFullShown ? 'Read less' : 'Read more'}
                   </Text>
                 )}
@@ -544,7 +569,7 @@ const ProductDetailsScreen = () => {
         <TouchableOpacity
           className="bg-primary-100 py-4 px-6 rounded-xl "
           onPress={() => handlePlaceOrder(itemDetails)}>
-          <Text className="text-white text-center font-semibold">
+          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-center">
             Add To Plate 🍽️
           </Text>
         </TouchableOpacity>
@@ -561,7 +586,7 @@ const ProductDetailsScreen = () => {
             <View className="items-center mb-4">
               <View className="w-12 h-1 bg-gray-300 rounded-full" />
             </View>
-            <Text className="text-xl font-bold text-gray-800 mb-4">
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl text-gray-800 mb-4">
               Customer Reviews
             </Text>
             <FlatList
@@ -576,22 +601,22 @@ const ProductDetailsScreen = () => {
                     /> */}
                     <View className="flex-1">
                       <View className="flex-row justify-between">
-                        <Text className="text-gray-800 font-semibold">
+                        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-gray-800 ">
                           {item.name}
                         </Text>
-                        <Text className="text-gray-500 text-sm">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-sm">
                           {item.time}
                         </Text>
                       </View>
                       <View className="flex-row mt-1">
                         {renderStars(item.rating)}
-                        <Text className="ml-2 text-gray-600">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-2 text-gray-600">
                           {item.rating}
                         </Text>
                       </View>
                     </View>
                   </View>
-                  <Text className="text-gray-600">{item.description}</Text>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600">{item.description}</Text>
                 </View>
               )}
             />
@@ -599,7 +624,7 @@ const ProductDetailsScreen = () => {
               <TouchableOpacity
                 className="bg-green-500 py-3 px-6 rounded-full flex-1 mr-2"
                 onPress={() => setModalVisible(false)}>
-                <Text className="text-white text-center font-semibold">
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-center">
                   Close
                 </Text>
               </TouchableOpacity>

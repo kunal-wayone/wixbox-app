@@ -95,7 +95,9 @@ const AdsDetailScreen = () => {
   if (!ads) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <Text style={{ color: '#888' }}>Ads not found</Text>
+        <Text style={{
+          color: '#888', fontFamily: 'Raleway-Regular',
+        }}>Ads not found</Text>
       </View>
     );
   }
@@ -108,7 +110,10 @@ const AdsDetailScreen = () => {
           <TouchableOpacity style={{ position: 'absolute', left: 10 }} onPress={() => navigation.goBack()}>
             <Icon name="arrow-back" size={24} color="#333" />
           </TouchableOpacity>
-          <Text style={{ fontSize: 18, fontWeight: '600', textAlign: 'center', width: '100%' }}>Ads Details</Text>
+          <Text style={{
+            fontFamily: 'Raleway-Regular',
+            fontSize: 18, fontWeight: '600', textAlign: 'center', width: '100%'
+          }}>Ads Details</Text>
         </View>
 
         {/* Image Slider */}
@@ -144,7 +149,7 @@ const AdsDetailScreen = () => {
             ))}
           </View>
           {ads.promotion_tag && (
-            <Text className='absolute bottom-4 left-2 bg-primary-90 py-2.5 px-4 flex items-center' style={{ marginTop: 8, color: '#fff', borderRadius: 8, alignSelf: 'flex-start' }}>
+            <Text className='absolute bottom-4 left-2 bg-primary-90 py-2.5 px-4 flex items-center' style={{ fontFamily: 'Raleway-Regular', marginTop: 8, color: '#fff', borderRadius: 8, alignSelf: 'flex-start' }}>
               {ads.promotion_tag}
             </Text>
           )}
@@ -154,28 +159,28 @@ const AdsDetailScreen = () => {
         {/* Ad Content */}
         <View style={{ padding: 16 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Text style={{ fontSize: 20, fontWeight: '700', color: '#333' }}>{ads.product_name}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 20, fontWeight: '700', color: '#333' }}>{ads.product_name}</Text>
           </View>
 
 
           <View className={`flex-row items-center justify-between`} style={{ flexDirection: 'row', marginTop: 12, gap: 20 }}>
-            <Text style={{ color: '#666', fontSize: 13 }}>{formatDate(ads.created_at)}</Text>
-            <Text style={{ fontSize: 14 }} className={`${ads.status === '1' ? 'text-green-600' : 'text-red-500'}`}>•{ads.status === '1' ? 'Active' : 'Inactive'}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular', color: '#666', fontSize: 13 }}>{formatDate(ads.created_at)}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14 }} className={`${ads.status === '1' ? 'text-green-600' : 'text-red-500'}`}>•{ads.status === '1' ? 'Active' : 'Inactive'}</Text>
           </View>
 
           <View className='flex-row items-center gap-1 mt-2 border-b border-gray-300 pb-2'>
-            <Text className='font-semibold text-lg'>₹{ads.discounted_price}/-</Text>
-            <Text className='text-xs line-through '> ₹{ads.original_price}/-</Text>
-            <Text style={{ fontSize: 14, }} className='text-orange-500 ml-2'> • {ads.offer_tag}</Text>
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className=' text-lg'>₹{ads.discounted_price}/-</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-xs line-through '> ₹{ads.original_price}/-</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} style={{ fontSize: 14, }} className='text-orange-500 ml-2'> • {ads.offer_tag}</Text>
           </View>
 
-          <Text style={{ marginTop: 6, }} className='font-semibold'>
+          <Text style={{ marginTop: 6, fontFamily: 'Raleway-SemiBold', }}>
             Offer Duration:
           </Text>
-          <Text className='text-grey-600 mt-1'>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-grey-600 mt-1'>
             {formatDate(ads.offer_starts_at)} - {formatDate(ads.offer_ends_at)}
           </Text>
-          <Text style={{ marginTop: 12, color: '#333', fontSize: 15 }}>{ads.caption || 'No description provided.'}</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular', marginTop: 12, color: '#333', fontSize: 15 }}>{ads.caption || 'No description provided.'}</Text>
         </View>
       </ScrollView >
     </SafeAreaView>

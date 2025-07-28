@@ -65,7 +65,7 @@ const MySavedScreen = () => {
   const navigation = useNavigation<any>()
   const dispatch = useDispatch<any>();
   const { shop_ids, menu_items, status, error } = useSelector((state: any) => state.wishlist as WishlistState);
-  console.log(menu_items, shop_ids)
+
   // Fetch wishlist on component mount
   useEffect(() => {
     if (isFocused) {
@@ -104,7 +104,8 @@ const MySavedScreen = () => {
       price: item?.price,
       quantity: 1,
       image: item?.images[0] ? IMAGE_URL + item.images[0] : undefined,
-      shop_id: item?.shop?.id ?? item?.store_id
+      shop_id: item?.shop?.id ?? item?.store_id,
+      tax: item?.tax || 0
     };
     dispatch(addToCart(cartItem));
     ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
@@ -120,7 +121,7 @@ const MySavedScreen = () => {
           quantity: 1,
           price: Math.floor(Number(item.price)),
           name: item.item_name,
-          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          image: item?.images?.length ? item.images[0] : '',
           shop_id: item?.shop?.id ?? item?.store_id
         },
       ],
@@ -143,16 +144,16 @@ const MySavedScreen = () => {
           resizeMode="stretch"
         />
         <View className="h-full flex-col items-start justify-start overflow-hidden">
-          <Text numberOfLines={1} className='mb-1' style={{ fontSize: 16, fontWeight: 'bold' }}>{shop.restaurant_name}</Text>
-          <Text numberOfLines={1} className="mb-1">{shop.address}</Text>
+          <Text numberOfLines={1} className='mb-1' style={{ fontSize: 16, fontFamily: 'Raleway-Regular', }}>{shop.restaurant_name}</Text>
+          <Text numberOfLines={1} style={{ fontFamily: 'Raleway-Regular', }} className="mb-1">{shop.address}</Text>
           <View className="flex-row items-center gap-4 ">
             <View style={{ flexDirection: 'row', alignItems: 'center' }} className='overflow-hidden'>
               <Ionicons name="fast-food-outline" size={16} color="gray" />
-              <Text numberOfLines={1} style={{ marginLeft: 5 }} className='overflow-hidden'>{`Dine Service: ${shop.dine_in_service ? "Available" : "Not Avalable"}`}</Text>
+              <Text numberOfLines={1} style={{ marginLeft: 5, fontFamily: 'Raleway-Regular', }} className='overflow-hidden'>{`Dine Service: ${shop.dine_in_service ? "Available" : "Not Avalable"}`}</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }} className='hidden'>
               <FontAwesome name="star" size={16} color="gold" />
-              <Text numberOfLines={1} style={{ marginLeft: 5 }}>{shop.average_rating || '0'}</Text>
+              <Text numberOfLines={1} style={{ marginLeft: 5, fontFamily: 'Raleway-Regular', }}>{shop.average_rating || '0'}</Text>
             </View>
           </View>
         </View>
@@ -180,7 +181,7 @@ const MySavedScreen = () => {
           resizeMode="stretch"
         />
         <View className="h-full flex-col items-start justify-start overflow-hidden">
-          <Text numberOfLines={1} className='mb-1' style={{ fontSize: 16, fontWeight: 'bold' }}>{item?.item_name}</Text>
+          <Text numberOfLines={1} className='mb-1' style={{ fontFamily: 'Raleway-Regular', fontSize: 16, fontWeight: 'bold' }}>{item?.item_name}</Text>
           {/* <Text numberOfLines={1} className="mb-1">{item}</Text> */}
           <View className="flex-row items-center gap-4 ">
             <View style={{ flexDirection: 'row', alignItems: 'center' }} className='overflow-hidden'>
@@ -189,7 +190,7 @@ const MySavedScreen = () => {
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }} className='hidden'>
               <FontAwesome name="star" size={16} color="gold" />
-              <Text numberOfLines={1} style={{ marginLeft: 5 }}>{item?.average_rating || '0'}</Text>
+              <Text numberOfLines={1} style={{ fontFamily: 'Raleway-Regular', marginLeft: 5 }}>{item?.average_rating || '0'}</Text>
             </View>
           </View>
         </View>
@@ -220,7 +221,7 @@ const MySavedScreen = () => {
         }
         dietaryInfo={item?.dietary_info || []}
         rating={item?.average_rating || 0}
-        isVegetarian={item?.is_vegetarian === 0 ? true : false || false}
+        isVegetarian={item?.isVegetarian === 0 ? true : false || false}
         isAvailable={item?.is_available !== false}
         onAddToCart={() => handleAddToCart}
         handlePlaceOrder={handlePlaceOrder}
@@ -266,7 +267,8 @@ const MySavedScreen = () => {
             onPress={() => setSelectedTab('pinned')}
           >
             <Text
-              className={`text-center font-bold ${selectedTab === 'pinned' ? 'text-white' : 'text-gray-800'
+              style={{ fontFamily: 'Raleway-Bold' }}
+              className={`text-center ${selectedTab === 'pinned' ? 'text-white' : 'text-gray-800'
                 }`}
             >
               Pinned Places
@@ -278,7 +280,8 @@ const MySavedScreen = () => {
             onPress={() => setSelectedTab('saved')}
           >
             <Text
-              className={`text-center font-bold ${selectedTab === 'saved' ? 'text-white' : 'text-gray-800'
+              style={{ fontFamily: 'Raleway-Bold' }}
+              className={`text-center ${selectedTab === 'saved' ? 'text-white' : 'text-gray-800'
                 }`}
             >
               Saved Products
@@ -287,13 +290,13 @@ const MySavedScreen = () => {
         </View>
 
         {/* Section Title */}
-        <Text className="text-lg font-bold px-6">
+        <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg px-6">
           {selectedTab === 'pinned' ? 'Pinned spots to visit' : 'Saved products'}
         </Text>
         {/* Loading Indicator */}
         {status === 'loading' && (
           <View className="flex-1 justify-center items-center">
-            <Text>Loading...</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }}>Loading...</Text>
           </View>
         )}
         {/* Card List */}
@@ -304,13 +307,13 @@ const MySavedScreen = () => {
               return shopId ? renderShopCard(shopId, true) : null;
             })
           ) : (
-            <Text className="text-center text-gray-500">No pinned places yet.</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center text-gray-500">No pinned places yet.</Text>
           )
         ) : (
           menu_items.length > 0 ? (
             menu_items.map((item: any) => renderItem({ item }))
           ) : (
-            <Text className="text-center text-gray-500">No saved products yet.</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center text-gray-500">No saved products yet.</Text>
           )
         )}
 

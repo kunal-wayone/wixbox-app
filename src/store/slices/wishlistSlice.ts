@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { Fetch, Post, Delete } from '../../utils/apiUtils';
 
+// Interfaces
 interface Shop {
   id: number;
   restaurant_name: string;
@@ -38,6 +39,7 @@ interface WishlistState {
   error: string | null;
 }
 
+// Initial State
 const initialState: WishlistState = {
   shop_ids: [],
   menu_items: [],
@@ -45,20 +47,19 @@ const initialState: WishlistState = {
   error: null,
 };
 
-// Fetch wishlist (unified API response)
+// Async Thunks
 export const fetchWishlist = createAsyncThunk(
   'wishlist/fetchWishlist',
   async (_, { rejectWithValue }) => {
     try {
       const response: any = await Fetch('/user/wishlist', undefined, 5000);
-      return response.data.wishlist; // array of { id, type, data }
+      return response.data.wishlist;
     } catch (error) {
       return rejectWithValue('Failed to fetch wishlist');
     }
   }
 );
 
-// Add item
 export const addWishlistItem = createAsyncThunk(
   'wishlist/addWishlistItem',
   async (body: { menu_item_id: number }, { rejectWithValue }) => {
@@ -71,7 +72,6 @@ export const addWishlistItem = createAsyncThunk(
   }
 );
 
-// Remove item
 export const removeWishlistItem = createAsyncThunk(
   'wishlist/removeWishlistItem',
   async (body: { menu_item_id: number }, { rejectWithValue }) => {
@@ -84,7 +84,6 @@ export const removeWishlistItem = createAsyncThunk(
   }
 );
 
-// Add shop
 export const addWishlistShop = createAsyncThunk(
   'wishlist/addWishlistShop',
   async (body: { shop_id: number }, { rejectWithValue }) => {
@@ -97,7 +96,6 @@ export const addWishlistShop = createAsyncThunk(
   }
 );
 
-// Remove shop
 export const removeWishlistShop = createAsyncThunk(
   'wishlist/removeWishlistShop',
   async (body: { shop_id: number }, { rejectWithValue }) => {
@@ -122,7 +120,6 @@ const wishlistSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-
       // Fetch Wishlist
       .addCase(fetchWishlist.pending, (state) => {
         state.status = 'loading';
@@ -135,13 +132,13 @@ const wishlistSlice = createSlice({
         const items: MenuItem[] = [];
 
         action.payload.forEach((entry) => {
-          if (entry.type === 'Shop' && entry.id && entry.data) {
-            shops.push(entry?.data);
+          if (entry.type === 'Shop' && entry.data?.id) {
+            shops.push(entry.data);
           } else if (entry.type === 'MenuItem' && entry.data) {
             items.push(entry.data);
           }
         });
-        console.log(shops,items,'dfd')
+
         state.shop_ids = shops;
         state.menu_items = items;
       })
@@ -150,29 +147,54 @@ const wishlistSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Add item
+      // Add Wishlist Item
       .addCase(addWishlistItem.fulfilled, (state, action: PayloadAction<any>) => {
-        const newItem = action.payload.menu_items?.[0];
-        if (newItem) {
-          const exists = state.menu_items.some(item => item.id === newItem.id);
-          if (!exists) state.menu_items.push(newItem);
+        const newItem: MenuItem = action.payload?.menu_items?.[0] || action.payload;
+
+        if (newItem && newItem.id) {
+          const itemExists = state.menu_items.some(item => item.id === newItem.id);
+
+          if (!itemExists) {
+            state.menu_items.push(newItem);
+          }
+
+          const shopId = newItem.shop?.id;
+          if (shopId && !state.shop_ids.includes(shopId)) {
+            state.shop_ids.push(shopId);
+          }
         }
       })
 
-      // Remove item
+      // Remove Wishlist Item
       .addCase(removeWishlistItem.fulfilled, (state, action: PayloadAction<number>) => {
         state.menu_items = state.menu_items.filter(item => item.id !== action.payload);
       })
 
-      // Add shop
+      // Add Wishlist Shop
       .addCase(addWishlistShop.fulfilled, (state, action: PayloadAction<any>) => {
-        const newShopId = action.payload.shop_ids?.[0];
-        if (newShopId && !state.shop_ids.includes(newShopId)) {
-          state.shop_ids.push(newShopId);
+        const shopData = action.payload?.shop || action.payload?.shops?.[0];
+        const shopId = shopData?.id || action.payload?.shop_id || action.payload?.shop_ids?.[0];
+
+        if (shopId && !state.shop_ids.includes(shopId)) {
+          state.shop_ids.push(shopId);
         }
+
+        const menuItems = action.payload?.menu_items || [];
+
+        menuItems.forEach((item: MenuItem) => {
+          const exists = state.menu_items.some(existing => existing.id === item.id);
+          if (!exists) {
+            state.menu_items.push(item);
+          }
+
+          const itemShopId = item?.shop?.id;
+          if (itemShopId && !state.shop_ids.includes(itemShopId)) {
+            state.shop_ids.push(itemShopId);
+          }
+        });
       })
 
-      // Remove shop
+      // Remove Wishlist Shop
       .addCase(removeWishlistShop.fulfilled, (state, action: PayloadAction<number>) => {
         state.shop_ids = state.shop_ids.filter(id => id !== action.payload);
         state.menu_items = state.menu_items.filter(item => item.shop.id !== action.payload);

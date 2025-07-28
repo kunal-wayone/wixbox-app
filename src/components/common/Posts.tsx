@@ -121,7 +121,7 @@ const Post = () => {
           <View className="absolute inset-0 bg-black/50 rounded-2xl" />
           <View className="flex-row justify-between items-center z-10">
             <View className={`${item?.status?.toLocaleUpperCase() === "DRAFT" ? "bg-red-500" : "bg-green-600"} px-3 py-1 rounded-lg`}>
-              <Text className={`text-xs font-semibold text-white`}>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`text-xs text-white`}>
                 {item?.status?.toLocaleUpperCase() || "Tag"}
               </Text>
             </View>
@@ -130,13 +130,13 @@ const Post = () => {
             </TouchableOpacity>
           </View>
           <View className="z-10">
-            <Text className="text-white font-bold text-lg mb-1">{item.title}</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-lg mb-1">{item.title}</Text>
             <View className="flex-row justify-between items-center">
               <View className="flex-row gap-4 hidden">
-                <Text className="text-white text-xs">{item.views || 0} Views</Text>
-                <Text className="text-white text-xs">{item.comments || 0} Comments</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-xs">{item.views || 0} Views</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-xs">{item.comments || 0} Comments</Text>
               </View>
-              <Text className="text-white text-xs font-bold opacity-80">
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-xs opacity-80">
                 {formatDate(item.created_at)}
               </Text>
             </View>
@@ -153,13 +153,13 @@ const Post = () => {
             }}
             className="px-3 py-2"
           >
-            <Text className="text-sm"><Icon name="edit" color="#000" /> Edit</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm"><Icon name="edit" color="#000" /> Edit</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setConfirmDeleteVisible(true)}
             className="px-3 py-2"
           >
-            <Text className="text-sm text-red-600"><Icon name="trash" color="red" /> Delete</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-red-600"><Icon name="trash" color="red" /> Delete</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -173,11 +173,11 @@ const Post = () => {
       >
         <View className="flex-1 justify-center items-center bg-black/50">
           <View className="bg-white p-6 rounded-xl w-[80%]">
-            <Text className="text-lg font-bold mb-4">Confirm Delete</Text>
-            <Text className="mb-6">Are you sure you want to delete this post?</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg mb-4">Confirm Delete</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="mb-6">Are you sure you want to delete this post?</Text>
             <View className="flex-row justify-end gap-4">
               <TouchableOpacity onPress={() => setConfirmDeleteVisible(false)}>
-                <Text className="text-base">Cancel</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base">Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={deletePost}
@@ -186,7 +186,7 @@ const Post = () => {
                 {deletingPostId ? (
                   <ActivityIndicator size="small" color="#FF0000" />
                 ) : (
-                  <Text className="text-base text-red-600 font-bold">Delete</Text>
+                  <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-base text-red-600">Delete</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -210,7 +210,7 @@ const Post = () => {
           onPress={loadMorePosts}
           className="bg-primary-100 py-3 px-4 rounded-lg my-4 mx-4"
         >
-          <Text className="text-white text-center text-md font-medium">Load More</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center text-md font-medium">Load More</Text>
         </TouchableOpacity>
       );
     }
@@ -223,7 +223,7 @@ const Post = () => {
         onPress={() => navigation.navigate("PostScreen")}
         className="bg-primary-100 py-3 rounded-xl my-4 items-center"
       >
-        <Text className="text-white font-semibold text-base">Add Post</Text>
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-base">Add Post</Text>
       </TouchableOpacity>
 
       {isLoading && posts.length === 0 ? (
@@ -232,7 +232,7 @@ const Post = () => {
         </View>
       ) : posts.length === 0 ? (
         <View className="flex-1 justify-center items-center">
-          <Text className="text-gray-500 text-lg">No posts found</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-lg">No posts found</Text>
         </View>
       ) : (
         <FlatList

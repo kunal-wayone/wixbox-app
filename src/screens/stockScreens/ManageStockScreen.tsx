@@ -55,10 +55,11 @@ const CategorySchema = Yup.object().shape({
 });
 
 // API functions
-const fetchCategories = async (setLoading: (loading: boolean) => void): Promise<Category[]> => {
+const fetchInventory = async (setLoading: (loading: boolean) => void): Promise<Category[]> => {
   try {
     setLoading(true);
-    const response: any = await Fetch('/user/menu-item/inventory', {}, 5000);
+    const response: any = await Fetch('/user/inventory-status-count', {}, 5000);
+    console.log(response)
     if (!response.success) throw new Error('Failed to fetch categories');
     return response.data;
   } catch (error: any) {
@@ -69,6 +70,26 @@ const fetchCategories = async (setLoading: (loading: boolean) => void): Promise<
   }
 };
 
+
+const fetchCategories = async (
+  setLoading: (loading: boolean) => void,
+): Promise<Product[]> => {
+  try {
+    setLoading(true);
+    const response: any = await Fetch(`/user/food/category`, {}, 5000);
+    console.log(response)
+    if (!response.success) throw new Error('Failed to fetch categories');
+    return response.data;
+  } catch (error: any) {
+    ToastAndroid.show(error?.message || 'Failed to load categories.', ToastAndroid.SHORT);
+    return [];
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
 const fetchProductsByCategory = async (
   categoryId: string,
   setLoading: (loading: boolean) => void,
@@ -76,6 +97,7 @@ const fetchProductsByCategory = async (
   try {
     setLoading(true);
     const response: any = await Fetch(`/user/menu-items`, { category_id: categoryId }, 5000);
+    console.log(response)
     if (!response.success) throw new Error('Failed to fetch products');
     return response.data.menu_items;
   } catch (error: any) {
@@ -128,23 +150,27 @@ const deleteProduct = async (
 const ManageStockScreen = () => {
   const navigation = useNavigation<any>();
   const isFocused = useIsFocused();
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [editingCategory, setEditingCategory] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [productLoading, setProductLoading] = useState<{ [key: string]: boolean }>({});
   const [confirmModalVisible, setConfirmModalVisible] = useState<boolean>(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
+  const [Inventory, setInventory] = useState<any | null>(null);
 
 
   // Load categories
   const loadCategories = useCallback(async () => {
     const categoryData = await fetchCategories(setIsLoading);
+    const inv = await fetchInventory(setIsLoading);
+    console.log(inv)
+    setInventory(inv)
     setCategories(categoryData);
-    if (categoryData.length > 0 && !selectedCategory) {
+    if (categoryData?.length > 0 && !selectedCategory) {
       setSelectedCategory(categoryData[0]);
     }
   }, [selectedCategory]);
@@ -166,7 +192,7 @@ const ManageStockScreen = () => {
 
   useEffect(() => {
     loadProducts();
-  }, [selectedCategory, loadProducts]);
+  }, [selectedCategory, isFocused, loadProducts]);
 
 
   const handleToggleStatus = useCallback(
@@ -247,7 +273,7 @@ const ManageStockScreen = () => {
           className="h-20 w-20 rounded-xl"
         />
         <View className="absolute inset-0 bg-black/50 rounded-xl" />
-        <Text numberOfLines={1} ellipsizeMode='tail' className="absolute bottom-2 left-2 right-2 text-white text-sm font-semibold text-center">
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} numberOfLines={1} ellipsizeMode='tail' className="absolute bottom-2 left-2 right-2 text-white text-sm  text-center">
           {item.name}
         </Text>
       </TouchableOpacity>
@@ -300,13 +326,13 @@ const ManageStockScreen = () => {
           <View className="flex-1">
             <View className="flex-row justify-between">
               <View>
-                <Text numberOfLines={1} ellipsizeMode='tail' className="text-base font-semibold text-gray-800 flex-1 pr-2">
-                  {item.item_name}
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} numberOfLines={1} ellipsizeMode='tail' className="text-base  text-gray-800 flex-1 pr-2">
+                  {item?.item_name}
                 </Text>
-                <Text numberOfLines={1} ellipsizeMode='tail' className="text-sm ">{item.category.name}</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} numberOfLines={1} ellipsizeMode='tail' className="text-sm ">{item?.category?.name}</Text>
               </View>
               <View>
-                <Text className="text-sm font-bold text-green-600">${item.price}</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-sm  text-green-600">${item?.price}</Text>
 
               </View>
             </View>
@@ -320,7 +346,7 @@ const ManageStockScreen = () => {
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Icon
                     key={i}
-                    name={i < Math.floor(item.average_rating || 0) ? 'star' : 'star-outline'}
+                    name={i < Math.floor(item?.average_rating || 0) ? 'star' : 'star-outline'}
                     size={14}
                     color="#facc15"
                   />
@@ -328,7 +354,7 @@ const ManageStockScreen = () => {
               </View>
               <View className="flex-row items-center mt-1">
                 <Icon name="production-quantity-limits" size={16} color={stockColor} />
-                <Text className="text-sm text-gray-600 ml-1">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600 ml-1">
                   {stockQty} {item.unit}{' '}
                   {isOutOfStock ? '(Out of stock)' : isLowStock ? '(Low)' : ''}
                 </Text>
@@ -343,33 +369,33 @@ const ManageStockScreen = () => {
           {/* 🔁 Status */}
           <View className="items-center flex-row gap-2">
             <Switch
-              value={item.status === 1}
-              onValueChange={() => handleToggleStatus(item.id, item.status === 1)}
+              value={item?.status === 1}
+              onValueChange={() => handleToggleStatus(item?.id, item?.status === 1)}
               disabled={productLoading[item.id]}
               trackColor={{ false: "#ccc", true: "#22c55e" }}
-              thumbColor={item.status === 1 ? "#10b981" : "#f3f4f6"}
+              thumbColor={item?.status === 1 ? "#10b981" : "#f3f4f6"}
               size="small"
             />
-            <Text>{item.status === 1 ? "Live" : "Offline"}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} >{item?.status === 1 ? "Live" : "Offline"}</Text>
 
-            <View className={`rounded-full w-3 h-3 ${item.status === 1 ? "bg-green-600" : "bg-red-600"}`} />
+            <View className={`rounded-full w-3 h-3 ${item?.status === 1 ? "bg-green-600" : "bg-red-600"}`} />
           </View>
           <View className='flex-row items-center gap-2'>
 
             {/* ✏️ Edit */}
             <TouchableOpacity
-              onPress={() => navigation.navigate('AddProductScreen', { productId: item.id })}
+              onPress={() => navigation.navigate('AddProductScreen', { productId: item?.id })}
               className="flex-row items-center  px-3 py-1.5"
             >
               <Icon name="edit" size={14} color="black" />
-              <Text className="text-sm text-black ml-1">Edit</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-black ml-1">Edit</Text>
             </TouchableOpacity>
 
             {/* 🗑️ Delete */}
             <TouchableOpacity
-              onPress={() => handleDeleteProduct(item.id, item.item_name)}
+              onPress={() => handleDeleteProduct(item?.id, item?.item_name)}
               className="px-3 "
-              disabled={productLoading[item.id]}
+              disabled={productLoading[item?.id]}
             >
               <Icon name="delete" size={18} color="#dc2626" />
             </TouchableOpacity>
@@ -394,8 +420,8 @@ const ManageStockScreen = () => {
             <Icon name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
           <View className="flex-1 items-center">
-            <Text className="text-2xl font-bold">Your Inventory 📦</Text>
-            <Text className="text-gray-500">Update in real-time, stay stocked</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-2xl ">Your Inventory 📦</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500">Update in real-time, stay stocked</Text>
           </View>
         </View>
 
@@ -409,10 +435,10 @@ const ManageStockScreen = () => {
         >
           <View className="flex-1 justify-center items-center bg-black/50">
             <View className="bg-white p-6 rounded-xl w-11/12">
-              <Text className="text-xl font-bold mb-2">
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl mb-2">
                 Delete {confirmAction?.type === 'category' ? 'Category' : 'Product'}
               </Text>
-              <Text className="text-base mb-4">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-4">
                 Are you sure you want to delete "{confirmAction?.name}"?
               </Text>
               <View className="flex-row justify-between">
@@ -421,14 +447,14 @@ const ManageStockScreen = () => {
                   className="flex-1 bg-gray-200 p-3 rounded-lg mr-2"
                   disabled={isLoading}
                 >
-                  <Text className="text-center font-medium">Cancel</Text>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center font-medium">Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleConfirmDelete}
                   className={`flex-1 bg-red-500 p-3 rounded-lg ${isLoading ? 'opacity-50' : ''}`}
                   disabled={isLoading}
                 >
-                  <Text className="text-white text-center font-medium">Delete</Text>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center font-medium">Delete</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -441,11 +467,10 @@ const ManageStockScreen = () => {
           <TouchableOpacity
             className="w-[48%] bg-yellow-100 rounded-xl p-4 items-center shadow-md"
             onPress={() => {
-              const lowStockItems = products.filter(item => item.stock_quantity < 5);
-              if (lowStockItems.length) {
+              if (Inventory?.low_stock > 0) {
                 navigation.navigate('FilteredProductListScreen', {
                   title: 'Low Stock',
-                  products: lowStockItems,
+                  products: Inventory?.low_stock,
                 });
               } else {
                 ToastAndroid.show('No low stock items found.', ToastAndroid.SHORT);
@@ -453,19 +478,18 @@ const ManageStockScreen = () => {
             }}
           >
             <Feather name="alert-triangle" size={30} color="orange" />
-            <Text className="text-xl font-bold text-gray-800 mt-2">
-              {products.filter(item => item.stock_quantity < 5).length}
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl text-gray-800 mt-2">
+              {Inventory?.low_stock || 0}
             </Text>
-            <Text className="text-sm text-gray-600">Low Stock</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Low Stock</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className="w-[48%] bg-red-100 rounded-xl p-4 items-center shadow-md"
             onPress={() => {
-              const outOfStockItems = products.filter(item => item.stock_quantity === 0);
-              if (outOfStockItems.length) {
+              if (Inventory?.out_of_stock) {
                 navigation.navigate('FilteredProductListScreen', {
                   title: 'Out of Stock',
-                  products: outOfStockItems,
+                  products: Inventory?.out_of_stock,
                 });
               } else {
                 ToastAndroid.show('No out of stock items found.', ToastAndroid.SHORT);
@@ -473,10 +497,10 @@ const ManageStockScreen = () => {
             }}
           >
             <Feather name="x-circle" size={30} color="red" />
-            <Text className="text-xl font-bold text-gray-800 mt-2">
-              {products.filter(item => item.stock_quantity === 0).length}
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl text-gray-800 mt-2">
+              {Inventory?.out_of_stock || 0}
             </Text>
-            <Text className="text-sm text-gray-600">Out of Stock</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Out of Stock</Text>
           </TouchableOpacity>
         </View>
 
@@ -484,12 +508,12 @@ const ManageStockScreen = () => {
         {/* Categories Section */}
         <View className="px-4">
           <View className="flex-row justify-between items-center ">
-            <Text className="text-xl font-bold">Categories</Text>
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl ">Categories</Text>
           </View>
-          {isLoading && !categories.length ? (
-            <Text className="text-gray-500 text-center">Loading categories...</Text>
-          ) : categories.length === 0 ? (
-            <Text className="text-gray-500 text-center">No categories added yet</Text>
+          {isLoading && !categories?.length ? (
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-center">Loading categories...</Text>
+          ) : categories?.length === 0 ? (
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-center">No categories added yet</Text>
           ) : (
             <FlatList
               data={categories}
@@ -506,7 +530,7 @@ const ManageStockScreen = () => {
         {/* Product List */}
         <View className="flex-1">
           <View className="flex-row justify-between items-center mb-3 px-4">
-            <Text className="text-xl font-bold">
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl">
               Products in {selectedCategory?.name || 'Selected Category'}
             </Text>
             <TouchableOpacity
@@ -518,7 +542,7 @@ const ManageStockScreen = () => {
               <Icon name="add" size={20} color="white" />
             </TouchableOpacity>
           </View>
-          {products.length > 0 ? (
+          {products?.length > 0 ? (
             <FlatList
               data={products}
               renderItem={renderProductItem}
@@ -526,7 +550,7 @@ const ManageStockScreen = () => {
               showsVerticalScrollIndicator={false}
             />
           ) : (
-            <Text className="text-gray-500 m-4 text-center">No products in this category</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 m-4 text-center">No products in this category</Text>
           )}
         </View>
       </View>

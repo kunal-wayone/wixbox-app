@@ -20,139 +20,151 @@ import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ImagePath } from '../../constants/ImagePath';
 import { googleAuth, login } from '../../store/slices/authSlice';
 import { fetchUser } from '../../store/slices/userSlice';
 import { getFcmToken } from '../../utils/notification/firebase';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-const { width, height } = Dimensions.get('screen');
+const { width } = Dimensions.get('screen');
 
 const validationSchema = Yup.object().shape({
   email: Yup.string().email('Invalid email').required('Email is required'),
   password: Yup.string().min(8, 'Min 8 characters').required('Password is required'),
 });
 
+type RootStackParamList = {
+  HomeScreen: { screen: string } | undefined;
+  CreateShopScreen: undefined;
+  ForgetPasswordScreen: undefined;
+  AccountTypeScreen: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const LoginScreen = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const dispatch = useDispatch<any>();
 
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [apiErrors, setApiErrors] = useState({ email: '', password: '' });
 
   const navigateAfterLogin = (user: any) => {
-    const route = user.role === 'user'
-      ? { name: 'HomeScreen', params: { screen: 'Market' } }
-      : { name: user.shopcreated ? 'HomeScreen' : 'CreateShopScreen' };
+    if (!user) {
+      ToastAndroid.show('User data missing', ToastAndroid.LONG);
+      return;
+    }
+    const route: any =
+      user.role === 'user'
+        ? { name: 'HomeScreen', params: { screen: 'Market' } }
+        : { name: user.shopcreated ? 'HomeScreen' : 'CreateShopScreen' };
 
-    navigation.reset({ index: 0, routes: [route as any] });
+    navigation.reset({ index: 0, routes: [route] });
   };
 
-  const handleLogin = async (values: { email: string; password: string }, actions: any) => {
-    setIsSubmitting(true);
-    setApiErrors({ email: '', password: '' });
-
+  const handleLogin = async (
+    values: { email: string; password: string },
+    { setSubmitting, resetForm, setErrors }: any
+  ) => {
+    setIsLoading(true);
+    setSubmitting(true);
     try {
-      const payload = { ...values, fcm_token: await getFcmToken() };
+      const fcmToken = await getFcmToken();
+      const payload = { ...values, fcm_token: fcmToken };
       const response = await dispatch(login(payload)).unwrap();
+      console.log(response)
+      if (!response.success) {
+        throw new Error(response.message || 'Login failed');
+      }
 
-      if (!response.success) throw new Error(response.message || 'Login failed');
       await dispatch(fetchUser()).unwrap();
-
-      actions.resetForm();
+      resetForm();
       ToastAndroid.show(response.message || 'Login Successful!', ToastAndroid.LONG);
 
-      if (response.user) navigateAfterLogin(response.user);
-      else throw new Error('User data missing');
-
+      navigateAfterLogin(response.user);
     } catch (error: any) {
       console.error('Login error:', error);
-      const err = error?.errors || {};
-      setApiErrors({
-        email: err.email?.[0] || '',
-        password: err.password?.[0] || '',
-      });
-
-      ToastAndroid.show(
-        error.message || 'Login failed. Check credentials.',
-        ToastAndroid.LONG
-      );
+      const errorMessage = error?.message || 'Login failed. Check credentials.';
+      if (error.errors) {
+        setErrors(error.errors);
+        setApiErrors({
+          email: error.errors.email?.[0] || '',
+          password: error.errors.password?.[0] || '',
+        });
+      }
+      ToastAndroid.show(errorMessage, ToastAndroid.LONG);
     } finally {
-      setIsSubmitting(false);
-      actions.setSubmitting(false);
+      setIsLoading(false);
+      setSubmitting(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setIsSubmitting(true);
+    setIsGoogleLoading(true);
     setApiErrors({ email: '', password: '' });
 
     try {
-      const response = await dispatch(
-        googleAuth({ fcm_token: await getFcmToken() })
-      ).unwrap();
+      const fcmToken = await getFcmToken();
+      const response = await dispatch(googleAuth({ fcm_token: fcmToken })).unwrap();
 
-      if (!response.success) throw new Error(response.message || 'Google login failed');
+      if (!response.success) {
+        throw new Error(response.message || 'Google login failed');
+      }
+
       await dispatch(fetchUser()).unwrap();
-
       ToastAndroid.show(response.message || 'Login Successful!', ToastAndroid.LONG);
-      if (response.user) navigateAfterLogin(response.user);
-
+      navigateAfterLogin(response.user);
     } catch (error: any) {
       console.error('Google login error:', error);
-      const err = error?.errors || {};
+      const errorMessage = error?.message || 'Google login failed.';
       setApiErrors({
-        email: err.email?.[0] || '',
-        password: err.password?.[0] || '',
+        email: error.errors?.email?.[0] || '',
+        password: error.errors?.password?.[0] || '',
       });
-
-      ToastAndroid.show(error.message || 'Google login failed.', ToastAndroid.LONG);
+      ToastAndroid.show(errorMessage, ToastAndroid.LONG);
     } finally {
-      setIsSubmitting(false);
+      setIsGoogleLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1, backgroundColor: '#fff' }}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
           <View className="relative p-4">
             <Image
               source={ImagePath.signBg}
-              style={{ tintColor: "#ac94f4" }}
-              className="absolute -top-[2%] -left-[2%] w-52 h-44"
+              style={styles.backgroundImage}
               resizeMode="contain"
             />
 
             <View className="mt-20">
               <MaskedView
-                maskElement={
-                  <Text className="text-center text-3xl font-bold">Welcome Back!</Text>
-                }
+                maskElement={<Text style={{ fontFamily: 'Raleway-Bold' }} className="text-center text-3xl ">Welcome Back!</Text>}
               >
                 <LinearGradient
                   colors={['#ac94f4', '#7248B3']}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 0 }}
                 >
-                  <Text className="text-center text-3xl font-bold" style={{ opacity: 0 }}>
+                  <Text style={{ fontFamily: 'Raleway-Bold', opacity: 0 }} className="text-center text-3xl ">
                     Welcome Back!
                   </Text>
                 </LinearGradient>
               </MaskedView>
 
-              <Text className="text-center my-2 text-gray-600">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center my-2 text-gray-600">
                 Sign in to continue your journey
               </Text>
 
@@ -168,55 +180,52 @@ const LoginScreen = () => {
                   values,
                   errors,
                   touched,
-                  isSubmitting: formSubmitting,
+                  isSubmitting,
                 }) => (
                   <View className="mt-4">
                     {/* Email */}
                     <View className="mb-3">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
-                      <TextInput
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">Email</Text>
+                      <TextInput style={{ fontFamily: 'Raleway-Regular' }}
                         className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
                         placeholder="Enter your email"
-                        placeholderTextColor={"#000"}
+                        placeholderTextColor="#000"
                         onChangeText={handleChange('email')}
                         onBlur={handleBlur('email')}
                         value={values.email}
                         keyboardType="email-address"
                         autoCapitalize="none"
-                        editable={!isSubmitting}
+                        editable={!isLoading}
                       />
-                      {(touched.email || apiErrors.email) && (
-                        <Text className="text-red-500 text-xs mt-1">
-                          {errors.email || apiErrors.email}
-                        </Text>
+                      {touched.email && errors.email && (
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.email}</Text>
                       )}
                     </View>
 
                     {/* Password */}
                     <View className="mb-3">
-                      <Text className="text-sm font-medium text-gray-700 mb-1">Password</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">Password</Text>
                       <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
-                        <TextInput
+                        <TextInput style={{ fontFamily: 'Raleway-Regular' }}
                           className="flex-1 p-3 bg-gray-100 text-gray-900 text-base"
                           placeholder="Enter your password"
-                          placeholderTextColor={"#000"}
+                          placeholderTextColor="#000"
                           secureTextEntry={!showPassword}
                           onChangeText={handleChange('password')}
                           onBlur={handleBlur('password')}
                           value={values.password}
-                          editable={!isSubmitting}
+                          editable={!isLoading}
                         />
                         <TouchableOpacity
                           onPress={() => setShowPassword(!showPassword)}
-                          className="p-3 bg-gray-100"
+                          className="p-3 px-4 bg-gray-100"
+                          disabled={isLoading}
                         >
                           <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color="#666" />
                         </TouchableOpacity>
                       </View>
-                      {(touched.password || apiErrors.password) && (
-                        <Text className="text-red-500 text-xs mt-1">
-                          {errors.password || apiErrors.password}
-                        </Text>
+                      {touched.password && errors.password && (
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.password}</Text>
                       )}
                     </View>
 
@@ -224,9 +233,9 @@ const LoginScreen = () => {
                     <TouchableOpacity
                       className="my-1"
                       onPress={() => navigation.navigate('ForgetPasswordScreen')}
-                      disabled={isSubmitting}
+                      disabled={isLoading}
                     >
-                      <Text className="ml-2 text-sm text-primary-90 font-bold">
+                      <Text style={{ fontFamily: 'Raleway-Bold' }} className="ml-2 text-sm text-primary-90 ">
                         Forgot Password?
                       </Text>
                     </TouchableOpacity>
@@ -235,25 +244,26 @@ const LoginScreen = () => {
                     <TouchableOpacity
                       className="mt-4"
                       onPress={() => handleSubmit()}
-                      disabled={isSubmitting || formSubmitting}
+                      disabled={isLoading || isSubmitting}
                     >
                       <LinearGradient
                         colors={['#ac94f4', '#7248B3']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        style={[
-                          styles.loginButton,
-                          (isSubmitting || formSubmitting) && { opacity: 0.7 },
-                        ]}
+                        style={[styles.loginButton, (isLoading || isSubmitting) && { opacity: 0.7 }]}
                       >
-                        <Text className="text-white text-base font-bold">Login</Text>
+                        {isLoading || isSubmitting ? (
+                          <ActivityIndicator size="small" color="#fff" />
+                        ) : (
+                          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-base ">Login</Text>
+                        )}
                       </LinearGradient>
                     </TouchableOpacity>
                   </View>
                 )}
               </Formik>
 
-              <Text className="text-center my-4 mt-10 text-gray-600">
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center my-4 mt-10 text-gray-600">
                 -------- Or Continue with --------
               </Text>
 
@@ -261,29 +271,24 @@ const LoginScreen = () => {
                 <TouchableOpacity
                   className="p-3 w-1/2 bg-primary-10 rounded-2xl"
                   onPress={handleGoogleLogin}
-                  disabled={isSubmitting}
+                  disabled={isGoogleLoading}
                 >
-                  <Image source={ImagePath.google} className="w-8 h-8 m-auto" resizeMode="contain" />
-                </TouchableOpacity>
-
-                {/* Facebook (Placeholder) */}
-                <TouchableOpacity
-                  className="p-3 w-1/2 bg-primary-10 rounded-2xl opacity-50 hidden"
-                  onPress={() => ToastAndroid.show('Facebook login not implemented', ToastAndroid.SHORT)}
-                  disabled
-                >
-                  <Image source={ImagePath.facebook} className="w-8 h-8 m-auto" resizeMode="contain" />
+                  {isGoogleLoading ? (
+                    <ActivityIndicator size="small" color="#000" />
+                  ) : (
+                    <Image source={ImagePath.google} className="w-8 h-8 m-auto" resizeMode="contain" />
+                  )}
                 </TouchableOpacity>
               </View>
 
               {/* Sign Up Link */}
               <View className="flex-row items-center justify-center mb-4">
-                <Text className="text-sm text-gray-600">Don't have an account?</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Don't have an account?</Text>
                 <TouchableOpacity
                   onPress={() => navigation.navigate('AccountTypeScreen')}
-                  disabled={isSubmitting}
+                  disabled={isLoading}
                 >
-                  <Text className="text-primary-100 text-sm ml-1 underline font-bold">
+                  <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-primary-100 text-sm ml-1 underline">
                     Sign Up
                   </Text>
                 </TouchableOpacity>
@@ -291,38 +296,32 @@ const LoginScreen = () => {
             </View>
           </View>
         </ScrollView>
-
-        {/* Loading Overlay */}
-        {isSubmitting && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.loadingText}>Logging In...</Text>
-          </View>
-        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: '#fff',
+  },
+  backgroundImage: {
+    tintColor: '#ac94f4',
+    position: 'absolute',
+    top: -50,
+    left: -8,
+    width: width * 0.5,
+    height: width * 0.5,
+  },
   loginButton: {
     padding: 16,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0, left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  loadingText: {
-    color: '#fff',
-    fontSize: 16,
-    marginTop: 10,
-    fontWeight: 'bold',
   },
 });
 

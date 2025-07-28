@@ -159,7 +159,7 @@ const ManageDineInServiceScreen = () => {
 
             <View className="bg-white rounded-lg m-4 p-4 mb-4 flex-row items-center justify-between shadow-md" style={styles.shadow}>
               <View>
-                <Text className='text-lg font-bold font-poppins'>Dine-In Mode</Text>
+                <Text className='text-lg font-bold   '>Dine-In Mode</Text>
                 <Text className='text-sm'>Enable to accept table bookin</Text>
               </View>
               <Switch value={showForm} onValueChange={setShowForm} size={"small"} />
@@ -450,12 +450,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: '#374151'
+    color: '#374151',
+    fontFamily: 'Raleway-Regular',
   },
   errorText: {
     color: '#EF4444',
     fontSize: 12,
     marginTop: 4,
+    fontFamily: 'Raleway-Regular',
   },
   radioContainer: {
     flexDirection: 'row',
@@ -476,6 +478,7 @@ const styles = StyleSheet.create({
   radioText: {
     fontSize: 14,
     color: '#374151',
+    fontFamily: 'Raleway-Regular',
   },
   checkboxContainer: {
     flexDirection: 'row',
@@ -498,6 +501,7 @@ const styles = StyleSheet.create({
   checkboxText: {
     fontSize: 14,
     color: '#374151',
+    fontFamily: 'Raleway-Regular',
   },
   addButton: {
     backgroundColor: '#fff',
@@ -517,7 +521,7 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Raleway-Bold',
     color: '#374151',
   },
   tableListContainer: {
@@ -525,7 +529,7 @@ const styles = StyleSheet.create({
   },
   tableListTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'Raleway-Bold',
     color: '#374151',
     marginBottom: 8,
   },
@@ -544,6 +548,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#374151',
     marginBottom: 4,
+    fontFamily: 'Raleway-Regular',
   },
   removeButton: {
     padding: 8,

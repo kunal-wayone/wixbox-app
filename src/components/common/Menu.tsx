@@ -114,8 +114,8 @@ const Menu = () => {
       price: item.price,
       quantity: 1,
       image: item.images[0] ? IMAGE_URL + item.images[0] : undefined,
-      shop_id: item?.shop?.id ?? item?.store_id
-
+      shop_id: item?.shop?.id ?? item?.store_id,
+      tax: item?.tax || 0
     };
     dispatch(addToCart(cartItem));
     ToastAndroid.show(`${item.item_name} added to cart`, ToastAndroid.SHORT);
@@ -131,7 +131,7 @@ const Menu = () => {
           quantity: 1,
           price: Math.floor(Number(item.price)),
           name: item.item_name,
-          image: item?.images?.length ? { uri: IMAGE_URL + item.images[0] } : '',
+          image: item?.images?.length ? item.images[0] : '',
           shop_id: item?.shop?.id ?? item?.store_id
         },
       ],
@@ -142,11 +142,11 @@ const Menu = () => {
   const renderItem = ({ item }: { item: Product }) => {
     const isToggling = toggleLoadingIds.includes(item.id);
     const imageSource = item.images?.[0] ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1;
-
+    console.log(item)
     return (
       <View
         key={item.id}
-        className="bg-gray-100 rounded-xl p-3 mr-4"
+        className="bg-gray-100 border border-gray-200 rounded-xl p-3 mr-4"
         style={{ width: 260 }}
       >
         <Image
@@ -161,27 +161,27 @@ const Menu = () => {
 
         {item.offer && (
           <View className="bg-primary-80 px-2 py-1 rounded-md mb-2 self-start">
-            <Text className="text-white text-xs font-semibold">{item.offer}</Text>
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-xs">{item.offer}</Text>
           </View>
         )}
 
-        <Text className="text-lg font-semibold text-gray-800">{item.item_name}</Text>
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg text-gray-800">{item.item_name}</Text>
 
         <View className="flex-row justify-between items-center mt-1">
-          <Text className="text-sm text-gray-500">
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-500">
             {item.category?.name || 'N/A'} •
           </Text>
-          <Text className="text-md font-bold">
+          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-md">
             {item.currency || '₹'}
             {item.price}
           </Text>
         </View>
 
-        {/* <Text className="text-sm text-gray-600 mt-1">{item.unit || 'N/A'}</Text> */}
+        {/* <Text style={{fontFamily:'Raleway-Regular'}} className="text-sm text-gray-600 mt-1">{item.unit || 'N/A'}</Text> */}
         <View className='flex-row justify-between items-center '>
           <View className="flex-row items-center mt-1 bg-gray-200 rounded-md px-2 py-1 w-16">
             <AntDesign name="star" color="#FBBF24" size={16} />
-            <Text className="ml-1 text-sm text-gray-700">{item.rating || '0'}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-1 text-sm text-gray-700">{item.rating || '0'}</Text>
           </View>
 
           {isToggling ? (
@@ -196,15 +196,15 @@ const Menu = () => {
         </View>
 
         <View className="flex-row justify-between mt-1">
-          <Text className="text-sm text-gray-600">Stock Count:</Text>
-          <Text className="font-semibold">{item.stock_quantity || '0'}</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Stock Count:</Text>
+          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="">{item.stock_quantity || '0'}</Text>
         </View>
 
         <TouchableOpacity
           onPress={() => navigation.navigate('AddProductScreen', { productId: item.id })}
           className="mt-2 bg-primary-90 px-3 py-2 rounded-lg"
         >
-          <Text className="text-white text-center font-medium">Edit Item Details</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center font-medium">Edit Item Details</Text>
         </TouchableOpacity>
       </View>
     );
@@ -225,7 +225,7 @@ const Menu = () => {
           onPress={loadMoreProducts}
           className="bg-primary-90 py-3 px-4 rounded-lg my-4 ml-4"
         >
-          <Text className="text-white text-center font-medium">Load More</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center font-medium">Load More</Text>
         </TouchableOpacity>
       );
     }
@@ -239,7 +239,7 @@ const Menu = () => {
       <View className="flex-row items-center gap-3 mb-4">
         <View className="flex-row items-center flex-1 bg-white px-3 py-1 border rounded-xl shadow-sm">
           <AntDesign name="search1" color="#6B7280" size={20} />
-          <TextInput
+          <Text style={{ fontFamily: 'Raleway-Regular' }} Input
             value={search}
             onChangeText={setSearch}
             placeholder="Search Item..."
@@ -261,7 +261,7 @@ const Menu = () => {
         </View>
       ) : filteredProducts.length === 0 ? (
         <View className="flex-1 justify-center items-center mt-10">
-          <Text className="text-gray-500 text-lg">No products found</Text>
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-lg">No products found</Text>
         </View>
       ) : (
         <FlatList

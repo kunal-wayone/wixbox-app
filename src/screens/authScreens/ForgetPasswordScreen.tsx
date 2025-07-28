@@ -112,8 +112,7 @@ const ForgetPasswordScreen = () => {
                   style={{
                     textAlign: 'center',
                     fontSize: 30,
-                    fontWeight: 'bold',
-                    fontFamily: 'Poppins',
+                    fontFamily: 'Raleway-Regular',
                   }}>
                   Forget Password
                 </Text>
@@ -126,8 +125,7 @@ const ForgetPasswordScreen = () => {
                   style={{
                     textAlign: 'center',
                     fontSize: 30,
-                    fontWeight: 'bold',
-                    fontFamily: 'Poppins',
+                    fontFamily: 'Raleway-Regular',
                     opacity: 0,
                   }}>
                   Forget Password
@@ -135,7 +133,7 @@ const ForgetPasswordScreen = () => {
               </LinearGradient>
             </MaskedView>
             <Text
-              style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
+              style={{ fontFamily: 'Raleway-Regular', textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
               Enter your registered email to receive an OTP.
             </Text>
 
@@ -159,6 +157,7 @@ const ForgetPasswordScreen = () => {
                         fontSize: 14,
                         fontWeight: '500',
                         color: '#374151',
+                        fontFamily: 'Raleway-Regular',
                         marginBottom: 4,
                       }}>
                       Email
@@ -171,7 +170,8 @@ const ForgetPasswordScreen = () => {
                         borderRadius: 8,
                         padding: 12,
                         fontSize: 16,
-                        color: "#000"
+                        color: "#000",
+                        fontFamily: 'Raleway-Regular',
                       }}
                       placeholderTextColor={"#000"}
                       placeholder="Enter your email address"
@@ -183,13 +183,13 @@ const ForgetPasswordScreen = () => {
                     />
                     {touched.email && errors.email && (
                       <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.email}
                       </Text>
                     )}
                     {apiErrors.email && (
                       <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {apiErrors.email}
                       </Text>
                     )}
@@ -209,7 +209,7 @@ const ForgetPasswordScreen = () => {
                         alignItems: 'center',
                       }}>
                       <Text
-                        style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                        style={{ fontFamily: 'Raleway-Regular', color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
                         {isSubmitting ? 'Sending...' : 'Send OTP'}
                       </Text>
                     </LinearGradient>
@@ -225,7 +225,7 @@ const ForgetPasswordScreen = () => {
                 justifyContent: 'center',
                 marginTop: 16,
               }}>
-              <Text style={{ fontSize: 14, color: '#4B5563' }}>Back to</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, color: '#4B5563' }}>Back to</Text>
               <TouchableOpacity
                 onPress={() => navigation.navigate('LoginScreen')}>
                 <Text
@@ -234,7 +234,7 @@ const ForgetPasswordScreen = () => {
                     marginLeft: 4,
                     fontSize: 14,
                     textDecorationLine: 'underline',
-                    fontWeight: 'bold',
+                    fontFamily: 'Raleway-Regular',
                   }}>
                   Login
                 </Text>

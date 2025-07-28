@@ -21,8 +21,8 @@ const PaymentIcons = ({ paymentMethods }: { paymentMethods: string[] }) => {
     <View className="flex-row items-center gap-4">
       {paymentMethods.map((method, index) => (
         <View key={index} className="flex-row items-center gap-1">
-          {renderIcon(method)} 
-          <Text className="font-poppins text-gray-50">{method}</Text>
+          {renderIcon(method)}
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="   text-gray-50">{method}</Text>
         </View>
       ))}
     </View>

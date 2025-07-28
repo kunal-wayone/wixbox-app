@@ -5,7 +5,6 @@ import {
     TextInput,
     Image,
     FlatList,
-    Switch,
     TouchableOpacity,
     ToastAndroid,
     ActivityIndicator,
@@ -17,6 +16,7 @@ import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { ImagePath } from '../../constants/ImagePath';
 import { Delete, Fetch, IMAGE_URL } from '../../utils/apiUtils';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Switch from '../../components/common/Switch';
 
 const AdsListScreen = () => {
     const navigation = useNavigation<any>();
@@ -35,6 +35,7 @@ const AdsListScreen = () => {
             setIsLoading(true);
             const response: any = await Fetch(`/user/ads`, {}, 5000);
             if (!response.success) throw new Error('Failed to fetch ads');
+            console.log(response.data.ads)
             setAdsList(response.data.ads || []);
         } catch (error: any) {
             console.error('fetchAds error:', error.message);
@@ -105,66 +106,118 @@ const AdsListScreen = () => {
 
     // Memoized filtered ads
     const filteredAds = React.useMemo(
-        () => adsList.filter((item: any) => item?.product_name?.toLowerCase().includes(search?.toLowerCase())),
+        () => adsList.filter((item: any) => item?.ads_type?.toLowerCase().includes(search?.toLowerCase())),
         [adsList, search]
     );
 
+
+    console.log(filteredAds)
     const renderItem = useCallback(
         ({ item }: any) => (
-            <View key={item?.id} className="flex-row bg-gray-100 rounded-xl p-4 mb-4 shadow-sm">
-                {/* Left: Image + Switch */}
+            <View key={item?.id} className="flex-col bg-white rounded-2xl p-4 mb-4 shadow-md border border-gray-200">
+                {/* Left: Image */}
                 <TouchableOpacity
                     onPress={() => navigation.navigate('AdsDetailScreen', { adsId: item?.id })}
-                    className="w-2/5 mr-3 items-center"
+                    className="mb-2"
                 >
                     <Image
                         source={item?.images?.length > 0 ? { uri: IMAGE_URL + item.images[0] } : ImagePath.item1}
-                        className="w-full h-40 rounded-lg mb-2"
+                        className="w-full h-40 rounded-xl"
                         resizeMode="cover"
                     />
                 </TouchableOpacity>
 
                 {/* Right: Content */}
-                <View className="flex-1">
-                    <View className="flex-row items-center justify-between">
-                        <View className={`self-start px-2 py-1 rounded-md flex-row items-center gap-1`}>
+                <View className="flex-1 justify-between">
+                    {/* Status & Switch */}
+                    <View className="flex-row justify-between items-center mb-2 hidden">
+                        <View className="flex-row items-center gap-2 bg-gray-100 px-2 py-1 rounded-full">
                             <View className={`w-2.5 h-2.5 rounded-full ${item?.status ? 'bg-green-500' : 'bg-red-500'}`} />
-                            <Text className="text-gray-800 text-xs font-semibold">{item?.status ? 'Active' : 'Paused'}</Text>
+                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-[10px] text-gray-700">
+                                {item?.status ? ' Active' : ' Paused'}
+                            </Text>
                         </View>
-                        <View className="w-1/2">
-                            {toggleLoadingIds.includes(item.id) ? (
-                                <ActivityIndicator size="small" color="#007AFF" style={{ marginLeft: 8 }} />
-                            ) : (
-                                <Switch
-                                    value={item?.status ? true : false}
-                                    onValueChange={() => toggleAdsStatus(item.id, item.status)}
-                                    disabled={toggleLoadingIds.includes(item.id)}
-                                />
-                            )}
-                        </View>
+                        {toggleLoadingIds.includes(item.id) ? (
+                            <ActivityIndicator size="small" color="#007AFF" />
+                        ) : (
+                            <Switch
+                                value={!!item?.status}
+                                onValueChange={() => toggleAdsStatus(item.id, item.status)}
+                                disabled={toggleLoadingIds.includes(item.id)}
+                                size="small"
+                            />
+                        )}
                     </View>
 
-                    <Text className="text-lg font-semibold text-gray-800">{item?.product_name}</Text>
-                    <View className="flex-row justify-start gap-2 items-baseline">
-                        <Text className="text-md font-bold">
-                            {item?.currency || '₹'}
-                            {item?.discounted_price}/-
+                    {/* Title */}
+                    <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-sm text-gray-800 mb-1" numberOfLines={1} ellipsizeMode='tail'>{item?.ad_title || ' Product Name'}</Text>
+
+                    {/* Price */}
+                    <View className="flex-row items-baseline gap-2">
+                        <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xs text-green-600">
+                            ₹{item?.discounted_price}/-
                         </Text>
-                        <Text className="text-xs line-through text-gray-500">₹{item?.original_price + '/-' || 'N/A'} •</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs line-through text-gray-400">
+                            ₹{item?.original_price}/-
+                        </Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-[8px] text-center bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-md">
+                            Save ₹{(item?.original_price - item?.discounted_price).toFixed(2)}
+                        </Text>
                     </View>
-                    <Text className="text-sm text-orange-500 mt-1">{item?.offer_tag || 'N/A'}</Text>
-                    <View className="flex-row justify-between mt-2">
+
+                    {/* Offer & Promotion Tags */}
+                    <View className="flex-row mt-2 gap-2 flex-wrap">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs bg-primary-80 text-white px-2 py-1 rounded-full">
+                            🏷 {item?.offer_tag || 'Offer'}
+                        </Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+                            ⚡ {item?.promotion_tag || 'Promotion'}
+                        </Text>
+                    </View>
+
+                    {/* Time */}
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-[9px] my-0.5 text-gray-500 mt-1">
+                        📅 {new Date(item?.offer_starts_at).toLocaleDateString([], {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                        })}{' '}
+                        ⏰ {new Date(`1970-01-01T${item?.offer_start_time}`).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                        {'  '}→{'  '}
+                        📅 {new Date(item?.offer_ends_at).toLocaleDateString([], {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                        })}{' '}
+                        ⏰ {new Date(`1970-01-01T${item?.offer_end_time}`).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                        })}
+                    </Text>
+
+
+                    {/* Caption */}
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm italic text-blue-600 mt-1">
+                        💬 {item?.caption}
+                    </Text>
+
+                    {/* Buttons */}
+                    <View className="flex-row justify-between mt-3">
                         <TouchableOpacity
                             onPress={() => navigation.navigate('CreateAdScreen', { adDetails: item })}
-                            className="bg-primary-90 w-1/2 mr-2 px-3 py-2 rounded-lg"
+                            className="bg-primary-80 w-[48%] px-3 py-2 rounded-lg"
                         >
-                            <Text className="text-white text-center text-md font-medium">Edit Ad</Text>
+                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-center text-sm"> Edit</Text>
                         </TouchableOpacity>
+
                         <TouchableOpacity
                             onPress={() => handleDeleteAds(item.id, item.product_name)}
-                            className="bg-red-500 w-1/2 px-3 py-2 rounded-lg"
+                            className="bg-red-500 w-[48%] px-3 py-2 rounded-lg"
                         >
-                            <Text className="text-white text-center text-md font-medium">Delete</Text>
+                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-center text-sm"> Delete</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -180,7 +233,7 @@ const AdsListScreen = () => {
                     <TouchableOpacity onPress={() => navigation.goBack()} className='absolute z-50' >
                         <Icon name="arrow-back" className="" size={20} color="black" />
                     </TouchableOpacity>
-                    <Text className="text-2xl font-semibold text-center">Created Ads List</Text>
+                    <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-2xl text-center">Created Ads List</Text>
                 </View>
 
                 {/* Search & Add Button */}
@@ -206,7 +259,7 @@ const AdsListScreen = () => {
                 {/* Confirmation Modal */}
                 <Modal isVisible={confirmModalVisible} onBackdropPress={() => setConfirmModalVisible(false)}>
                     <View className="bg-white p-6 rounded-lg">
-                        <Text className="text-lg font-semibold mb-4">
+                        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg mb-4">
                             Are you sure you want to delete "{confirmAction?.name}"?
                         </Text>
                         <View className="flex-row justify-end gap-4">
@@ -217,7 +270,7 @@ const AdsListScreen = () => {
                                 }}
                                 className="px-4 py-2 bg-gray-200 rounded-lg"
                             >
-                                <Text className="text-gray-800 font-medium">Cancel</Text>
+                                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-800 font-medium">Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 onPress={confirmDelete}
@@ -227,7 +280,7 @@ const AdsListScreen = () => {
                                 {deleteLoading ? (
                                     <ActivityIndicator size="small" color="white" />
                                 ) : (
-                                    <Text className="text-white font-medium">Delete</Text>
+                                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white font-medium">Delete</Text>
                                 )}
                             </TouchableOpacity>
                         </View>
@@ -241,7 +294,7 @@ const AdsListScreen = () => {
                     </View>
                 ) : filteredAds.length === 0 ? (
                     <View className="flex-1 justify-center items-center mt-10">
-                        <Text className="text-gray-500 text-lg">No ads found</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500 text-lg">No ads found</Text>
                     </View>
                 ) : (
                     <FlatList

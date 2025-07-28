@@ -147,8 +147,8 @@ const TopCafesScreen = () => {
         tintColor="#FFFFFF59"
       />
       <View className="bg-primary-100 px-4 py-14 justify-end h-56 rounded-b-[2.5rem]">
-        <Text className="text-white mb-1 font-bold text-3xl">Top Cafes</Text>
-        <Text className="text-white">Explore the best-rated cafés in your city.</Text>
+        <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white mb-1 font-bold text-3xl">Top Cafes</Text>
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white">Explore the best-rated cafés in your city.</Text>
         <Image
           source={ImagePath.cofee}
           className="w-20 h-20 absolute right-5 bottom-5"
@@ -172,7 +172,7 @@ const TopCafesScreen = () => {
     console.log(hasMore, data.length, totalItems, data.length, 0)
     if (!hasMore && data.length >= totalItems && data.length > 0) {
       return (
-        <Text className="text-center text-gray-400 py-4">No more cafes to show.</Text>
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center text-gray-400 py-4">No more cafes to show.</Text>
       );
     }
 

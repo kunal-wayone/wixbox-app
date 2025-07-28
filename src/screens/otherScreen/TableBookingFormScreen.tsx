@@ -21,6 +21,8 @@ import { Picker } from '@react-native-picker/picker';
 import { Post } from '../../utils/apiUtils';
 import PaymentComponent from '../../components/PaymentComponent';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { RootState } from '../../store/store';
+import { useSelector } from 'react-redux';
 
 const validationSchema = Yup.object().shape({
     name: Yup.string().required('Full name is required'),
@@ -38,7 +40,7 @@ const validationSchema = Yup.object().shape({
 const TableBookingFormScreen = () => {
     const navigation = useNavigation<any>();
     const route = useRoute();
-    const { shop_id, table_info }: any = route.params || {
+    const { shop_id, table_info, slot }: any = route.params || {
         shop_id: 8,
         table_info: [
             {
@@ -50,12 +52,20 @@ const TableBookingFormScreen = () => {
                 seats: '4',
             },
         ],
+        slot: {
+            start_time: "09:00",
+            end_time: "10:00",
+            price: 25,
+            date: "Sat Jul 26 2025"
+        }
     };
 
+    console.log(table_info)
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [showThankYouModal, setShowThankYouModal] = useState(false);
+    const [selectedSlot, setSelectedSlot] = useState(null)
 
     const formatDate = (date: any) => {
         const year = date.getFullYear();
@@ -74,15 +84,16 @@ const TableBookingFormScreen = () => {
         async (values: any, resetForm: any) => {
             try {
                 setIsLoading(true);
+                console.log(selectedSlot)
                 const payload = {
                     shop_id,
                     name: values?.name?.trim() || '',
                     phone: values?.phone?.trim() || '',
                     booking_date: values?.booking_date || '',
-                    time_slot: values?.time_slot || '',
+                    time_slot: [selectedSlot] || '',
                     guests: parseInt(values?.guests || '0', 10),
                     description: values?.description?.trim() || '',
-                    table_info,
+                    table_info
                     // payment_id: paymentData?.razorpay_payment_id,
                 };
 
@@ -104,7 +115,6 @@ const TableBookingFormScreen = () => {
                 );
                 return { success: false };
             } finally {
-                setIsLoading(false);
             }
         },
         [shop_id, table_info, navigation]
@@ -171,7 +181,7 @@ const TableBookingFormScreen = () => {
                         <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 8 }}>
                             <Ionicons name="arrow-back" size={24} color="black" />
                         </TouchableOpacity>
-                        <Text style={{ flex: 1, fontSize: 20, fontWeight: 'bold', textAlign: 'center', color: '#374151' }}>
+                        <Text style={{ flex: 1, fontSize: 20, fontFamily: 'Raleway-Regular', textAlign: 'center', color: '#374151' }}>
                             Book a Table
                         </Text>
                     </View>
@@ -181,7 +191,7 @@ const TableBookingFormScreen = () => {
                             name: '',
                             phone: '',
                             booking_date: '',
-                            time_slot: '',
+                            time_slot: [],
                             guests: '',
                             description: '',
                         }}
@@ -243,25 +253,57 @@ const TableBookingFormScreen = () => {
                                     <ErrorText text={errors.booking_date} />
                                 )}
 
-                                <DateTimeField
+                                {/* <DateTimeField
                                     label="Time Slot"
                                     value={values.time_slot}
                                     icon="access-time"
                                     onPress={() => setShowTimePicker(true)}
                                 />
-                                <DateTimePickerModal
-                                    isVisible={showTimePicker}
-                                    mode="time"
-                                    is24Hour={true}
-                                    onConfirm={(time) => {
-                                        setFieldValue('time_slot', formatTime(time));
-                                        setShowTimePicker(false);
-                                    }}
-                                    onCancel={() => setShowTimePicker(false)}
-                                />
-                                {touched.time_slot && errors.time_slot && (
-                                    <ErrorText text={errors.time_slot} />
-                                )}
+                                {/* 🛑 Show error if time_slot not selected */}
+
+
+                                {/* 🪑 Select Time Slot from Table
+                                {table_info![0]?.time_slot?.length > 0 && (
+                                    <View style={{ marginTop: 16 }}>
+                                        {table_info![0]?.time_slot.map((slot: any, idx: number) => {
+                                            const isSelected = slot === values?.time_slot;
+                                            const bgClass = isSelected ? 'bg-primary-100' : 'bg-gray-100';
+                                            const textClass = isSelected ? 'text-white' : 'text-black';
+
+                                            return (
+                                                <TouchableOpacity
+                                                    key={idx}
+                                                    className={`${bgClass} mb-2 rounded p-2`}
+                                                    onPress={() => {
+                                                        setFieldValue('time_slot', slot); // Update form field
+                                                        }}
+                                                >
+                                                    <Text style={{ fontSize: 12 }} className={textClass}>
+                                                        📅 {slot.date} | 🕐 {slot.start_time} - {slot.end_time} • 💰 ₹{slot.price}
+                                                    </Text>
+                                                    </TouchableOpacity>
+                                            );
+                                            })}
+                                    </View>
+                                    )} */}
+
+                                <View style={{ marginBottom: 12 }}>
+                                    <Text style={labelStyle}>Select Time Slot</Text>
+                                    <View style={pickerContainer}>
+                                        <Picker
+                                            selectedValue={values.time_slot || ''}
+                                            onValueChange={(val) => setSelectedSlot(val)}
+                                        >
+                                            <Picker.Item label="Select time slot" style={{ fontSize: 13 }} value="" />
+                                            {table_info![0].time_slot?.map((slot: any, i: any) => (
+                                                <Picker.Item style={{ fontSize: 13 }} key={i} label={` ${slot.start_time} - ${slot.end_time} • ₹${slot.price}`} value={slot} />
+                                            ))}
+                                        </Picker>
+                                    </View>
+                                    {touched.time_slot && errors.time_slot && (
+                                        <ErrorText text={errors.time_slot} />
+                                    )}
+                                </View>
 
                                 <View style={{ marginBottom: 12 }}>
                                     <Text style={labelStyle}>Number of Guests</Text>
@@ -270,9 +312,9 @@ const TableBookingFormScreen = () => {
                                             selectedValue={values.guests || ''}
                                             onValueChange={(val) => setFieldValue('guests', val)}
                                         >
-                                            <Picker.Item label="Select number of guests" value="" />
+                                            <Picker.Item label="Select number of guests" style={{ fontSize: 13 }} value="" />
                                             {Array.from({ length: seatCount }, (_, i) => (
-                                                <Picker.Item key={i + 1} label={`${i + 1}`} value={`${i + 1}`} />
+                                                <Picker.Item style={{ fontSize: 13 }} key={i + 1} label={`${i + 1}`} value={`${i + 1}`} />
                                             ))}
                                         </Picker>
                                     </View>
@@ -339,6 +381,8 @@ const TableBookingFormScreen = () => {
                                         orderPayment(orderId, paymentData, table_info[0]?.price);
                                     }}
                                     onPaymentFailure={(error) => {
+                                        setIsLoading(false);
+                                        navigation.replace('BookedTablesScreen')
                                         ToastAndroid.show('Payment failed. Please try again.', ToastAndroid.LONG);
                                     }}
                                     onPaymentCancel={() => {
@@ -395,6 +439,7 @@ const labelStyle = {
     fontWeight: '500',
     color: '#374151',
     marginBottom: 4,
+    fontFamily: 'Raleway-Regular',
 };
 
 const pickerContainer = {
@@ -405,7 +450,7 @@ const pickerContainer = {
 };
 
 const ErrorText = ({ text }: any) => (
-    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{text}</Text>
+    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{text}</Text>
 );
 
 const InputField = ({
@@ -432,6 +477,7 @@ const InputField = ({
                 fontSize: 16,
                 minHeight,
                 verticalAlign: 'top',
+                fontFamily: 'Raleway-Regular',
             }}
             placeholder={placeholder}
             onChangeText={onChangeText}

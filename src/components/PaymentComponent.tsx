@@ -158,7 +158,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
     setShowModal(false);
     setPaymentData(null);
     setErrorMessage('');
-    navigation.replace("HomeScreen")
+    // navigation.replace("HomeScreen")
   }, []);
 
   return (
@@ -171,7 +171,7 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
         {loading ? (
           <ActivityIndicator color="#fff" />
         ) : (
-          <Text className="text-white text-center font-semibold">{buttonLabel}</Text>
+          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-center">{buttonLabel}</Text>
         )}
       </TouchableOpacity>
 
@@ -180,12 +180,12 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
           <View className="bg-white p-6 rounded-2xl w-11/12 max-w-md items-center">
             {status === 'success' ? (
               <>
-                <Text className="text-4xl mb-2">✅</Text>
-                <Text className="text-lg font-semibold mb-1">Payment Successful</Text>
-                <Text className="text-gray-700 mb-4 text-center">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-4xl mb-2">✅</Text>
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg mb-1">Payment Successful</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-700 mb-4 text-center">
                   ID: ***{paymentData?.razorpay_payment_id?.slice(-6) || 'N/A'}
                 </Text>
-                <Text className="text-gray-600 mb-4 text-center">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600 mb-4 text-center">
                   Amount: {amount.toFixed(2)} {config.currency}
                 </Text>
                 <TouchableOpacity
@@ -195,16 +195,16 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
                   }}
                   className="bg-blue-600 px-4 py-2 rounded-md"
                 >
-                  <Text className="text-white font-medium">View Receipt</Text>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white font-medium">View Receipt</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
-                <Text className="text-4xl mb-2">{status === 'cancelled' ? '⚠️' : '❌'}</Text>
-                <Text className="text-lg font-semibold mb-1">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-4xl mb-2">{status === 'cancelled' ? '⚠️' : '❌'}</Text>
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg mb-1">
                   {status === 'cancelled' ? 'Payment Cancelled' : 'Payment Failed'}
                 </Text>
-                <Text className="text-gray-700 mb-4 text-center">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-700 mb-4 text-center">
                   {errorMessage}
                 </Text>
                 <View className="flex-row items-center justify-center gap-4">
@@ -212,13 +212,13 @@ const PaymentComponent: React.FC<PaymentComponentProps> = ({
                     onPress={retry}
                     className="bg-red-500 px-4 py-2 rounded-md"
                   >
-                    <Text className="text-white font-medium">Retry Payment</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white font-medium">Retry Payment</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     onPress={closeModal}
                     className="bg-gray-300 px-4 py-2 rounded-md"
                   >
-                    <Text className="text-white font-medium">Close</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white font-medium">Close</Text>
                   </TouchableOpacity>
                 </View>
               </>

@@ -223,7 +223,7 @@ const EditProfileScreen = () => {
               <View style={{ marginTop: 16 }}>
                 {/* Full Name */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     Full Name
                   </Text>
                   <TextInput
@@ -234,7 +234,8 @@ const EditProfileScreen = () => {
                       borderRadius: 8,
                       padding: 12,
                       fontSize: 16,
-                      color: "#000"
+                      color: "#000",
+                      fontFamily: 'Raleway-Regular',
                     }}
                     placeholderTextColor={"#000"}
                     placeholder="Enter full name"
@@ -243,13 +244,13 @@ const EditProfileScreen = () => {
                     value={values.fullName}
                   />
                   {touched.fullName && errors.fullName && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.fullName}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.fullName}</Text>
                   )}
                 </View>
 
                 {/* Date of Birth */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     Date of Birth (DD/MM/YYYY)
                   </Text>
                   <TouchableOpacity
@@ -262,7 +263,7 @@ const EditProfileScreen = () => {
                       padding: 12,
                     }}
                   >
-                    <Text style={{ fontSize: 16, color: values.dateOfBirth ? '#374151' : '#9CA3AF' }}>
+                    <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 16, color: values.dateOfBirth ? '#374151' : '#9CA3AF' }}>
                       {values?.dateOfBirth?.split(" ")[0] || 'Select date of birth'}
                     </Text>
                   </TouchableOpacity>
@@ -286,13 +287,13 @@ const EditProfileScreen = () => {
 
                   )}
                   {touched.dateOfBirth && errors.dateOfBirth && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.dateOfBirth}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.dateOfBirth}</Text>
                   )}
                 </View>
 
                 {/* Phone Number */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     Phone Number
                   </Text>
                   <TextInput
@@ -303,7 +304,7 @@ const EditProfileScreen = () => {
                       borderRadius: 8,
                       padding: 12,
                       fontSize: 16,
-                      color: "#000"
+                      color: "#000", fontFamily: 'Raleway-Regular',
                     }}
                     placeholderTextColor={"#000"}
                     placeholder="Enter phone number"
@@ -314,13 +315,13 @@ const EditProfileScreen = () => {
                     maxLength={10}
                   />
                   {touched.phoneNumber && errors.phoneNumber && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.phoneNumber}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.phoneNumber}</Text>
                   )}
                 </View>
 
                 {/* Gender Radio Group */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     Gender
                   </Text>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -353,18 +354,18 @@ const EditProfileScreen = () => {
                             />
                           )}
                         </View>
-                        <Text style={{ fontSize: 16, color: '#374151' }}>{gender}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 16, color: '#374151' }}>{gender}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                   {touched.gender && errors.gender && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.gender}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.gender}</Text>
                   )}
                 </View>
 
                 {/* Email Address */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     Email Address
                   </Text>
                   <TextInput
@@ -375,6 +376,7 @@ const EditProfileScreen = () => {
                       borderRadius: 8,
                       padding: 12,
                       fontSize: 16,
+                      fontFamily: 'Raleway-Regular',
                     }}
                     placeholder="Enter email address"
                     onChangeText={handleChange('email')}
@@ -384,13 +386,13 @@ const EditProfileScreen = () => {
                     autoCapitalize="none"
                   />
                   {touched.email && errors.email && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.email}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.email}</Text>
                   )}
                 </View>
 
                 {/* Address Fields */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     Address
                   </Text>
                   <TextInput
@@ -403,7 +405,8 @@ const EditProfileScreen = () => {
                       fontSize: 16,
                       minHeight: 100,
                       textAlignVertical: 'top',
-                      color: "#000"
+                      color: "#000",
+                      fontFamily: 'Raleway-Regular',
                     }}
                     placeholderTextColor={"#000"}
                     placeholder="Enter address"
@@ -413,13 +416,13 @@ const EditProfileScreen = () => {
                     multiline
                   />
                   {touched.address?.[0]?.address && errors.address?.[0]?.address && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].address}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].address}</Text>
                   )}
                 </View>
 
                 {/* Address Type (Read-only based on role) */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     Address Type
                   </Text>
                   <TextInput
@@ -431,19 +434,20 @@ const EditProfileScreen = () => {
                       padding: 12,
                       fontSize: 16,
                       color: '#374151',
+                      fontFamily: 'Raleway-Regular',
                     }}
                     placeholderTextColor={"#000"}
                     value={values.address[0].type}
                     editable={false}
                   />
                   {touched.address?.[0]?.type && errors.address?.[0]?.type && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].type}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].type}</Text>
                   )}
                 </View>
 
                 {/* State */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     State
                   </Text>
                   <View
@@ -472,13 +476,13 @@ const EditProfileScreen = () => {
                     </Picker>
                   </View>
                   {touched.address?.[0]?.state && errors.address?.[0]?.state && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].state}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].state}</Text>
                   )}
                 </View>
 
                 {/* City */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     City
                   </Text>
                   <TextInput
@@ -489,7 +493,8 @@ const EditProfileScreen = () => {
                       borderRadius: 8,
                       padding: 12,
                       fontSize: 16,
-                      color: "#000"
+                      color: "#000",
+                      fontFamily: 'Raleway-Regular',
                     }}
                     placeholderTextColor={"#000"}
                     placeholder="Enter city"
@@ -498,13 +503,13 @@ const EditProfileScreen = () => {
                     value={values.address[0].city}
                   />
                   {touched.address?.[0]?.city && errors.address?.[0]?.city && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].city}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].city}</Text>
                   )}
                 </View>
 
                 {/* Pincode */}
                 <View style={{ marginBottom: 12 }}>
-                  <Text style={{ fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 14, fontWeight: '500', color: '#374151', marginBottom: 4 }}>
                     Pincode
                   </Text>
                   <TextInput
@@ -515,7 +520,8 @@ const EditProfileScreen = () => {
                       borderRadius: 8,
                       padding: 12,
                       fontSize: 16,
-                      color: "#000"
+                      color: "#000",
+                      fontFamily: 'Raleway-Regular',
                     }}
                     placeholderTextColor={"#000"}
                     placeholder="Enter pincode"
@@ -526,7 +532,7 @@ const EditProfileScreen = () => {
                     maxLength={6}
                   />
                   {touched.address?.[0]?.pincode && errors.address?.[0]?.pincode && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].pincode}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>{errors.address[0].pincode}</Text>
                   )}
                 </View>
 
@@ -543,7 +549,7 @@ const EditProfileScreen = () => {
                     marginBottom: 24,
                   }}
                 >
-                  <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                  <Text style={{ fontFamily: 'Raleway-Regular', color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
                     {isSubmitting ? 'Updating...' : 'Update Profile'}
                   </Text>
                 </TouchableOpacity>

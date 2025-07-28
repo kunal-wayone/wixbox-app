@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,10 @@ import {
   Dimensions,
   ImageBackground,
 } from 'react-native';
-import {ImagePath} from '../constants/ImagePath';
+import { ImagePath } from '../constants/ImagePath';
 import LinearGradient from 'react-native-linear-gradient';
 
-const {width} = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.5;
 
 const PopularAreaSection = () => {
@@ -47,10 +47,10 @@ const PopularAreaSection = () => {
     <View className="pt-6">
       {/* Header */}
       <View className="mb-3">
-        <Text className="text-lg font-semibold text-gray-900">
+        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg text-gray-900">
           Popular Area
         </Text>
-        <Text className="text-sm text-gray-500">
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-500">
           Explore trending locations near you
         </Text>
       </View>
@@ -64,12 +64,12 @@ const PopularAreaSection = () => {
         {areas.map(area => (
           <View
             key={area.id}
-            style={{width: CARD_WIDTH}}
+            style={{ width: CARD_WIDTH }}
             className="mr-4 rounded-xl overflow-hidden">
             <ImageBackground
               source={area.image}
               className="h-48 w-full justify-end"
-              imageStyle={{borderRadius: 16}}>
+              imageStyle={{ borderRadius: 16 }}>
               {/* <View
                 className="absolute inset-0  bg-black"
                 style={{opacity: 0.3}}
@@ -85,16 +85,16 @@ const PopularAreaSection = () => {
                     borderBottomRightRadius: 16,
                   }}>
                   {/* Area Name */}
-                  <Text
-                    className="text-base font-semibold text-white"
+                  <Text style={{ fontFamily: 'Raleway-SemiBold' }}
+                    className="text-base text-white"
                     numberOfLines={1}>
                     {area.name}
                   </Text>
 
                   {/* Location and Distance */}
                   <View className="flex-row justify-between items-center mt-1">
-                    <Text className="text-sm text-white">{area.location}</Text>
-                    <Text className="text-sm text-white">
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-white">{area.location}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-white">
                       {area.distance} km away
                     </Text>
                   </View>

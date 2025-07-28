@@ -64,7 +64,7 @@ const GetLocationButton = ({ setLocation }: any) => {
                         className="flex-row items-center space-x-2 py-2"
                     >
                         <Ionicons name="locate" size={20} color="#333" />
-                        <Text className="text-sm text-gray-800">Use Current Location</Text>
+                        <Text style={{fontFamily:'Raleway-Regular'}} className="text-sm text-gray-800">Use Current Location</Text>
                     </Pressable>
 
                     <Pressable
@@ -75,7 +75,7 @@ const GetLocationButton = ({ setLocation }: any) => {
                         className="flex-row items-center space-x-2 py-2 hidden"
                     >
                         <Ionicons name="create-outline" size={20} color="#333" />
-                        <Text className="text-sm text-gray-800">Enter Location Manually</Text>
+                        <Text style={{fontFamily:'Raleway-Regular'}} className="text-sm text-gray-800">Enter Location Manually</Text>
                     </Pressable>
                 </View>
             )}

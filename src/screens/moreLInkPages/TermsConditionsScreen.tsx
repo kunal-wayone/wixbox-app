@@ -48,7 +48,7 @@ const TermsConditionsScreen = () => {
     }
 
     const htmlStyles: any = {
-        h2: { fontSize: 20, fontWeight: 'bold', color: '#1F2937', marginBottom: 8 },
+        h2: { fontSize: 20, fontFamily: 'Raleway-Bold', color: '#1F2937', marginBottom: 8 },
         h3: { fontSize: 18, fontWeight: '600', color: '#1F2937', marginTop: 12, marginBottom: 6 },
         p: { fontSize: 16, color: '#4B5563', lineHeight: 24 }
     }
@@ -57,10 +57,10 @@ const TermsConditionsScreen = () => {
         <ScrollView className="flex-1 bg-gradient-to-b from-orange-50 to-white">
             {/* Header */}
             <View className="p-6 pt-12 pb-8 bg-primary-90 rounded-b-3xl shadow-lg">
-                <Text className="text-4xl font-extrabold text-white text-center tracking-tight">
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-4xl font-extrabold text-white text-center tracking-tight">
                     Terms & Conditions
                 </Text>
-                <Text className="text-lg font-medium text-orange-100 text-center mt-2">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-lg font-medium text-orange-100 text-center mt-2">
                     Our Commitment to You
                 </Text>
             </View>
@@ -72,12 +72,12 @@ const TermsConditionsScreen = () => {
                 )
                     : error ? (
                         <View className="bg-red-100 rounded-2xl p-4">
-                            <Text className="text-red-600 text-base">{error}</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-600 text-base">{error}</Text>
                             <TouchableOpacity
                                 className="mt-4 bg-primary-90 rounded-lg p-3"
                                 onPress={fetchContent}
                             >
-                                <Text className="text-white text-center font-semibold">Retry</Text>
+                                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-center ">Retry</Text>
                             </TouchableOpacity>
                         </View>
                     )
@@ -91,16 +91,16 @@ const TermsConditionsScreen = () => {
 
             {/* Queries Section */}
             <View className="px-5 mt-6 mb-8 hidden">
-                <Text className="text-2xl font-bold text-gray-800 text-center mb-4">
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-2xl font-bold text-gray-800 text-center mb-4">
                     Your Queries
                 </Text>
                 {queries.length === 0 ? (
-                    <Text className="text-gray-600 text-center">No queries found.</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600 text-center">No queries found.</Text>
                 ) : (
                     queries.map((query: any) => (
                         <View key={query.id} className="bg-white rounded-xl p-4 shadow-md mb-4">
-                            <Text className="text-gray-800 font-semibold">{query.query}</Text>
-                            <Text className="text-gray-600 text-sm">Status: {query.status}</Text>
+                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-gray-800">{query.query}</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600 text-sm">Status: {query.status}</Text>
                         </View>
                     ))
                 )}

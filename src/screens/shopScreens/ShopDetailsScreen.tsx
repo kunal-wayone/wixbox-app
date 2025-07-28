@@ -35,6 +35,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { addWishlistShop, removeWishlistShop } from '../../store/slices/wishlistSlice';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Octicons from 'react-native-vector-icons/Octicons';
 
 const { width } = Dimensions.get('screen');
 const DEFAULT_IMAGE = ImagePath.restaurant1;
@@ -70,6 +71,7 @@ const ShopDetailsScreen = () => {
   const [selectedTable, setSelectedTable] = useState<any>(null);
   const [selectedFloor, setSelectedFloor] = useState<any>('Ground');
   const [isModalVisible, setIsModalVisible] = useState<any>(false);
+  const [selectedSlot, setSelectedSlot] = useState(null)
   const [shopStatus, setShopStatus] = useState({
     isOpen: false,
     openingTime: null,
@@ -79,9 +81,21 @@ const ShopDetailsScreen = () => {
   const scrollY = useRef<any>(new Animated.Value(0)).current;
   const tabBarRef = useRef<any>(null);
   const [tabBarOffset, setTabBarOffset] = useState(0);
-  const shiftDetails = shop_info?.shift_details
-    ? JSON.parse(shop_info.shift_details)
-    : [];
+  let shiftDetails = [];
+
+  if (shop_info?.shift_details) {
+    if (typeof shop_info.shift_details === 'string') {
+      try {
+        shiftDetails = JSON.parse(shop_info.shift_details);
+      } catch (error) {
+        console.error("Invalid JSON in shift_details:", error);
+      }
+    } else if (typeof shop_info.shift_details === 'object') {
+      shiftDetails = shop_info.shift_details; // Already parsed
+    } else {
+      console.warn("shift_details is neither a string nor an object.");
+    }
+  }
 
   console.log(shop_info)
   const formatShiftData = (shifts: any) => {
@@ -306,7 +320,7 @@ const ShopDetailsScreen = () => {
       onPress={() => setSelectedFloor(item.floor)}
     >
       <Text
-        className={`font-poppins-regular ${selectedFloor === item.floor ? 'text-white' : 'text-black'}`}
+        className={`  -regular ${selectedFloor === item.floor ? 'text-white' : 'text-black'}`}
       >
         {item.floor}
       </Text>
@@ -437,18 +451,18 @@ const ShopDetailsScreen = () => {
               className={`rounded-full px-3 py-1 right-2 absolute bg-primary-100 `}
               style={{ top: '25%' }}
             >
-              <Text className={`text-xs font-medium text-white`}>{"Wisbox Verified"}</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-xs  text-white`}>{"Wisbox Verified"}</Text>
             </View>
 
 
             {/* Info on gradient bottom */}
             <View className="absolute bottom-0 left-4 right-4 mb-4">
-              <Text className="text-white text-xl font-bold" numberOfLines={1}>
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-xl " numberOfLines={1}>
                 {shop_info?.restaurant_name || 'Unknown Restaurant'}
               </Text>
               <View className="flex-row items-center mb-1 ">
                 <MaterialIcons name="location-on" size={16} color="white" />
-                <Text className="text-white ml-1">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white ml-1">
                   {`${shop_info?.city}, ${shop_info?.state}`}
                 </Text>
               </View>
@@ -458,7 +472,7 @@ const ShopDetailsScreen = () => {
                     key={tag.id}
                     className={`rounded-full px-3 py-1 bg-primary-80 `}
                   >
-                    <Text className={`text-xs font-medium text-white`}>{tag.label}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-xs font-medium text-white`}>{tag.label}</Text>
                   </View>
                 ))}
 
@@ -477,15 +491,15 @@ const ShopDetailsScreen = () => {
               {/* Row 1 - Column 1 */}
               <View className="flex-1 mr-2 flex-row items-center gap-2">
                 <Ionicons name='star' size={18} color={'#eba834'} />
-                <Text className="text-xl font-semibold text-gray-900">{shop_info?.average_rating || 0}</Text>
-                <Text className="text-xs text-gray-600 mt-1">(1.2K reviews)</Text>
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-xl  text-gray-900">{shop_info?.average_rating || 0}</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs text-gray-600 mt-1">(1.2K reviews)</Text>
               </View>
 
               {/* Row 1 - Column 2 */}
               <View className="flex-1 flex-row items-center gap-2 ml-2">
                 <Ionicons name='timer-outline' size={18} color={'#eb7a34'} />
 
-                <Text className="text-base font-medium text-gray-900">12–15 mins</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-900">12–15 mins</Text>
               </View>
             </View>
 
@@ -493,7 +507,7 @@ const ShopDetailsScreen = () => {
               {/* Row 2 - Column 1 */}
               <View className="flex-1 flex-row items-center mr-2">
                 <View className={`${shopStatus.isOpen ? "bg-green-500" : "bg-red-400"} w-4 h-4 rounded-full`} />
-                <Text className="text-base text-gray-900 ml-2">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-900 ml-2">
                   {shopStatus.openingTime && shopStatus.closingTime
                     ? shopStatus.isOpen
                       ? `Open till ${shopStatus.closingTime}`
@@ -506,7 +520,7 @@ const ShopDetailsScreen = () => {
               <View className="flex-1 flex-row items-center  ml-2">
                 <Ionicons name='shield-outline' size={18} color={'#eba834'} />
 
-                <Text className="text-base text-gray-900"> Hygiene: 4.5/5</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-900"> Hygiene: 4.5/5</Text>
               </View>
             </View>
           </View>
@@ -516,8 +530,8 @@ const ShopDetailsScreen = () => {
             <View className='flex-row items-center gap-1 w-[48%] '>
               <Ionicons name='location-outline' size={22} color={"#ac94f4"} />
               <View className='' >
-                <Text className='text-xs' numberOfLines={1} ellipsizeMode='tail' >{shop_info?.distance_km} Km away   {`${Math.floor((shop_info?.travel_time_mins || 0) / 60)}h ${(shop_info?.travel_time_mins || 0) % 60}m`}</Text>
-                <Text className='text-xs w-36' numberOfLines={1} ellipsizeMode='tail' >{shop_info?.address + ", " + shop_info?.city}</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-xs' numberOfLines={1} ellipsizeMode='tail' >{shop_info?.distance_km} Km away   {`${Math.floor((shop_info?.travel_time_mins || 0) / 60)}h ${(shop_info?.travel_time_mins || 0) % 60}m`}</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-xs w-36' numberOfLines={1} ellipsizeMode='tail' >{shop_info?.address + ", " + shop_info?.city}</Text>
               </View>
             </View>
             <View className='flex-row items-center justify- gap-2 w-[48%] '>
@@ -536,10 +550,10 @@ const ShopDetailsScreen = () => {
 
           <View className="bg-white dark:bg-gray-100 flex-col items-center gap-4 justify-between  p-5 border border-gray-100 px-3 rounded-xl mx-4 mb-4" style={styles.shadow}>
             <View className='flex-row items-center justify-between flex- w-full gap-4 '>
-              <Text className='font-semibold'>Top Dishes</Text>
-              <TouchableOpacity className='flex-row items-center  gap-3'>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }}>Top Dishes</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('ViewAllMenuItems', { shopId: shop_info?.id })} className='flex-row items-center  gap-3'>
                 <Ionicons name='eye-outline' color={"#ac94f4"} size={18} />
-                <Text className='text-primary-100'>View Full Menu</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-primary-100'>View Full Menu</Text>
               </TouchableOpacity>
             </View>
 
@@ -547,7 +561,7 @@ const ShopDetailsScreen = () => {
               <ActivityIndicator color={"#ac94f4"} />
             ) : (itemData?.length === 0 ? (
               <View className="items-center justify-center py-8">
-                <Text className="text-gray-500">No Item Found</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-500">No Item Found</Text>
               </View>
             ) : (
               <View className="flex flex-wrap flex-row justify-between">
@@ -573,14 +587,14 @@ const ShopDetailsScreen = () => {
                         className="h-28 w-full rounded-xl mb-2"
                         resizeMode="cover"
                       />
-                      <Text numberOfLines={1} ellipsizeMode='tail' className="text-base font-bold text-black mb-1">
+                      <Text style={{ fontFamily: 'Raleway-Bold' }} numberOfLines={1} ellipsizeMode='tail' className="text-base  text-black mb-1">
                         {item.item_name}
                       </Text>
-                      <Text numberOfLines={1} ellipsizeMode='tail' className="text-sm text-gray-600 mb-1">
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} numberOfLines={1} ellipsizeMode='tail' className="text-sm text-gray-600 mb-1">
                         {item.category?.name || 'Uncategorized'}
                       </Text>
                       <View className='flex-row items-center justify-between gap-1'>
-                        <Text numberOfLines={1} ellipsizeMode='tail' className={`text-xs font-semibold ${!shopStatus?.isOpen ? 'text-red-400' : 'text-green-600'}`}>
+                        <Text style={{ fontFamily: 'Raleway-SemiBold' }} numberOfLines={1} ellipsizeMode='tail' className={`text-xs ${!shopStatus?.isOpen ? 'text-red-400' : 'text-green-600'}`}>
                           {!shopStatus?.isOpen ? ' Closed' : ' Available'}
                         </Text>
                         <Text>
@@ -599,10 +613,10 @@ const ShopDetailsScreen = () => {
 
           <View className="bg-white dark:bg-gray-100 flex-col items-center gap-4 justify-between  p-5 border border-gray-100 px-3 rounded-xl mx-4 mb-4" style={styles.shadow}>
             <View className='flex-row items-center justify-between flex- w-full gap-4 '>
-              <Text className='font-semibold'>What People Are Saying</Text>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className=''>What People Are Saying</Text>
               <TouchableOpacity className='flex-row items-center  gap-3 hidden'>
                 <Ionicons name='eye-outline' color={"#ac94f4"} size={18} />
-                <Text className='text-primary-100'>View All</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-primary-100'>View All</Text>
               </TouchableOpacity>
             </View>
 
@@ -614,10 +628,10 @@ const ShopDetailsScreen = () => {
 
           <View className="bg-white dark:bg-gray-100 flex-col items-center gap-4 justify-between mb-40 p-5 border border-gray-100 px-3 rounded-xl mx-4 " style={styles.shadow}>
             <View className='flex-row items-center justify-between flex- w-full gap-4 '>
-              <Text className='font-semibold'>Latest Post</Text>
+              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className=''>Latest Post</Text>
               <TouchableOpacity className='flex-row items-center  gap-3 hidden'>
                 <Ionicons name='eye-outline' color={"#ac94f4"} size={18} />
-                <Text className='text-primary-100'>View All</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-primary-100'>View All</Text>
               </TouchableOpacity>
             </View>
 
@@ -641,13 +655,13 @@ const ShopDetailsScreen = () => {
           <TouchableOpacity
             disabled={cartItems?.length > 0 ? true : false}
             className="bg-primary-90 p-4 rounded-xl flex-row items-center justify-center gap-2  "
-            onPress={() => navigation.navigate('')} // Add proper navigation route
+            onPress={() => navigation.navigate('CartScreen')} // Add proper navigation route
           >
             {cartItems?.length > 0 && < Text className='absolute bg-red-600 rounded-full p-1 px-2 text-white z-50'
               style={{ right: '-2%', top: "-40%" }}
             >{cartItems?.length || 0}</Text>}
             <Ionicons name='cart-outline' color={"#fff"} size={22} />
-            <Text className="text-center text-white font-bold font-poppins">
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-center text-white   ">
               View Cart
             </Text>
           </TouchableOpacity>
@@ -672,7 +686,7 @@ const ShopDetailsScreen = () => {
             >
               <View className="bg-white rounded-t-3xl pt-6 pb-4" style={{ height: '85%' }}>
                 <View className="w-12 h-1 bg-gray-400 rounded-full self-center mb-3" />
-                <Text className="text-lg font-bold mb-3 px-4">Select a Table</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-lg font-bold mb-3 px-4">Select a Table</Text>
                 <FlatList
                   data={getUniqueFloors(shop_info?.tables)}
                   horizontal
@@ -700,7 +714,7 @@ const ShopDetailsScreen = () => {
                     }
                   }}
                 >
-                  <Text className="text-center text-white font-semibold font-poppins">
+                  <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-center text-white ">
                     Reserve a Table
                   </Text>
                 </TouchableOpacity>
@@ -742,43 +756,71 @@ const ShopDetailsScreen = () => {
                 className="w-full h-56 rounded-xl mb-2"
                 resizeMode="cover"
               /> */}
-                <Text className="text-lg text-center font-bold mb-1">
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg text-center font-bold mb-1">
                   {shop_info?.restaurant_name || 'Restaurant'}
                 </Text>
-                <Text className="text-center mb-4">Restaurant & Café</Text>
-                <Text className="py-2 mx-4 border-b border-gray-400 border-dashed">
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center mb-4">Restaurant & Café</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="py-2 mx-4 border-b border-gray-400 border-dashed">
                   Price Breakdown
                 </Text>
                 <View className="flex-row justify-between mx-4 my-2">
                   <View className="flex-1 mr-2">
-                    <Text className="text-base mb-1">Floor:</Text>
-                    <Text className="text-base mb-1">Table Number:</Text>
-                    <Text className="text-base mb-1">Table Type:</Text>
-                    <Text className="text-base mb-1">Seats:</Text>
-                    <Text className="text-base mb-1">Price:</Text>
-                    <Text className="text-base mb-1">Availability:</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">Floor:</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">Table Number:</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">Table Type:</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">Seats:</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">Price:</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">Availability:</Text>
                   </View>
                   <View className="flex-1 ml-2 items-end">
-                    <Text className="text-base mb-1">{selectedTable?.floor}</Text>
-                    <Text className="text-base mb-1">{selectedTable?.table_number}</Text>
-                    <Text className="text-base mb-1">
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">{selectedTable?.floor}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">{selectedTable?.table_number}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">
                       {selectedTable?.premium === "0" ? "Not Premium" : "Premium"}
                     </Text>
-                    <Text className="text-base mb-1">{selectedTable?.seats}</Text>
-                    <Text className="text-base mb-1">₹ {selectedTable?.price}/-</Text>
-                    <Text className={`text-base mb-1 ${selectedTable?.is_booked === "1" ? 'text-red-500' : 'text-green-500'}`}>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">{selectedTable?.seats}</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base mb-1">₹ {selectedTable?.price}/-</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-base mb-1 ${selectedTable?.is_booked === "1" ? 'text-red-500' : 'text-green-500'}`}>
                       {selectedTable?.is_booked === "1" ? 'Booked' : 'Available'}
                     </Text>
                   </View>
                 </View>
                 <View className="border-b border-dashed border-gray-400 mx-4 my-2" />
+
+                {/* <View>
+                  {selectedTable?.time_slot?.length > 0 && (
+                    <View style={{ marginTop: 16 }}>
+                      {selectedTable.time_slot.map((slot: any, idx: number) => {
+                        const isSelected = slot === selectedSlot;
+                        const bgClass = isSelected ? 'bg-primary-100 text-white' : 'bg-gray-100';
+                        console.log(isSelected, selectedSlot, slot)
+                        return (
+                          <TouchableOpacity
+                            key={idx}
+                            className={`${bgClass} mb-2 rounded p-2`}
+                            onPress={() => setSelectedSlot(slot)}
+                          >
+                            <Text style={{fontFamily:'Raleway-Regular'}} style={{ fontSize: 12 }}
+                              className={`${bgClass} `}
+                            >
+                              📅 {slot.date} |  {slot.start_time} - {slot.end_time} •  ₹{slot.price}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View> */}
+
+
                 <TouchableOpacity
-                  className={`rounded-xl p-4 mx-4 mt-5 ${selectedTable?.is_booked === "1" ? 'bg-gray-300' : 'bg-primary-80'}`}
+                  className={`rounded-xl p-4 mx-4 mt-5 ${selectedTable?.is_booked === "1" ? 'bg-gray-300' : 'bg-primary-100'}`}
                   onPress={() => {
                     if (selectedTable && selectedTable.is_booked !== "1") {
                       navigation.navigate("TableBookingFormScreen", {
                         shop_id: shop_info?.id,
                         table_info: [selectedTable],
+                        slot: selectedSlot
                       });
                     } else {
                       ToastAndroid.show("This table is already booked.", ToastAndroid.SHORT);
@@ -786,7 +828,7 @@ const ShopDetailsScreen = () => {
                   }}
                   disabled={selectedTable?.is_booked === "1"}
                 >
-                  <Text className={`text-center font-semibold font-poppins ${selectedTable?.is_booked === "1" ? 'text-gray-500' : 'text-white'}`}>
+                  <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`text-center  ${selectedTable?.is_booked === "1" ? 'text-gray-500' : 'text-white'}`}>
                     Pay ₹ {selectedTable?.price}/- & Reserve Now
                   </Text>
                 </TouchableOpacity>

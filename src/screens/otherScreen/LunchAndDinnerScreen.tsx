@@ -131,26 +131,26 @@ const LunchAndDinnerScreen = () => {
                 paddingHorizontal: 16,
                 paddingBottom: 28,
               }}>
-              <Text className="text-white mb-1 font-poppins font-bold text-2xl">
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white mb-1   text-2xl">
                 Lunch & Dinner
               </Text>
-              <Text className="text-white mb-2">Sharma Restaurant</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white mb-2">Sharma Restaurant</Text>
               <View className="flex-row items-center gap-1 mb-2">
                 <Image
                   source={ImagePath.location}
                   style={{ width: 16, height: 16, tintColor: '#fff' }}
                   resizeMode="contain"
                 />
-                <Text className="mb-1 text-white">{'12 Mins From Me'}</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="mb-1 text-white">{'12 Mins From Me'}</Text>
               </View>
             </LinearGradient>
           </ImageBackground>
 
           {/* Content Section */}
-          <Text className="text-2xl font-poppins font-bold mt-4 px-4">
+          <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-2xl   mt-4 px-4">
             Lunch & Dinner
           </Text>
-          <Text className="px-4 mb-4">
+          <Text style={{ fontFamily: 'Raleway-Regular' }} className="px-4 mb-4">
             <AntDesign name="star" size={19} color={'#FFC727'} /> 4 Star Rated &
             Above
           </Text>
@@ -158,11 +158,11 @@ const LunchAndDinnerScreen = () => {
           <View className="flex-row items-center justify-center px-4 mb-4">
             <TouchableOpacity className="rounded-l-full flex-row items-center justify-center gap-2 w-1/2 p-2.5 px-4 bg-primary-80 border border-primary-80">
               <MaterialIcons name={'local-offer'} size={19} color={'#fff'} />
-              <Text className="text-white text-center">Popular</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center">Popular</Text>
             </TouchableOpacity>
             <TouchableOpacity className="rounded-r-full flex-row items-center justify-center gap-2 w-1/2 p-2.5 px-4 bg-white border border-primary-80">
               <MaterialIcons name={'location-on'} size={19} color={'#000'} />
-              <Text className="text-black text-center">Near By</Text>
+              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-black text-center">Near By</Text>
             </TouchableOpacity>
           </View>
 
@@ -175,7 +175,7 @@ const LunchAndDinnerScreen = () => {
             />
           )}
           {error && (
-            <Text className="text-red-600 mb-4 text-center">{error}</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-600 mb-4 text-center">{error}</Text>
           )}
 
           {/* Items List */}
@@ -183,7 +183,7 @@ const LunchAndDinnerScreen = () => {
             <View
               key={i}
               className="flex-row gap-4 bg-primary-10 rounded-xl p-6 mx-4 mb-4">
-              <Text className="absolute top-2 right-12 font-poppins font-bold">
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="absolute top-2 right-12 ">
                 <AntDesign name="star" size={19} color={'#FFC727'} /> {d?.rating}
               </Text>
               <TouchableOpacity className="absolute top-2 right-5">
@@ -199,23 +199,23 @@ const LunchAndDinnerScreen = () => {
                 resizeMode="stretch"
               />
               <View style={{ flex: 1 }}>
-                <Text className="text-xl font-poppins font-bold">{d?.name}</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl ">{d?.name}</Text>
                 <View className="flex-row items-center gap-4 mb-2">
-                  <Text className="font-poppins text-gray-500">
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="   text-gray-500">
                     {d?.category}
                   </Text>
-                  <Text className="font-poppins text-gray-500">
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="   text-gray-500">
                     {d?.distance}
                   </Text>
                 </View>
-                <Text className="font-bold mb-1">₹{d?.price}/-</Text>
-                <Text className="font-poppins font-bold">{d?.resturentName}</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className=" mb-1">₹{d?.price}/-</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="">{d?.resturentName}</Text>
               </View>
             </View>
           ))}
 
           <TouchableOpacity className="bg-primary-80 p-4 rounded-xl m-4">
-            <Text className="text-white text-center">View More</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center">View More</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>

@@ -112,10 +112,10 @@ const ProductSlider = () => {
   return (
     <View className="mb-4">
       <View className="mb-3">
-        <Text className="text-lg font-semibold text-gray-900">
+        <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg text-gray-900">
           Few Steps Away
         </Text>
-        <Text className="text-sm text-gray-500">
+        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-500">
           Discover nearby picks tailored for you
         </Text>
       </View>
@@ -133,7 +133,7 @@ const ProductSlider = () => {
           isLoading && !data.length ? (
             <SkeletonCard key={index} />
           ) : (
-            <View key={store.id} style={{ width:width * 0.8 }}>
+            <View key={store.id} style={{ width: width * 0.8 }}>
               <Shop
                 id={store.id}
                 name={store.restaurant_name}

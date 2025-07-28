@@ -85,13 +85,14 @@ const DeleteAccountScreen = () => {
                 textAlign: 'center',
                 fontSize: 20,
                 fontWeight: 'bold',
-                fontFamily: 'Poppins',
+                fontFamily: 'Raleway-Regular',
                 color: '#374151',
+
               }}>
               Delete Account
             </Text>
             <Text
-              style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
+              style={{ fontFamily: 'Raleway-Regular', textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
               Enter your phone number to receive an OTP for account deletion.
             </Text>
 
@@ -115,6 +116,7 @@ const DeleteAccountScreen = () => {
                   <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
+                        fontFamily: 'Raleway-Regular',
                         fontSize: 14,
                         fontWeight: '500',
                         color: '#374151',
@@ -130,6 +132,7 @@ const DeleteAccountScreen = () => {
                         borderRadius: 8,
                         padding: 12,
                         fontSize: 16,
+                        fontFamily: 'Raleway-Regular',
                       }}
                       placeholder="Enter phone number"
                       onChangeText={handleChange('phoneNumber')}
@@ -140,7 +143,7 @@ const DeleteAccountScreen = () => {
                     />
                     {touched.phoneNumber && errors.phoneNumber && (
                       <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.phoneNumber}
                       </Text>
                     )}
@@ -158,7 +161,7 @@ const DeleteAccountScreen = () => {
                       marginTop: 16,
                     }}>
                     <Text
-                      style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                      style={{ fontFamily: 'Raleway-Regular', color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
                       {isSubmitting ? 'Sending OTP...' : 'Send OTP'}
                     </Text>
                   </TouchableOpacity>

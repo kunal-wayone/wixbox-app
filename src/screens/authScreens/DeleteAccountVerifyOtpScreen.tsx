@@ -118,13 +118,13 @@ const DeleteAccountVerifyOtpScreen = () => {
                 textAlign: 'center',
                 fontSize: 20,
                 fontWeight: 'bold',
-                fontFamily: 'Poppins',
+                fontFamily: 'Raleway-Regular',
               }}>
               Verify OTP
             </Text>
 
             <Text
-              style={{ textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
+              style={{ fontFamily: 'Raleway-Regular', textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
               Enter the 6-digit OTP sent to your registered mobile number.
             </Text>
 
@@ -150,6 +150,7 @@ const DeleteAccountVerifyOtpScreen = () => {
                         fontWeight: '500',
                         color: '#374151',
                         marginBottom: 4,
+                        fontFamily: 'Raleway-Regular',
                       }}>
                       Enter OTP
                     </Text>
@@ -172,6 +173,7 @@ const DeleteAccountVerifyOtpScreen = () => {
                             textAlign: 'center',
                             fontSize: 18,
                             marginHorizontal: 4,
+                            fontFamily: 'Raleway-Regular',
                           }}
                           placeholder="0"
                           keyboardType="number-pad"
@@ -185,7 +187,7 @@ const DeleteAccountVerifyOtpScreen = () => {
                     </View>
                     {touched.otp && errors.otp && (
                       <Text
-                        style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                         {errors.otp}
                       </Text>
                     )}
@@ -197,7 +199,7 @@ const DeleteAccountVerifyOtpScreen = () => {
                         marginLeft: 4,
                         fontSize: 14,
                         textDecorationLine: 'underline',
-                        fontWeight: 'bold',
+                        fontFamily: 'Raleway-Bold',
                       }}>
                       Resend Otp
                     </Text>
@@ -208,7 +210,7 @@ const DeleteAccountVerifyOtpScreen = () => {
                     style={{ marginTop: 16 }}>
                     <Text
                       className="text-center bg-primary-80 p-4 rounded-xl"
-                      style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                      style={{ fontFamily: 'Raleway-Regular', color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
                       {isSubmitting ? 'Verifying...' : 'Verify'}
                     </Text>
                   </TouchableOpacity>
@@ -246,9 +248,9 @@ const DeleteAccountVerifyOtpScreen = () => {
               <Text
                 style={{
                   fontSize: 18,
-                  fontWeight: 'bold',
                   marginVertical: 12,
                   textAlign: 'center',
+                  fontFamily: 'Raleway-Bold',
                 }}>
                 OTP Verified Successfully!
               </Text>
@@ -258,6 +260,7 @@ const DeleteAccountVerifyOtpScreen = () => {
                   color: '#4B5563',
                   textAlign: 'center',
                   marginBottom: 16,
+                  fontFamily: 'Raleway-Regular',
                 }}>
                 Your OTP has been verified. You will be redirected to the Register
                 screen.
@@ -277,7 +280,7 @@ const DeleteAccountVerifyOtpScreen = () => {
                   style={{
                     color: '#fff',
                     fontSize: 16,
-                    fontWeight: 'bold',
+                    fontFamily: 'Raleway-Bold',
                   }}>
                   Continue
                 </Text>

@@ -12,9 +12,13 @@ import AntDesign from 'react-native-vector-icons/AntDesign';
 import { ImagePath } from '../../constants/ImagePath';
 import { Fetch } from '../../utils/apiUtils';
 import { useSelector } from 'react-redux';
-import { useIsFocused } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/AntDesign';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import ReviewComment from '../../components/common/ReviewComment';
 
 const ManageReviewScreen = () => {
+    const naviagation = useNavigation<any>()
     const isFocused = useIsFocused();
     const [reviews, setReviews] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -84,10 +88,10 @@ const ManageReviewScreen = () => {
                         style={{ width: 40, height: 40, borderRadius: 20, marginRight: 12 }}
                     />
                     <View>
-                        <Text style={{ fontWeight: 'bold', fontSize: 15, color: '#333' }}>
+                        <Text style={{  fontFamily: 'Raleway-Regular', fontSize: 15, color: '#333' }}>
                             {item?.user?.name || '👤 Anonymous'}
                         </Text>
-                        <Text style={{ fontSize: 12, color: '#777' }}>
+                        <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 12, color: '#777' }}>
                             🗓️ {item?.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}
                         </Text>
                     </View>
@@ -100,16 +104,13 @@ const ManageReviewScreen = () => {
                         .map((_, index) => (
                             <AntDesign key={index} name="star" color="#FFD700" size={16} />
                         ))}
-                    <Text style={{ marginLeft: 4, fontWeight: '600', color: '#444' }}>
-                        {item?.rating || 0} ⭐
+                    <Text style={{ fontFamily: 'Raleway-Regular', marginLeft: 4, color: '#444' }}>
+                        {item?.rating || 0}
                     </Text>
                 </View>
             </View>
 
-            {/* Comment */}
-            <Text style={{ fontSize: 14, color: '#555', marginTop: 4 }}>
-                💬 {item?.comment || 'No comment provided.'}
-            </Text>
+            <ReviewComment comment={item?.comment} />
         </View>
     );
 
@@ -134,7 +135,7 @@ const ManageReviewScreen = () => {
                         marginTop: 16,
                     }}
                 >
-                    <Text style={{ color: '#fff', textAlign: 'center', fontWeight: 'bold', fontSize: 16 }}>
+                    <Text style={{ color: '#fff', textAlign: 'center', fontFamily: 'Raleway-Regular', fontSize: 16 }}>
                         🔄 Load More Reviews
                     </Text>
                 </TouchableOpacity>
@@ -145,50 +146,63 @@ const ManageReviewScreen = () => {
     };
 
     return (
-        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 16, backgroundColor: '#fff' }}>
+        <SafeAreaView className='flex-1 bg-white'>
             {/* Header */}
-            <View style={{ marginBottom: 12 }}>
-                <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#1F2937' }}>
-                    {user?.shop?.restaurant_name || 'Your Shop'}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                    {[1, 2, 3, 4, 5].map((_, index) => (
-                        <AntDesign key={index} name="star" color="#FBBF24" size={16} />
-                    ))}
-                    <Text style={{ marginLeft: 6, fontSize: 16, fontWeight: '600', color: '#374151' }}>
-                        {user?.shop?.average_rating || 0}
+            <TouchableOpacity className='p-4 absolute z-50 ' onPress={() => naviagation.goBack()}>
+                <Icon name='arrowleft' size={20} className='text' />
+            </TouchableOpacity>
+            <Text className='text-center my-4' style={{ fontFamily: 'Raleway-Regular', fontSize: 18,  color: '#111827' }}>
+                Manage Reviews
+            </Text>
+            <View style={{ flex: 1, paddingHorizontal: 16, backgroundColor: '#fff' }}>
+                <View style={{ marginBottom: 12 }} className='flex-row items-center  justify-between w-11/12'>
+                    <Text style={{ fontSize: 16, fontFamily: 'Raleway-Regular', color: '#1F2937' }} className='w-4/5' numberOfLines={1}>
+                        {user?.shop?.restaurant_name || 'Your Shop'}
                     </Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                        {[1].map((_, index) => (
+                            <AntDesign key={index} name="star" color="#FBBF24" size={16} />
+                        ))}
+                        <View className='flex-row items-center gap-1'>
+                            <Text style={{ fontSize: 16,  fontFamily: 'Raleway-Regular', color: '#374151' }}>
+                                {user?.shop?.average_rating || 0}
+                            </Text>
+                            <Text style={{  fontFamily: 'Raleway-Regular',fontSize: 12, color: '#6B7280', }}>
+                                ({totalReviews} review(s))
+                            </Text>
+                        </View>
+                    </View>
                 </View>
+
+                {/* Review Info */}
+                <View className='flex-row items-center justify-between border-b-2 mb-4 border-gray-300 pb-2  '>
+                    <Text style={{ fontSize: 18,  fontFamily: 'Raleway-Regular', color: '#111827' }}>
+                        ✍️ Reviews
+                    </Text>
+
+                </View>
+
+                {/* Review List */}
+                {isLoading ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <ActivityIndicator size="large" color="#007AFF" />
+                    </View>
+                ) : reviews?.length === 0 ? (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={{  fontFamily: 'Raleway-Regular',fontSize: 16, color: '#6B7280' }}>😕 No reviews found</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        data={reviews}
+                        renderItem={renderReviewCard}
+                        keyExtractor={(item) => item.id.toString()}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ paddingBottom: 24 }}
+                        ListFooterComponent={renderFooter}
+                    />
+                )}
             </View>
-
-            {/* Review Info */}
-            <Text style={{ fontSize: 18, fontWeight: '600', color: '#111827', marginBottom: 4 }}>
-                ✍️ Reviews
-            </Text>
-            <Text style={{ fontSize: 14, color: '#6B7280', marginBottom: 16 }}>
-                {totalReviews} review(s)
-            </Text>
-
-            {/* Review List */}
-            {isLoading ? (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#007AFF" />
-                </View>
-            ) : reviews?.length === 0 ? (
-                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 16, color: '#6B7280' }}>😕 No reviews found</Text>
-                </View>
-            ) : (
-                <FlatList
-                    data={reviews}
-                    renderItem={renderReviewCard}
-                    keyExtractor={(item) => item.id.toString()}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingBottom: 24 }}
-                    ListFooterComponent={renderFooter}
-                />
-            )}
-        </View>
+        </SafeAreaView>
     );
 };
 

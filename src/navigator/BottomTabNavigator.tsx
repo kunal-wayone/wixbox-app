@@ -81,9 +81,11 @@ export default function BottomTabNavigator() {
         tabBarLabelStyle: {
           fontSize: 12,
           paddingTop: 3,
+          fontFamily: 'Raleway-SemiBold'
         },
         tabBarItemStyle: {
           paddingVertical: 5,
+          fontFamily: 'Raleway-Regular'
         },
         tabBarActiveTintColor: '#B68AD4',
         tabBarInactiveTintColor: '#313131',

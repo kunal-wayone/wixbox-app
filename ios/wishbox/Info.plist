@@ -52,9 +52,13 @@
 		<string>Inter-Bold.otf</string>
 		<string>Inter-Regular.otf</string>
 		<string>Inter-SemiBold.otf</string>
+		<string>BitcountPropDouble-Regular.ttf</string>
 		<string>Poppins-Bold.ttf</string>
 		<string>Poppins-Regular.ttf</string>
 		<string>Poppins-SemiBold.ttf</string>
+		<string>Raleway-Bold.ttf</string>
+		<string>Raleway-Regular.ttf</string>
+		<string>Raleway-SemiBold.ttf</string>
 	</array>
 </dict>
 </plist>

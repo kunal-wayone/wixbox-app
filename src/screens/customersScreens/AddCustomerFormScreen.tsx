@@ -178,8 +178,7 @@ const AddCustomerFormScreen = () => {
                 flex: 1,
                 textAlign: 'center',
                 fontSize: 20,
-                fontWeight: 'bold',
-                fontFamily: 'Poppins',
+                fontFamily: 'Raleway-Bold',
                 color: '#374151',
               }}
             >
@@ -212,72 +211,36 @@ const AddCustomerFormScreen = () => {
                 )}
 
                 {/* Order Items */}
-                <View style={{ marginBottom: 12 }} className='bg-primary-10 p-2 rounded-xl '>
-                  <View className="flex-row items-center justify-start gap-10">
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}
-                    >
-                      Item Name
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}
-                    >
-                      Qnt.
-                    </Text>
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                      }}
-                    >
-                      Price
-                    </Text>
+                <View style={{ marginBottom: 12 }} className=' p-2 rounded-xl '>
 
-                    <Text
-                      style={{
-                        fontSize: 14,
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: 4,
-                        textAlign: "right"
-                      }}
-                      className='flex-1 mr-2'
-                    >
-                      Action
-                    </Text>
-                  </View>
                   {orderItems?.length === 0 ? (
-                    <Text>No items added</Text>
+                    <Text style={{ fontFamily: 'Raleway-Regular' }}>No items added</Text>
                   ) : (
                     <View>
-                      {orderItems.map((item: any, index: any) => (
+                      {orderItems?.map((item, index) => (
                         <View
                           key={item.id || index}
-                          style={{
-                            marginBottom: 8,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                          }}
+                          className="bg-white rounded-xl shadow-md p-4 mb-3 flex-row items-center justify-between"
+                          style={{ elevation: 3 }} // For Android shadow
                         >
-                          <View className="flex-1 flex-row items-center justify-start gap-10">
-                            <Text className="w-24">
-                              {item?.name?.length > 10 ? `${item.name.slice(0, 10)}...` : item.name}
-                            </Text>
-                            <Text>{item?.quantity}</Text>
-                            <Text>₹ {item.price}/-</Text>
+                          {/* Item Info Section */}
+                          <View className="flex-1 flex-row items-center gap-4">
+                            <View className="bg-blue-100 p-2 rounded-lg">
+                              <Ionicons name="fast-food-outline" size={20} color="#3B82F6" />
+                            </View>
+
+                            <View className="flex-1">
+                              <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-800">
+                                {item?.name?.length > 15 ? `${item.name.slice(0, 15)}...` : item.name}
+                              </Text>
+                              <View className="flex-row gap-3 mt-1">
+                                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">Qty: {item?.quantity}</Text>
+                                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-green-600 ">₹ {item.price}/-</Text>
+                              </View>
+                            </View>
                           </View>
+
+                          {/* Delete Button */}
                           <TouchableOpacity
                             onPress={() => {
                               dispatch(removeFromCart(item.id));
@@ -285,15 +248,15 @@ const AddCustomerFormScreen = () => {
                               setOrderItems(updatedItems);
                               setFieldValue('orderItems', updatedItems);
                             }}
-                            style={{ marginLeft: 8 }}
-                            className='mr-4'
+                            className="ml-2 p-2 rounded-full bg-red-100"
                           >
-                            <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                            <Ionicons name="trash-outline" size={20} color="#DC2626" />
                           </TouchableOpacity>
                         </View>
                       ))}
+
                       {touched.orderItems && errors.orderItems && (
-                        <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                        <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                           {errors.orderItems}
                         </Text>
                       )}
@@ -312,11 +275,12 @@ const AddCustomerFormScreen = () => {
                       alignItems: 'center',
                       padding: 8,
                       marginTop: 4,
+
                     }}
                     className='ml-auto'
                   >
-                    <Ionicons name="add-circle-outline" size={20} color="#B68AD4" />
-                    <Text style={{ marginLeft: 8, color: '#B68AD4', fontSize: 14 }}>
+                    <Ionicons name="add-circle-outline" size={20} color="#ac94f4" />
+                    <Text style={{ marginLeft: 8, color: '#ac94f4', fontSize: 14 }}>
                       Add Item
                     </Text>
                   </TouchableOpacity>
@@ -330,6 +294,7 @@ const AddCustomerFormScreen = () => {
                       fontWeight: '500',
                       color: '#374151',
                       marginBottom: 4,
+                      fontFamily: 'Raleway-Regular',
                     }}
                   >
                     Customer Name
@@ -342,14 +307,17 @@ const AddCustomerFormScreen = () => {
                       borderRadius: 8,
                       padding: 12,
                       fontSize: 16,
+                      color: "#000",
+                      fontFamily: 'Raleway-Regular',
                     }}
+                    placeholderTextColor={'#000'}
                     placeholder="Enter customer name"
                     onChangeText={handleChange('customerName')}
                     onBlur={handleBlur('customerName')}
                     value={values.customerName}
                   />
                   {touched.customerName && errors.customerName && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.customerName}
                     </Text>
                   )}
@@ -363,6 +331,7 @@ const AddCustomerFormScreen = () => {
                       fontWeight: '500',
                       color: '#374151',
                       marginBottom: 4,
+                      fontFamily: 'Raleway-Regular',
                     }}
                   >
                     Email
@@ -375,7 +344,10 @@ const AddCustomerFormScreen = () => {
                       borderRadius: 8,
                       padding: 12,
                       fontSize: 16,
+                      color: "#000",
+                      fontFamily: 'Raleway-Regular',
                     }}
+                    placeholderTextColor={'#000'}
                     placeholder="Enter email"
                     onChangeText={handleChange('email')}
                     onBlur={handleBlur('email')}
@@ -383,7 +355,7 @@ const AddCustomerFormScreen = () => {
                     keyboardType="email-address"
                   />
                   {touched.email && errors.email && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.email}
                     </Text>
                   )}
@@ -397,6 +369,7 @@ const AddCustomerFormScreen = () => {
                       fontWeight: '500',
                       color: '#374151',
                       marginBottom: 4,
+                      fontFamily: 'Raleway-Regular',
                     }}
                   >
                     Phone
@@ -409,7 +382,10 @@ const AddCustomerFormScreen = () => {
                       borderRadius: 8,
                       padding: 12,
                       fontSize: 16,
+                      color: "#000",
+                      fontFamily: 'Raleway-Regular',
                     }}
+                    placeholderTextColor={'#000'}
                     maxLength={10}
                     placeholder="Enter phone number"
                     onChangeText={handleChange('phone')}
@@ -418,7 +394,7 @@ const AddCustomerFormScreen = () => {
                     keyboardType="phone-pad"
                   />
                   {touched.phone && errors.phone && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.phone}
                     </Text>
                   )}
@@ -426,7 +402,7 @@ const AddCustomerFormScreen = () => {
 
 
 
-                {/* Arrived At */}
+                {/* Arriving At */}
                 <View style={{ marginBottom: 12 }}>
                   <TouchableOpacity
                     style={{
@@ -440,8 +416,8 @@ const AddCustomerFormScreen = () => {
                     }}
                     onPress={() => setShowStartTimePicker(true)}
                   >
-                    <Text style={{ fontSize: 16, color: '#374151', flex: 1 }}>
-                      {values.arrivedAt || 'Arrived At'}
+                    <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 16, color: '#374151', flex: 1 }}>
+                      {values.arrivedAt || 'Arriving At'}
                     </Text>
                     <Icon name="access-time" size={20} color="#374151" />
                   </TouchableOpacity>
@@ -456,7 +432,7 @@ const AddCustomerFormScreen = () => {
                     onCancel={() => setShowStartTimePicker(false)}
                   />
                   {touched.arrivedAt && errors.arrivedAt && (
-                    <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
+                    <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                       {errors.arrivedAt}
                     </Text>
                   )}
@@ -467,14 +443,14 @@ const AddCustomerFormScreen = () => {
                   onPress={() => handleSubmit()}
                   disabled={isSubmitting}
                   style={{
-                    backgroundColor: isSubmitting ? '#B68AD480' : '#B68AD4',
+                    backgroundColor: isSubmitting ? '#ac94f4' : '#ac94f4',
                     padding: 16,
                     borderRadius: 10,
                     alignItems: 'center',
                     marginTop: 16,
                   }}
                 >
-                  <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold' }}>
+                  <Text style={{ fontFamily: 'Raleway-Bold', color: '#fff', fontSize: 16, }}>
                     {isSubmitting
                       ? 'Submitting...'
                       : user?.role === 'user'

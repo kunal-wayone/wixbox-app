@@ -7,6 +7,8 @@ module.exports = {
       fontFamily: {
         poppins: ['Poppins', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
+        raleway: ['Raleway', 'sans-serif'],
+
         // Remove platformSelect — it's not valid here
         system: ['ui-sans-serif', 'system-ui'],
       },

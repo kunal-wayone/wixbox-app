@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -25,13 +25,15 @@ import { ImagePath } from '../../constants/ImagePath';
 import { Fetch, IMAGE_URL, Post, Put } from '../../utils/apiUtils';
 import Switch from '../../components/common/Switch';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Picker } from '@react-native-picker/picker';
+import MultiSelect from 'react-native-multiple-select';
 
 const { width } = Dimensions.get('screen');
 
 const validationSchema = Yup.object().shape({
   ad_title: Yup.string().required('Please enter an ad title 😊'),
   ads_type: Yup.string().required('Please select an ad type 🌟'),
-  related_item: Yup.string().required('Please enter a product name 🛍️'),
+  related_item: Yup.array().required('Please enter a product name 🛍️'),
   offer_tag: Yup.string().required('Please select an offer tag 🎁'),
   promotion_tag: Yup.string().required('Please select a promotion tag 🌟'),
   offer_starts_at: Yup.date().required('Please set a start date 📅'),
@@ -40,12 +42,6 @@ const validationSchema = Yup.object().shape({
     .min(Yup.ref('offer_starts_at'), 'End date must be after start date'),
   offer_start_time: Yup.date().required('Please set a start time ⏰'),
   offer_end_time: Yup.date().required('Please set an end time ⏰'),
-  original_price: Yup.number()
-    .required('Please enter the original price 💸')
-    .positive('Price must be positive'),
-  discounted_price: Yup.number()
-    .positive('Discounted price must be positive')
-    .nullable(),
   caption: Yup.string().required('Please add a caption 📝'),
   budget: Yup.number()
     .required('Please specify a budget 💰')
@@ -63,6 +59,7 @@ const CreateAdScreen = () => {
   const [showEndDatePicker, setShowEndDatePicker] = React.useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = React.useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = React.useState(false);
+  const [products, setProducts] = useState([])
   const [images, setImages] = React.useState<any[]>(adDetails?.images?.map((img: any, index: any) => ({ uri: IMAGE_URL + img, id: index })) || []);
 
   useEffect(() => {
@@ -92,6 +89,24 @@ const CreateAdScreen = () => {
       fetchAdDetails();
     }
   }, [adDetails?.id]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [productsRes]: any = await Promise.all([
+          Fetch('/user/menu-items-all', undefined, 5000),
+
+        ]);
+        if (productsRes.success) setProducts(productsRes.data);
+        console.log(productsRes)
+
+      } catch (error) {
+        ToastAndroid.show('Failed to load categories or units 😢', ToastAndroid.SHORT);
+      }
+    };
+    fetchData();
+  }, [adDetails]);
+
 
   const pickImages = async (setFieldValue: any) => {
     try {
@@ -191,7 +206,7 @@ const CreateAdScreen = () => {
         {isFetching && (
           <View className="absolute inset-0 bg-black/80 justify-center items-center z-50">
             <ActivityIndicator size="large" color="#ac94f4" />
-            <Text className="text-white text-lg mt-3 font-medium">Loading...</Text>
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-lg mt-3 font-medium">Loading...</Text>
           </View>
         )}
         <ScrollView
@@ -208,10 +223,10 @@ const CreateAdScreen = () => {
           </TouchableOpacity>
 
           <View className="">
-            <Text className="text-center text-2xl font-bold text-gray-900 dark:text-gray-900 font-[Poppins] mt-4">
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-center text-2xl text-gray-900 dark:text-gray-900 font-[Poppins] mt-4">
               {adDetails ? 'Edit Ad ✨' : 'Create New Ad ✨'}
             </Text>
-            <Text className="text-center text-sm text-gray-600 dark:text-gray-400 mb-6">
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center text-sm text-gray-600 dark:text-gray-400 mb-6">
               {adDetails ? 'Update your ad to captivate your audience!' : 'Craft a stunning ad to promote your offer!'}
             </Text>
 
@@ -263,7 +278,7 @@ const CreateAdScreen = () => {
                   {/* Image Upload and Preview */}
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Upload Poster</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Upload Poster</Text>
                     </View>
                     <TouchableOpacity
                       className="border border-dashed border-gray-400 dark:border-gray-300 rounded-lg p-4 items-center justify-center h-36 mb-3"
@@ -273,8 +288,8 @@ const CreateAdScreen = () => {
                       <View className="bg-primary-100 rounded-full p-3">
                         <Ionicons name="camera-outline" size={40} color="#fff" />
                       </View>
-                      <Text className="text-gray-600 dark:text-gray-400 mt-2">Tap to add photos</Text>
-                      <Text className="text-xs text-gray-500 dark:text-gray-400">Up to 5 images from camera or gallery</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600 dark:text-gray-400 mt-2">Tap to add photos</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs text-gray-500 dark:text-gray-400">Up to 5 images from camera or gallery</Text>
                     </TouchableOpacity>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                       {images.map((image: any, index: any) => (
@@ -295,7 +310,7 @@ const CreateAdScreen = () => {
                       ))}
                     </ScrollView>
                     {touched.images && errors.images && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.images}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.images}</Text>
                     )}
                   </View>
 
@@ -303,7 +318,7 @@ const CreateAdScreen = () => {
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <FontAwesome name="bullhorn" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Ad Title</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Ad Title</Text>
                     </View>
                     <TextInput
                       className="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-white text-gray-900 rounded-lg p-3 text-base dark:text-gray-900"
@@ -315,7 +330,7 @@ const CreateAdScreen = () => {
                       accessibilityLabel="Ad title"
                     />
                     {touched.ad_title && errors.ad_title && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.ad_title}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.ad_title}</Text>
                     )}
                   </View>
 
@@ -323,19 +338,46 @@ const CreateAdScreen = () => {
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <MaterialIcons name="shopping-bag" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Product Name</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Product Name</Text>
                     </View>
-                    <TextInput
-                      className="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-white rounded-lg p-3 text-base text-gray-800 dark:text-gray-900"
-                      placeholder="e.g., Deluxe Burger 🍔"
-                      placeholderTextColor="#6B7280"
-                      onChangeText={handleChange('related_item')}
-                      onBlur={handleBlur('related_item')}
-                      value={values.related_item}
-                      accessibilityLabel="Product name"
+                    <MultiSelect
+                      hideTags={false}
+                      items={products}
+                      uniqueKey="id"
+                      onSelectedItemsChange={(selected) => {
+                        setFieldValue('related_item', selected); // Assuming you're using Formik
+                      }}
+                      selectedItems={values.related_item}
+                      selectText="e.g., Deluxe Burger 🍔"
+                      searchInputPlaceholderText="Search related items..."
+                      tagRemoveIconColor="#CCC"
+                      tagBorderColor="#CCC"
+                      tagTextColor="#000"
+                      selectedItemTextColor="#000"
+                      selectedItemIconColor="#000"
+                      itemTextColor="#000"
+                      displayKey="item_name"
+                      searchInputStyle={{ color: '#000' }}
+                      submitButtonColor="#ac94f4"
+                      submitButtonText="Confirm"
+                      styleMainWrapper={{
+                        backgroundColor: '#F3F4F6', // Tailwind's gray-100
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: '#D1D5DB', // Tailwind's gray-300
+                        padding: 10,
+                        minHeight: 100,
+                      }}
+                      styleDropdownMenuSubsection={{
+                        paddingLeft: 0,
+                        paddingRight: 0,
+                        height: 50,
+                        backgroundColor: 'transparent',
+                        borderBottomWidth: 0,
+                      }}
                     />
                     {touched.related_item && errors.related_item && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.related_item}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.related_item}</Text>
                     )}
                   </View>
 
@@ -344,7 +386,7 @@ const CreateAdScreen = () => {
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <MaterialIcons name="category" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Type of Ad</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Type of Ad</Text>
                     </View>
                     <View className="flex-col justify-between gap-2">
                       {[
@@ -358,13 +400,13 @@ const CreateAdScreen = () => {
                           onPress={() => setFieldValue('ads_type', type)}
                           accessibilityLabel={`Select ${type} ad type`}
                         >
-                          <Text className={`text-left text-base font-semibold ${values?.ads_type === type ? "text-white dark:text-white" : "text-gray-900 dark:text-gray-900"}`}>{emoji} {lable}</Text>
-                          <Text className={`text-left text-xs  mt-1 ${values?.ads_type === type ? "text-white dark:text-white" : "text-gray-900 dark:text-gray-900"}`}>{desc}</Text>
+                          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`text-left text-base ${values?.ads_type === type ? "text-white dark:text-white" : "text-gray-900 dark:text-gray-900"}`}>{emoji} {lable}</Text>
+                          <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-left text-xs  mt-1 ${values?.ads_type === type ? "text-white dark:text-white" : "text-gray-900 dark:text-gray-900"}`}>{desc}</Text>
                         </TouchableOpacity>
                       ))}
                     </View>
                     {touched.ads_type && errors.ads_type && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.ads_type}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.ads_type}</Text>
                     )}
                   </View>
 
@@ -372,7 +414,7 @@ const CreateAdScreen = () => {
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <Ionicons name="chatbubble-ellipses-outline" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Short Caption</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Short Caption</Text>
                     </View>
                     <TextInput
                       className="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-white rounded-lg p-3 min-h-[100px] text-base text-gray-800 dark:text-gray-900"
@@ -386,7 +428,7 @@ const CreateAdScreen = () => {
                       accessibilityLabel="Ad caption"
                     />
                     {touched.caption && errors.caption && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.caption}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.caption}</Text>
                     )}
                   </View>
 
@@ -394,12 +436,12 @@ const CreateAdScreen = () => {
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <MaterialIcons name="event" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Offer Schedule</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Offer Schedule</Text>
                     </View>
                     <View className="flex-row justify-between bg-gray-100 dark:bg-white p-4 rounded-lg mb-2">
-                      <Text className="text-sm font-medium text-gray-900 dark:text-gray-900">Starts</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-900 dark:text-gray-900">Starts</Text>
                       <View className="w-px bg-primary-100 dark:bg-primary-100" />
-                      <Text className="text-sm font-medium text-gray-900 dark:text-gray-900">Ends</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-900 dark:text-gray-900">Ends</Text>
                     </View>
                     <View className="flex-row justify-between gap-2">
                       <View className="flex-1">
@@ -408,7 +450,7 @@ const CreateAdScreen = () => {
                           onPress={() => setShowStartDatePicker(true)}
                           accessibilityLabel="Select start date"
                         >
-                          <Text className="text-base text-gray-800 dark:text-gray-900">
+                          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-800 dark:text-gray-900">
                             {values.offer_starts_at ? new Date(values.offer_starts_at).toLocaleDateString() : 'Start Date'}
                           </Text>
                           <MaterialIcons name="calendar-today" size={20} color="#ac94f4" />
@@ -416,6 +458,7 @@ const CreateAdScreen = () => {
                         <DateTimePickerModal
                           isVisible={showStartDatePicker}
                           mode="date"
+                          minimumDate={new Date()}
                           onConfirm={date => {
                             setFieldValue('offer_starts_at', date);
                             setShowStartDatePicker(false);
@@ -431,13 +474,14 @@ const CreateAdScreen = () => {
                           onPress={() => setShowEndDatePicker(true)}
                           accessibilityLabel="Select end date"
                         >
-                          <Text className="text-base text-gray-800 dark:text-gray-900">
+                          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-800 dark:text-gray-900">
                             {values.offer_ends_at ? new Date(values.offer_ends_at).toLocaleDateString() : 'End Date'}
                           </Text>
                           <MaterialIcons name="calendar-today" size={20} color="#ac94f4" />
                         </TouchableOpacity>
                         <DateTimePickerModal
                           isVisible={showEndDatePicker}
+                          minimumDate={values.offer_starts_at || new Date()}
                           mode="date"
                           onConfirm={date => {
                             setFieldValue('offer_ends_at', date);
@@ -456,7 +500,7 @@ const CreateAdScreen = () => {
                           onPress={() => setShowStartTimePicker(true)}
                           accessibilityLabel="Select start time"
                         >
-                          <Text className="text-base text-gray-800 dark:text-gray-900">
+                          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-800 dark:text-gray-900">
                             {values.offer_start_time ? new Date(values.offer_start_time).toLocaleTimeString() : 'Start Time'}
                           </Text>
                           <MaterialIcons name="access-time" size={20} color="#ac94f4" />
@@ -465,6 +509,7 @@ const CreateAdScreen = () => {
                           isVisible={showStartTimePicker}
                           mode="time"
                           is24Hour={false}
+                          minimumDate={new Date()}
                           onConfirm={time => {
                             setFieldValue('offer_start_time', time);
                             setShowStartTimePicker(false);
@@ -480,7 +525,7 @@ const CreateAdScreen = () => {
                           onPress={() => setShowEndTimePicker(true)}
                           accessibilityLabel="Select end time"
                         >
-                          <Text className="text-base text-gray-800 dark:text-gray-900">
+                          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-800 dark:text-gray-900">
                             {values.offer_end_time ? new Date(values.offer_end_time).toLocaleTimeString() : 'End Time'}
                           </Text>
                           <MaterialIcons name="access-time" size={20} color="#ac94f4" />
@@ -500,16 +545,16 @@ const CreateAdScreen = () => {
                       </View>
                     </View>
                     {touched.offer_starts_at && errors.offer_starts_at && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.offer_starts_at}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.offer_starts_at}</Text>
                     )}
                     {touched.offer_ends_at && errors.offer_ends_at && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.offer_ends_at}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.offer_ends_at}</Text>
                     )}
                     {touched.offer_start_time && errors.offer_start_time && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.offer_start_time}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.offer_start_time}</Text>
                     )}
                     {touched.offer_end_time && errors.offer_end_time && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.offer_end_time}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.offer_end_time}</Text>
                     )}
                   </View>
 
@@ -517,7 +562,7 @@ const CreateAdScreen = () => {
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <FontAwesome name="money" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Budget</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Budget</Text>
                     </View>
                     <TextInput
                       className="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-white rounded-lg p-3 text-base text-gray-800 dark:text-gray-900"
@@ -530,7 +575,7 @@ const CreateAdScreen = () => {
                       accessibilityLabel="Ad budget"
                     />
                     {touched.budget && errors.budget && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.budget}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.budget}</Text>
                     )}
                   </View>
 
@@ -540,7 +585,7 @@ const CreateAdScreen = () => {
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <FontAwesome name="tag" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Offer Tag</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Offer Tag</Text>
                     </View>
                     <View className="flex-row flex-wrap gap-2">
                       {['Fresh Arrived', 'Buy 1 Get 1 Free', '50% Off'].map(tag => (
@@ -550,14 +595,14 @@ const CreateAdScreen = () => {
                           onPress={() => setFieldValue('offer_tag', tag)}
                           accessibilityLabel={`Select ${tag} offer tag`}
                         >
-                          <Text className={`text-sm font-medium ${values.offer_tag === tag ? 'text-white' : 'text-gray-900 dark:text-gray-900'}`}>
+                          <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-sm font-medium ${values.offer_tag === tag ? 'text-white' : 'text-gray-900 dark:text-gray-900'}`}>
                             {tag}
                           </Text>
                         </TouchableOpacity>
                       ))}
                     </View>
                     {touched.offer_tag && errors.offer_tag && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.offer_tag}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.offer_tag}</Text>
                     )}
                   </View>
 
@@ -565,7 +610,7 @@ const CreateAdScreen = () => {
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <FontAwesome name="star" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Promotion Tag</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Promotion Tag</Text>
                     </View>
                     <View className="flex-row flex-wrap gap-2">
                       {['Limited Time', 'Flash Sale', 'Exclusive Offer'].map(tag => (
@@ -575,30 +620,31 @@ const CreateAdScreen = () => {
                           onPress={() => setFieldValue('promotion_tag', tag)}
                           accessibilityLabel={`Select ${tag} promotion tag`}
                         >
-                          <Text className={`text-sm font-medium ${values.promotion_tag === tag ? 'text-white' : 'text-gray-900 dark:text-gray-900'}`}>
+                          <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-sm font-medium ${values.promotion_tag === tag ? 'text-white' : 'text-gray-900 dark:text-gray-900'}`}>
                             {tag}
                           </Text>
                         </TouchableOpacity>
                       ))}
                     </View>
                     {touched.promotion_tag && errors.promotion_tag && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.promotion_tag}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.promotion_tag}</Text>
                     )}
                   </View>
 
                   {/* Price & Discounted Price */}
-                  <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
+                  {values?.related_item?.length === 1 && <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <FontAwesome name="rupee" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Pricing</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Pricing</Text>
                     </View>
                     <View className="flex-row justify-between gap-2">
                       <View className="flex-1">
-                        <Text className="text-sm font-medium text-gray-900 dark:text-gray-900 mb-1">Original Price</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-900 dark:text-gray-900 mb-1">Original Price</Text>
                         <TextInput
                           className="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-white rounded-lg p-3 text-base text-gray-800 dark:text-gray-900"
                           placeholder="e.g., 20 "
                           placeholderTextColor="#6B7280"
+                          defaultValue={values?.related_item?.length === 1 ? values?.related_item![0]?.price : ""}
                           onChangeText={handleChange('original_price')}
                           onBlur={handleBlur('original_price')}
                           value={values.original_price}
@@ -606,11 +652,11 @@ const CreateAdScreen = () => {
                           accessibilityLabel="Original price"
                         />
                         {touched.original_price && errors.original_price && (
-                          <Text className="text-red-500 text-xs mt-1">{errors.original_price}</Text>
+                          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.original_price}</Text>
                         )}
                       </View>
                       <View className="flex-1">
-                        <Text className="text-sm font-medium text-gray-900 dark:text-gray-900 mb-1">Discounted Price</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-900 dark:text-gray-900 mb-1">Discounted Price</Text>
                         <TextInput
                           className="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-white rounded-lg p-3 text-base text-gray-800 dark:text-gray-900"
                           placeholder="e.g., 15 "
@@ -622,28 +668,28 @@ const CreateAdScreen = () => {
                           accessibilityLabel="Discounted price"
                         />
                         {touched.discounted_price && errors.discounted_price && (
-                          <Text className="text-red-500 text-xs mt-1">{errors.discounted_price}</Text>
+                          <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.discounted_price}</Text>
                         )}
                       </View>
                     </View>
                   </View>
-
+                  }
                   {/* Status Switch */}
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <MaterialIcons name="toggle-on" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Ad Status</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Ad Status</Text>
                     </View>
                     <View className="flex-row items-center justify-between">
                       <View className="flex-row items-center gap-3">
                         <View className={`${values.status ? 'bg-green-500' : 'bg-red-400'} w-4 h-4 rounded-full`} />
-                        <Text className="text-lg font-semibold text-gray-900 dark:text-gray-900">
+                        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-lg text-gray-900 dark:text-gray-900">
                           {values.status ? 'Live' : 'Offline'}
                         </Text>
                       </View>
                       <Switch
                         value={values.status}
-                        onValueChange={value => setFieldValue('status', value)}
+                        onValueChange={(value: any) => setFieldValue('status', value)}
                         trackColor={{ false: '#EF4444', true: '#10B981' }}
                         thumbColor="#f4f3f4"
                         accessibilityLabel="Toggle ad status"
@@ -651,7 +697,7 @@ const CreateAdScreen = () => {
                       />
                     </View>
                     {touched.status && errors.status && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.status}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.status}</Text>
                     )}
                   </View>
 
@@ -659,40 +705,40 @@ const CreateAdScreen = () => {
                   <View className="bg-white dark:bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
                     <View className="flex-row items-center mb-2">
                       <MaterialIcons name="visibility" size={22} color="#ac94f4" className="mr-2" />
-                      <Text className="text-base font-semibold text-gray-900 dark:text-gray-900">Ad Preview</Text>
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Ad Preview</Text>
                     </View>
                     <View className="border border-gray-300 dark:border-gray-300 rounded-lg p-4 bg-gray-100 dark:bg-white">
-                      <Text className="text-lg font-bold text-gray-900 dark:text-gray-900">
+                      <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg  text-gray-900 dark:text-gray-900">
                         {values.ad_title || 'Your Ad Title '}
                       </Text>
                       <View className="flex-row items-center mt-1">
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">{values.ads_type || 'Ad Type'}</Text>
-                        <Text className="text-sm text-gray-800 dark:text-gray-800 ml-2">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600 dark:text-gray-400">{values.ads_type || 'Ad Type'}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-800 dark:text-gray-800 ml-2">
                           {values.ads_type === 'Promote Product' ? '🛍️' : values.ads_type === 'Special Offer' ? '🎉' : '🎈'}
                         </Text>
                       </View>
                       {images.length > 0 && (
                         <Image source={{ uri: images[0].uri }} className="w-full h-48 rounded-lg mt-2" resizeMode="cover" accessibilityLabel="Ad preview image" />
                       )}
-                      <Text className="text-base text-gray-800 dark:text-gray-900 mt-2">
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-800 dark:text-gray-900 mt-2">
                         {values.caption || 'Your short caption goes here!'}
                       </Text>
                       <View className="flex-col justify-between mt-2">
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600 dark:text-gray-400">
                           {values.offer_starts_at ? new Date(values.offer_starts_at).toLocaleDateString() : 'Start Date'} •{' '}
                           {values.offer_start_time ? new Date(values.offer_start_time).toLocaleTimeString() : 'Start Time'}
                         </Text>
-                        {/* <Text className='flex-row items-center mx-1'>|</Text> */}
-                        <Text className="text-sm text-gray-600 dark:text-gray-400">
+                        {/* <Text style={{fontFamily:'Raleway-Regular'}} className='flex-row items-center mx-1'>|</Text> */}
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600 dark:text-gray-400">
                           {values.offer_ends_at ? new Date(values.offer_ends_at).toLocaleDateString() : 'End Date'} •{' '}
                           {values.offer_end_time ? new Date(values.offer_end_time).toLocaleTimeString() : 'End Time'}
                         </Text>
                       </View>
                       <View className="flex-row justify-between mt-2">
-                        <Text className="text-sm font-medium text-gray-800 dark:text-gray-800">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-800 dark:text-gray-800">
                           Price: ₹{values.original_price || '0'} {values.discounted_price ? `→ ₹${values.discounted_price}` : ''}
                         </Text>
-                        <Text className="text-sm font-medium text-gray-800 dark:text-gray-800">
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-800 dark:text-gray-800">
                           Budget: ₹{values.budget || '0'}
                         </Text>
                       </View>
@@ -706,7 +752,7 @@ const CreateAdScreen = () => {
                     className={`rounded-lg p-4 items-center my-4 ${isSubmitting || isFetching ? 'bg-primary-100/50' : 'bg-primary-100'}`}
                     accessibilityLabel={adDetails ? 'Update ad' : 'Create ad'}
                   >
-                    <Text className="text-white text-base font-bold">
+                    <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-base">
                       {isSubmitting ? 'Saving...' : adDetails ? 'Update Ad ' : 'Create Ad '}
                     </Text>
                   </TouchableOpacity>

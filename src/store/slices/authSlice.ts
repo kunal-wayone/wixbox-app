@@ -53,12 +53,13 @@ export const login = createAsyncThunk(
         thunkAPI
     ) => {
         try {
-            const fcm_token = await messaging().getToken();
-            const response = await Post<AuthResponse>('/auth/signin', { ...credentials, fcm_token }, 5000);
-            const { success, data, message }: any = response;
+            // const fcm_token = await messaging().getToken();
+            console.log(credentials, thunkAPI)
+            const response: any = await Post('/auth/signin', credentials, 5000);
+            const { success, data, message }: any = response || {};
             const user = data?.user
             const token = data?.token
-
+            console.log(response,success,token)
             console.log(false)
             if (success && token) {
                 await TokenStorage.setToken(token);
@@ -91,7 +92,7 @@ export const signup = createAsyncThunk(
         try {
             const fcm_token = await messaging().getToken();
             console.log({ ...payload, fcm_token })
-            const response = await Post<AuthResponse>('/auth/signup', { ...payload, fcm_token }, 5000);
+            const response: any = await Post<AuthResponse>('/auth/signup', { ...payload, fcm_token }, 5000);
             console.log(response?.data)
             const { success, message }: any = response;
             const token: any = response?.data?.token;
@@ -188,7 +189,7 @@ const authSlice = createSlice({
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(login.fulfilled, (state, action: PayloadAction<{ token: string; user: GoogleUser }>) => {
+            .addCase(login.fulfilled, (state, action: PayloadAction<{ token: string; user: GoogleUser }> | any) => {
                 state.loading = false;
                 state.token = action.payload.token;
                 state.user = action.payload.user;

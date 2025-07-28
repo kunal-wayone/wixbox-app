@@ -75,6 +75,7 @@ const AddProductScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [newVariant, setNewVariant] = useState({ name: '', price: '' });
+  const [dynamicTaxes, setDynamicTaxes] = useState<any[]>([]);
 
   // Fetch product details if editing
   const getProductData = async (id: any) => {
@@ -107,14 +108,17 @@ const AddProductScreen = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [categoriesRes, unitsRes, tagsRes]: any = await Promise.all([
+        const [categoriesRes, unitsRes, tagsRes, taxsRes]: any = await Promise.all([
           Fetch('/user/food/category', undefined, 5000),
           Fetch('/user/menu-units', undefined, 5000),
           Fetch('/user/vendor/tag', undefined, 5000),
+          Fetch('/user/vendor/taxes', undefined, 5000),
         ]);
         if (categoriesRes.success) setCategories(categoriesRes.data);
         if (unitsRes.success) setUnits(unitsRes.data.units);
         if (tagsRes.success) setTags(tagsRes.data);
+        if (taxsRes.success) setDynamicTaxes(taxsRes.data);
+
         console.log(categoriesRes, unitsRes.data.units, tagsRes)
       } catch (error) {
         ToastAndroid.show('Failed to load categories or units 😢', ToastAndroid.SHORT);
@@ -168,7 +172,7 @@ const AddProductScreen = () => {
       values.tags.forEach((tag: string, index: number) => {
         formData.append(`tags[${index}]`, tag);
       });
-
+      formData.append('tax_id', values.tax)
       // Append variants
       values.variants.forEach((variant: any, index: number) => {
         formData.append(`variants[${index}][name]`, variant.name);
@@ -188,6 +192,7 @@ const AddProductScreen = () => {
 
       const endpoint = productId ? `/user/menu-items/${productId}` : '/user/menu-items';
       const response: any = await (productId ? Put : Post)(endpoint, formData, 5000);
+      console.log(response)
       if (!response.success) throw new Error('Failed to save product');
 
       ToastAndroid.show(
@@ -198,7 +203,7 @@ const AddProductScreen = () => {
       setImages([]);
       navigation.goBack();
     } catch (error: any) {
-      ToastAndroid.show(error.message || 'Something went wrong 😔', ToastAndroid.SHORT);
+      ToastAndroid.show(error?.message || 'Something went wrong 😔', ToastAndroid.SHORT);
     } finally {
       setSubmitting(false);
     }
@@ -238,10 +243,10 @@ const AddProductScreen = () => {
           </TouchableOpacity>
 
           <View>
-            <Text className="text-center text-2xl font-bold text-gray-900 mt-12 mb-2">
+            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-center text-2xl text-gray-900 mt-12 mb-2">
               {itemDetails ? 'Edit Product 🍽️' : 'Add New Product 🍽️'}
             </Text>
-            <Text className="text-center text-sm text-gray-600 mb-4">
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center text-sm text-gray-600 mb-4">
               {itemDetails ? 'Update your menu item' : 'Add a new item to your menu'}
             </Text>
 
@@ -257,7 +262,9 @@ const AddProductScreen = () => {
                 images: images || [],
                 isVegetarian: `${itemDetails?.isVegetarian}` || '',
                 variants: itemDetails?.variants || [],
-                tags: itemDetails?.tags || [],
+                tags: itemDetails?.tags?.map(tag => tag.id) || [],
+                tax: itemDetails?.tax_id || '',
+                preparation_time: itemDetails?.preparation_time || '',
               }}
               validationSchema={validationSchema}
               onSubmit={handleSaveProduct}
@@ -276,7 +283,7 @@ const AddProductScreen = () => {
                 <View>
                   {/* Image Upload and Preview */}
                   <View className="bg-white rounded-lg p-4 mb-4" style={styles.shadow}>
-                    <Text className="text-base font-semibold text-gray-900 mb-2">
+                    <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                       Product Photos
                     </Text>
                     <TouchableOpacity
@@ -287,8 +294,8 @@ const AddProductScreen = () => {
                       <View className="bg-primary-80 rounded-full p-3">
                         <Ionicons name="camera-outline" size={40} color="#fff" />
                       </View>
-                      <Text className="text-gray-600 mt-2">Tap to add photos </Text>
-                      <Text className="text-xs text-gray-500">Up to 5 images from camera or gallery</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-gray-600 mt-2">Tap to add photos </Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-xs text-gray-500">Up to 5 images from camera or gallery</Text>
                     </TouchableOpacity>
 
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -310,14 +317,14 @@ const AddProductScreen = () => {
                       ))}
                     </ScrollView>
                     {touched.images && errors.images && (
-                      <Text className="text-red-500 text-xs mt-1">{errors.images}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.images}</Text>
                     )}
                   </View>
 
                   <View className="bg-white rounded-lg p-4 mb-4 shadow-md" style={styles.shadow}>
                     {/* Product Name */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Product Name
                       </Text>
                       <TextInput
@@ -330,13 +337,13 @@ const AddProductScreen = () => {
                         accessibilityLabel="Product name"
                       />
                       {touched.item_name && errors.item_name && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.item_name}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.item_name}</Text>
                       )}
                     </View>
 
                     {/* Description */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Description
                       </Text>
                       <TextInput
@@ -351,27 +358,7 @@ const AddProductScreen = () => {
                         accessibilityLabel="Product description"
                       />
                       {touched.description && errors.description && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.description}</Text>
-                      )}
-                    </View>
-
-                    {/* Stock Quantity */}
-                    <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
-                        Stock Quantity
-                      </Text>
-                      <TextInput
-                        className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base text-gray-900"
-                        placeholder="Enter stock quantity"
-                        placeholderTextColor="#6B7280"
-                        onChangeText={handleChange('stock_quantity')}
-                        onBlur={handleBlur('stock_quantity')}
-                        value={values.stock_quantity}
-                        keyboardType="numeric"
-                        accessibilityLabel="Stock quantity"
-                      />
-                      {touched.stock_quantity && errors.stock_quantity && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.stock_quantity}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.description}</Text>
                       )}
                     </View>
 
@@ -379,7 +366,7 @@ const AddProductScreen = () => {
 
                     {/* Stock Quantity */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Price
                       </Text>
                       <TextInput
@@ -393,13 +380,13 @@ const AddProductScreen = () => {
                         accessibilityLabel="price"
                       />
                       {touched.price && errors.price && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.price}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.price}</Text>
                       )}
                     </View>
 
                     {/* Unit Picker */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Unit
                       </Text>
                       <View className="border border-gray-300 bg-gray-100 rounded-lg">
@@ -408,7 +395,6 @@ const AddProductScreen = () => {
                           onValueChange={value => setFieldValue('unit', value)}
                           style={{ color: '#374151' }}
                           accessibilityLabel="Select unit"
-                          mode="dropdown"
                         >
                           <Picker.Item label="Choose a unit" value="" />
                           {units.map((unit: any) => (
@@ -421,13 +407,13 @@ const AddProductScreen = () => {
                         </Picker>
                       </View>
                       {touched.unit && errors.unit && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.unit}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.unit}</Text>
                       )}
                     </View>
 
                     {/* Variants Section */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Product Variants
                       </Text>
 
@@ -437,7 +423,7 @@ const AddProductScreen = () => {
                         onPress={() => setModalVisible(true)}
                         accessibilityLabel="Add new variant"
                       >
-                        <Text className="text-white text-sm font-semibold">Add Variant ➕</Text>
+                        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white text-sm ">Add Variant ➕</Text>
                       </TouchableOpacity>
 
                       {/* Modal for adding variants */}
@@ -449,7 +435,7 @@ const AddProductScreen = () => {
                       >
                         <View className="flex-1 justify-center items-center bg-black/50">
                           <View className="bg-white rounded-lg p-6 w-11/12" style={styles.shadow}>
-                            <Text className="text-lg font-bold text-gray-900 mb-4">
+                            <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg text-gray-900 mb-4">
                               Add New Variant
                             </Text>
                             <View className='flex-row items-center gap-2'>
@@ -483,14 +469,14 @@ const AddProductScreen = () => {
                                 }}
                                 accessibilityLabel="Cancel adding variant"
                               >
-                                <Text className="text-gray-900 font-semibold">Cancel</Text>
+                                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-gray-900">Cancel</Text>
                               </TouchableOpacity>
                               <TouchableOpacity
                                 className="bg-primary-100 rounded-lg p-3 px-4"
                                 onPress={() => handleAddVariant(setFieldValue, values)}
                                 accessibilityLabel="Save variant"
                               >
-                                <Text className="text-white font-semibold">Save</Text>
+                                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-white">Save</Text>
                               </TouchableOpacity>
                             </View>
                           </View>
@@ -500,7 +486,7 @@ const AddProductScreen = () => {
                       {/* Display added variants */}
                       {values.variants.length > 0 ? (
                         <View className="mt-3">
-                          <Text className="text-sm font-semibold text-gray-700 mb-2">
+                          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-gray-700 mb-2">
                             Added Variants:
                           </Text>
                           {values.variants.map((variant: any, index: number) => (
@@ -509,9 +495,9 @@ const AddProductScreen = () => {
                               className="flex-row items-center justify-between bg-gray-100 rounded-lg p-3 mb-2"
                             >
                               <View className='flex-row  gap-2 items-center justify-between w-3/4'>
-                                <Text className="text-base text-gray-900">{variant.name}</Text>
-                                <Text className="text-sm text-gray-600">
-                                  ${variant.price}
+                                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base text-gray-900">{variant.name}</Text>
+                                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">
+                                  ₹{variant.price}
                                 </Text>
                               </View>
                               <TouchableOpacity
@@ -527,19 +513,38 @@ const AddProductScreen = () => {
                           ))}
                         </View>
                       ) : (
-                        <Text className="text-sm text-gray-500">No variants added yet.</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-500">No variants added yet.</Text>
                       )}
 
                       {touched.variants && errors.variants && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.variants}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.variants}</Text>
                       )}
                     </View>
 
 
+                    {/* Stock Quantity */}
+                    <View className="mb-4">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
+                        Stock Quantity
+                      </Text>
+                      <TextInput
+                        className="border border-gray-300 bg-gray-100 rounded-lg p-3 text-base text-gray-900"
+                        placeholder="Enter stock quantity"
+                        placeholderTextColor="#6B7280"
+                        onChangeText={handleChange('stock_quantity')}
+                        onBlur={handleBlur('stock_quantity')}
+                        value={values.stock_quantity}
+                        keyboardType="numeric"
+                        accessibilityLabel="Stock quantity"
+                      />
+                      {touched.stock_quantity && errors.stock_quantity && (
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.stock_quantity}</Text>
+                      )}
+                    </View>
 
                     {/* Category Picker */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Category
                       </Text>
                       <View className="border border-gray-300 bg-gray-100 rounded-lg">
@@ -560,13 +565,13 @@ const AddProductScreen = () => {
                         </Picker>
                       </View>
                       {touched.category_id && errors.category_id && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.category_id}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.category_id}</Text>
                       )}
                     </View>
 
                     {/* Food Type */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Food Type
                       </Text>
                       <View className="border border-gray-300 bg-gray-100 rounded-lg">
@@ -582,13 +587,13 @@ const AddProductScreen = () => {
                         </Picker>
                       </View>
                       {touched.isVegetarian && errors.isVegetarian && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.isVegetarian}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.isVegetarian}</Text>
                       )}
                     </View>
 
                     {/* Food Type */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Preparation Time
                       </Text>
                       <View className="border border-gray-300 bg-gray-100 rounded-lg">
@@ -606,13 +611,36 @@ const AddProductScreen = () => {
                         </Picker>
                       </View>
                       {touched.preparation_time && errors.preparation_time && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.preparation_time}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.preparation_time}</Text>
+                      )}
+                    </View>
+
+
+                    <View className="mb-4">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base  text-gray-900 mb-2">
+                        Tax (if applicable)
+                      </Text>
+                      <View className="border border-gray-300 bg-gray-100 rounded-lg">
+                        <Picker
+                          selectedValue={values.tax}
+                          onValueChange={value => setFieldValue('tax', value)}
+                          style={{ color: '#374151' }}
+                          accessibilityLabel="Select tax"
+                        >
+                          <Picker.Item label="Choose tax" value="" />
+                          {dynamicTaxes?.map((tax: any) => (
+                            <Picker.Item label={tax?.name + " (" + tax?.rate + `${tax?.type === 'percentage' && "%"}` + ")"} value={tax?.id} />
+                          ))}
+                        </Picker>
+                      </View>
+                      {touched.tax && errors.tax && (
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.tax}</Text>
                       )}
                     </View>
 
                     {/* Tags */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Tags
                       </Text>
                       <View className="flex-row flex-wrap gap-2">
@@ -624,30 +652,31 @@ const AddProductScreen = () => {
                               const newTags = values.tags.includes(tag.id)
                                 ? values.tags.filter((t: string) => t !== tag.id)
                                 : [...values.tags, tag.id];
+                              console.log(newTags, tag.id, tag)
                               setFieldValue('tags', newTags);
                             }}
                             accessibilityLabel={`Toggle ${tag.name} tag`}
                           >
                             <Image source={tag?.image ? { uri: IMAGE_URL + tag?.image } : ImagePath.banner} className='w-4 h-4' resizeMode='contain' />
 
-                            <Text className={`text-sm font-medium ${values.tags.includes(tag.id) ? 'text-white' : 'text-gray-800'}`}>{tag.name}</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-sm font-medium ${values.tags.includes(tag.id) ? 'text-white' : 'text-gray-800'}`}>{tag.name}</Text>
                           </TouchableOpacity>
                         ))}
                       </View>
                       {touched.tags && errors.tags && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.tags}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.tags}</Text>
                       )}
                     </View>
 
                     {/* Status Switch */}
                     <View className="mb-4">
-                      <Text className="text-base font-semibold text-gray-900 mb-2">
+                      <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 mb-2">
                         Status
                       </Text>
                       <View className="flex-row items-center justify-between">
                         <View className='flex-row items-center gap-3'>
                           <View className={`${values?.status ? "bg-green-500" : "bg-red-400"} w-4 h-4 rounded-full `} />
-                          <Text className='text-lg font-semibold'>{values?.status ? "Live" : "Offline"}</Text>
+                          <Text style={{ fontFamily: 'Raleway-SemiBold' }} className='text-lg'>{values?.status ? "Live" : "Offline"}</Text>
                         </View>
                         <Switch
                           value={values.status}
@@ -659,7 +688,7 @@ const AddProductScreen = () => {
                         />
                       </View>
                       {touched.status && errors.status && (
-                        <Text className="text-red-500 text-xs mt-1">{errors.status}</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.status}</Text>
                       )}
                     </View>
                   </View>
@@ -671,7 +700,7 @@ const AddProductScreen = () => {
                     className={`rounded-lg p-4 items-center my-4 ${isSubmitting ? 'bg-primary-90' : 'bg-primary-100'}`}
                     accessibilityLabel={productId ? 'Update product' : 'Save product'}
                   >
-                    <Text className="text-white text-base font-bold">
+                    <Text style={{ fontFamily: 'Raleway-BoldF' }} className="text-white text-base">
                       {isSubmitting ? 'Saving... ' : (productId ? 'Update Product ' : 'Save Product ')}
                     </Text>
                   </TouchableOpacity>

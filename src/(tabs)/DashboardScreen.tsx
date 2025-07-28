@@ -50,7 +50,7 @@ const quickActions = [
     label: 'Create Ads',
     icon: 'target',
     emoji: '🎯',
-    screen: 'CreateAdScreen',
+    screen: 'AdsListScreen',
     gradient: ['#fde68a', '#f59e0b'], // yellow-orange
   },
   {
@@ -71,7 +71,7 @@ const quickActions = [
     label: 'Manage Orders',
     icon: 'shopping-cart',
     emoji: '🛒',
-    screen: 'ManageAllOrders',
+    screen: 'AddCustomerScreen',
     gradient: ['#fca5a5', '#ef4444'], // red
   },
   {
@@ -225,18 +225,18 @@ const DashboardScreen = () => {
                   <Image source={ImagePath.chef} className='w-7 h-7' style={{ tintColor: "white" }} resizeMode='contain' />
                 </View>
                 <View>
-                  <Text className="text-lg font-bold font-poppins pl-1" numberOfLines={1} ellipsizeMode='tail'>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-lg font-bold  pl-1" numberOfLines={1} ellipsizeMode='tail'>
                     {user?.shop?.restaurant_name || ' Burger One (Cafe & Bakery)'}
                   </Text>
                   <View className='flex-row items-center gap-1'>
                     <Icon name='location-outline' size={16} />
-                    <Text className='text-sm ' numberOfLines={1} ellipsizeMode='tail' >
+                    <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-sm ' numberOfLines={1} ellipsizeMode='tail' >
                       {(user?.user_addresses[0]?.city || '') +
                         ', ' +
                         (user?.user_addresses[0]?.state || '') + ", (" + (user?.user_addresses[0]?.pincode || '') + ")"}
                     </Text>
                   </View>
-                  <Text className='text-sm hidden'>
+                  <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-sm hidden'>
                     {(user?.user_addresses[0]?.longitude || '') +
                       ', ' +
                       (user?.user_addresses[0]?.latitude || '')}
@@ -256,7 +256,7 @@ const DashboardScreen = () => {
             <View style={style.shadow} className=' rounded-lg px-4 py-3 flex-row items-center justify-between gap-2   w-full ' >
               <View className='flex-row items-center gap-3'>
                 <View className={`${storeStatus ? "bg-green-500" : "bg-red-400"} w-4 h-4 rounded-full `} />
-                <Text className='text-lg font-bold'>{storeStatus ? "Live" : "Offline"}</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-lg font-bold'>{storeStatus ? "Live" : "Offline"}</Text>
                 {storeStatus && <Feather name='check-circle' size={15} color={'#00c40a'} />}
               </View>
               <View className='flex-row items-center gap-2'>
@@ -269,8 +269,8 @@ const DashboardScreen = () => {
 
 
 
-            <Text className='text-lg font-bold font-poppins mt-4'>
-              Today's OverView
+            <Text style={{ fontFamily: 'Raleway-Regular' }} className='text-lg font-bold  mt-4'>
+              Today's Overview
             </Text>
 
 
@@ -287,8 +287,8 @@ const DashboardScreen = () => {
                 >
                   <Feather name="shopping-cart" size={30} color="#0077ff" />
                 </LinearGradient>
-                <Text className="text-xl font-bold text-gray-950 font-poppins">4</Text>
-                <Text className="text-sm text-gray-800 font-semibold font-poppins">Orders Received</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl  text-gray-950   ">4</Text>
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-gray-800    ">Orders Received</Text>
               </View>
 
               {/* 2. Sales Today */}
@@ -302,8 +302,8 @@ const DashboardScreen = () => {
                 >
                   <MaterialIcons name="currency-rupee" size={30} color="#28a745" />
                 </LinearGradient>
-                <Text className="text-xl font-bold text-gray-950 font-poppins">₹2,350</Text>
-                <Text className="text-sm text-gray-800 font-semibold font-poppins">Sales Today</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl  text-gray-950   ">₹2,350</Text>
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-gray-800    ">Sales Today</Text>
               </View>
 
               {/* 3. Visitors Seen */}
@@ -317,8 +317,8 @@ const DashboardScreen = () => {
                 >
                   <Feather name="eye" size={30} color="#c084fc" />
                 </LinearGradient>
-                <Text className="text-xl font-bold text-gray-950 font-poppins">120</Text>
-                <Text className="text-sm text-gray-800 font-semibold font-poppins">Visitors Seen</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl text-gray-950   ">120</Text>
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-gray-800 ">Visitors Seen</Text>
               </View>
 
               {/* 4. Pending Stock */}
@@ -332,8 +332,8 @@ const DashboardScreen = () => {
                 >
                   <Feather name="box" size={30} color="#dc3545" />
                 </LinearGradient>
-                <Text className="text-xl font-bold text-gray-950 font-poppins">15</Text>
-                <Text className="text-sm text-gray-800 font-semibold font-poppins">Pending Stock</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl text-gray-950   ">15</Text>
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-gray-800   ">Pending Stock</Text>
               </View>
             </View>
 
@@ -343,7 +343,7 @@ const DashboardScreen = () => {
 
             <View className="">
               {/* Section Label */}
-              <Text className="text-lg font-bold text-gray-800 mb-2 px-1">Quick Action</Text>
+              <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-lg text-gray-800 mb-2 px-1">Quick Action</Text>
 
               {/* Quick Action Grid */}
               <View className="flex-row flex-wrap justify-between">
@@ -369,8 +369,8 @@ const DashboardScreen = () => {
 
                     {/* Right: Label + Emoji */}
                     <View className='w-3/5'>
-                      <Text className="text-sm font-bold mb-1 text-gray-600">{item.label}</Text>
-                      <Text className="text-base">{item.emoji}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-sm mb-1 text-gray-600">{item.label}</Text>
+                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base">{item.emoji}</Text>
                     </View>
                   </TouchableOpacity>
                 ))}
