@@ -71,7 +71,7 @@ const quickActions = [
     label: 'Manage Orders',
     icon: 'shopping-cart',
     emoji: '🛒',
-    screen: 'AddCustomerScreen',
+    screen: 'ManageAllOrders',
     gradient: ['#fca5a5', '#ef4444'], // red
   },
   {
@@ -116,6 +116,7 @@ const DashboardScreen = () => {
   const [storeStatus, setStoreStatus] = useState(user?.shop?.status === 1 ? true : false)
   const [tabBarOffset, setTabBarOffset] = useState<any>(0);
   const [userData, setUserData] = useState<any>(null);
+  const [dashboardData, setDashboardData] = useState<any>(null)
 
   const onTabBarLayout = (event: any) => {
     tabBarRef.current?.measure?.(
@@ -131,6 +132,21 @@ const DashboardScreen = () => {
     extrapolate: 'clamp',
   });
 
+  const fetchDashBoardData = async () => {
+    try {
+      const response: any = await Fetch('/user/vendor/dashboard', {}, 5000);
+      console.log(response)
+      if (!response?.success) {
+        console.error('Dashboard fetch failed:', response);
+        throw new Error('Failed to fetch dashboard data');
+      }
+
+      setDashboardData(response?.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      // You can optionally show a UI alert or toast here
+    }
+  };
 
 
   const getUserData = async () => {
@@ -185,6 +201,7 @@ const DashboardScreen = () => {
     try {
       setRefreshing(true);
       await getUserData(); // re-fetch user/shop data
+      await fetchDashBoardData()
     } catch (error) {
       console.error("Refresh error:", error);
     } finally {
@@ -196,6 +213,7 @@ const DashboardScreen = () => {
   useEffect(() => {
     if (isFocused) {
       getUserData();
+      fetchDashBoardData()
     }
   }, [isFocused, storeStatus]);
 
@@ -287,8 +305,8 @@ const DashboardScreen = () => {
                 >
                   <Feather name="shopping-cart" size={30} color="#0077ff" />
                 </LinearGradient>
-                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl  text-gray-950   ">4</Text>
-                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-gray-800    ">Orders Received</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl  text-gray-950 ">{dashboardData?.total_orders ?? 0}</Text>
+                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-gray-800">Orders Received</Text>
               </View>
 
               {/* 2. Sales Today */}
@@ -302,7 +320,7 @@ const DashboardScreen = () => {
                 >
                   <MaterialIcons name="currency-rupee" size={30} color="#28a745" />
                 </LinearGradient>
-                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl  text-gray-950   ">₹2,350</Text>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-xl  text-gray-950   ">₹ {dashboardData?.total_revenue}</Text>
                 <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-gray-800    ">Sales Today</Text>
               </View>
 

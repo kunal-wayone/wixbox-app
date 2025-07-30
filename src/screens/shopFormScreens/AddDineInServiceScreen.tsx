@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker, { Event } from '@react-native-community/datetimepicker';
-import { Formik } from 'formik';
+import { Formik, useFormikContext } from 'formik';
 import * as Yup from 'yup';
 import { ImagePath } from '../../constants/ImagePath';
 import { useNavigation } from '@react-navigation/native';
@@ -52,7 +52,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
   const navigation = useNavigation<any>();
   const [shopId, setShopId] = useState<any>(route?.params?.shopId || null); // For edit mode
   const { status: userStatus, data: user }: any = useSelector((state: any) => state.user);
-
+  // const { values, handleChange, handleBlur, touched, errors, setFieldValue }: any = useFormikContext();
   const [floor, setFloor] = useState('Ground');
   const [type, setType] = useState('Standard');
   const [premium, setPremium] = useState(false);
@@ -71,6 +71,41 @@ const AddDineInServiceScreen = ({ route }: any) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
+  const [tableOptions, setTableOptions] = useState([]);
+
+  // Generate options dynamically when table_type changes
+
+  const tabelNo = async () => {
+    const options = [
+      // Regular Tables
+      ...Array.from({ length: 25 }, (_, i) => ({
+        label: `T${i + 1}`,
+        value: `T${i + 1}`,
+        type: 'Regular Seating',
+      })),
+
+      // Cabin Tables
+      ...Array.from({ length: 15 }, (_, i) => ({
+        label: `CABIN-${i + 1}`,
+        value: `CABIN-${i + 1}`,
+        type: 'Cabin',
+      })),
+
+      // Open Air Tables
+      ...Array.from({ length: 20 }, (_, i) => ({
+        label: `OPEN-${i + 1}`,
+        value: `OPEN-${i + 1}`,
+        type: 'Open Air',
+      })),
+    ];
+
+    setTableOptions(options);
+  };
+
+  useEffect(() => {
+    tabelNo()
+  }, [])
+
 
   // Handlers for date/time pickers
   const onChangeDate = (_event: Event, selectedDate?: Date) => {
@@ -291,7 +326,7 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       {/* Floor Picker */}
                       <View style={styles.pickerContainer}>
                         <Picker selectedValue={floor} onValueChange={setFloor} style={styles.pickerStyle}>
-                          {['Ground', '1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th'].map(f => (
+                          {['Select Floor or Area', 'Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor', '6th Floor', '7th Floor', '8th Floor', '9th Floor', '10th Floor', '11th Floor', 'Rooftop', 'Backyard', 'Garden Area'].map(f => (
                             <Picker.Item key={f} label={f} value={f} />
                           ))}
                         </Picker>
@@ -300,23 +335,28 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       {/* Type Picker */}
                       <View style={styles.pickerContainerSecondary}>
                         <Picker selectedValue={type} onValueChange={setType} style={styles.pickerStyle}>
-                          <Picker.Item label="Standard" value="Standard" />
-                          <Picker.Item label="Booth" value="Booth" />
-                          <Picker.Item label="Outdoor" value="Outdoor" />
+                          <Picker.Item label="Choose Table Type" value="" />
+                          <Picker.Item label="Choose Table Type" value="" />
+                          <Picker.Item label="Regular Seating" value="Regular Seating" />
+                          <Picker.Item label="Cabin / Private Table" value="Cabin" />
+                          <Picker.Item label="Open Air / Outside" value="Open Air" />
                         </Picker>
                       </View>
 
                       {/* Table Number Input */}
                       <View style={styles.inputContainer}>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="Enter table number"
-                          placeholderTextColor={"#000"}
-                          onChangeText={handleChange('table_number')}
+                        <Picker
+                          selectedValue={values.table_number}
+                          onValueChange={handleChange('table_number')}
                           onBlur={handleBlur('table_number')}
-                          value={values.table_number}
-                          keyboardType="number-pad"
-                        />
+                          style={styles.pickerStyle}
+                          enabled={tableOptions.length > 0}
+                        >
+                          <Picker.Item label="Choose Table Number" value="" />
+                          {tableOptions?.map((table: any, index: any) => (
+                            <Picker.Item key={index} label={table?.label} value={table?.value} />
+                          ))}
+                        </Picker>
                         {touched.table_number && errors.table_number && (
                           <Text style={styles.errorText}>{errors.table_number}</Text>
                         )}
@@ -324,25 +364,41 @@ const AddDineInServiceScreen = ({ route }: any) => {
 
                       {/* Seats Input */}
                       <View style={styles.inputContainer}>
-                        <TextInput
-                          style={styles.input}
-                          placeholder="Enter no of seats"
-                          placeholderTextColor={"#000"}
-                          onChangeText={handleChange('seats')}
+                        <Picker
+                          selectedValue={values.seats}
+                          onValueChange={handleChange('seats')}
                           onBlur={handleBlur('seats')}
-                          value={values.seats}
-                          keyboardType="number-pad"
-                        />
+                          style={styles.pickerStyle}
+                        >
+                          <Picker.Item label="Select Number of Seats" value="" />
+                          <Picker.Item label="🪑 2 Seater" value="2" />
+                          <Picker.Item label="🪑 4 Seater" value="4" />
+                          <Picker.Item label="🪑 6 Seater" value="6" />
+                          <Picker.Item label="🪑 8 Seater" value="8" />
+                          <Picker.Item label="🪑 10 Seater" value="10" />
+                          <Picker.Item label="🪑 12 Seater" value="12" />
+                          <Picker.Item label="🪑 14 Seater" value="14" />
+                          <Picker.Item label="🪑 16 Seater" value="16" />
+                          <Picker.Item label="🪑 18 Seater" value="18" />
+                          <Picker.Item label="🪑 20 Seater" value="20" />
+                          <Picker.Item label="🪑 22 Seater" value="22" />
+                          <Picker.Item label="🪑 24 Seater" value="24" />
+                          <Picker.Item label="🪑 26 Seater" value="26" />
+                          <Picker.Item label="🪑 28 Seater" value="28" />
+                          <Picker.Item label="🪑 30 Seater" value="30" />
+
+                        </Picker>
                         {touched.seats && errors.seats && (
                           <Text style={styles.errorText}>{errors.seats}</Text>
                         )}
                       </View>
 
+
                       {/* Price Input */}
                       <View style={styles.inputContainer}>
                         <TextInput
                           style={styles.input}
-                          placeholder="Enter table price"
+                          placeholder="e.g. ₹100 for rooftop or premium cabin"
                           placeholderTextColor={"#000"}
                           onChangeText={handleChange('price')}
                           onBlur={handleBlur('price')}
@@ -358,11 +414,11 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       <View style={styles.radioGroup}>
                         <TouchableOpacity onPress={() => setPremium(false)} style={styles.radioContainer}>
                           <View style={[styles.radio, !premium && styles.radioSelected]} />
-                          <Text style={styles.radioText}>Non-Premium</Text>
+                          <Text style={styles.radioText}>Regular (Normal seating)</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => setPremium(true)} style={styles.radioContainer}>
                           <View style={[styles.radio, premium && styles.radioSelected]} />
-                          <Text style={styles.radioText}>Premium</Text>
+                          <Text style={styles.radioText}>Premium (AC, privacy, priority)</Text>
                         </TouchableOpacity>
                       </View>
 
@@ -601,7 +657,6 @@ const styles = StyleSheet.create({
     borderColor: '#D1D5DB',
     borderRadius: 8,
     marginBottom: 12,
-    height: 50,
     justifyContent: 'center',
   },
   pickerContainerSecondary: {
@@ -610,7 +665,6 @@ const styles = StyleSheet.create({
     borderColor: '#D1D5DB',
     borderRadius: 8,
     marginBottom: 12,
-    height: 50,
     justifyContent: 'center',
   },
   pickerStyle: {
@@ -626,7 +680,7 @@ const styles = StyleSheet.create({
   },
   input: {
     padding: 12,
-    fontSize: 16,
+    fontSize: 14,
     color: '#000',
     fontFamily: 'Raleway-Regular',
   },
@@ -646,8 +700,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Raleway-Regular',
   },
   radioGroup: {
-    flexDirection: 'row',
-    gap: 16,
+    flexDirection: 'column',
+    gap: 4,
     marginBottom: 12,
   },
   radioContainer: {

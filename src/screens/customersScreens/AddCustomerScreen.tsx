@@ -62,9 +62,7 @@ const AddCustomerScreen = () => {
   );
   console.log(filteredOrders)
   const renderCustomerCard = ({ item }: any, index: any) => (
-    <OrderCard key={index} orderData={item} />
-    // console.log(item)
-
+    <OrderCard key={index}  orderData={item} />
   );
 
   const renderModalContent = () => {

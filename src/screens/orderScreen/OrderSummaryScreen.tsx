@@ -33,14 +33,14 @@ const validationSchema = Yup.object().shape({
 
 const OrderSummaryScreen = () => {
   const navigation = useNavigation();
-  const route = useRoute();
+  const route: any = useRoute();
   const payload = route.params?.payload || {};
   const item = route.params?.item || [];
   const dispatch = useDispatch();
   const cartItems = item.length > 0 ? item : useSelector((state: RootState) => state.cart.items);
   const { totalAmount, totalTax: taxToatal, totalWithTax } = useSelector((state: RootState) => state.cart);
   console.log(totalAmount, taxToatal, totalWithTax, "df")
-  const user = useSelector((state: RootState) => state.user.data);
+  const user: any = useSelector((state: RootState) => state.user.data);
   const [dynamicTaxes, setDynamicTaxes] = useState([]);
   const [showThankYouModal, setShowThankYouModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,13 +50,13 @@ const OrderSummaryScreen = () => {
 
   // Calculate subtotal
   const subTotal = useMemo(
-    () => cartItems.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 0), 0),
+    () => cartItems.reduce((sum: any, item: any) => sum + (item.price || 0) * (item.quantity || 0), 0),
     [cartItems]
   );
 
   // Calculate total tax
   const totalTax = useMemo(
-    () => taxInputs.reduce((sum, t) => sum + parseFloat(t.value || '0'), 0),
+    () => taxInputs.reduce((sum: any, t: any) => sum + parseFloat(t.value || '0'), 0),
     [taxInputs]
   );
 
@@ -69,8 +69,8 @@ const OrderSummaryScreen = () => {
       // Initialize tax inputs with fetched taxes
       setTaxInputs(
         response.data
-          .filter(tax => tax.status === 1)
-          .map(tax => ({
+          .filter((tax: any) => tax.status === 1)
+          .map((tax: any) => ({
             id: tax.id,
             label: tax.name,
             value: '0',
@@ -78,7 +78,7 @@ const OrderSummaryScreen = () => {
             type: tax.type,
           }))
       );
-    } catch (error) {
+    } catch (error: any) {
       ToastAndroid.show(error.message || 'Failed to load taxes.', ToastAndroid.SHORT);
     }
   };
@@ -230,8 +230,9 @@ const OrderSummaryScreen = () => {
               image: item.image || '',
             })),
         };
+        const url = user?.role === "user" ? 'place-order-user' : '/user/vendor/place-order'
 
-        const response: any = await Post('/user/vendor/place-order', jsonPayload, 10000);
+        const response: any = await Post(url, jsonPayload, 10000);
         console.log(response)
         if (!response?.success) {
           ToastAndroid.show(response?.message || 'Failed to place order.', ToastAndroid.LONG);

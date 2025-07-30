@@ -24,6 +24,7 @@ import { states } from '../../utils/data/constant';
 import ShiftCard from '../../components/common/ShiftCard';
 import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const { width } = Dimensions.get('screen');
 const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -202,6 +203,7 @@ const CreateShopScreen = ({ route }: any) => {
 
       formData.append('business_name', values.business_name);
       formData.append('phone', values.phone);
+      formData.append('shop_type', values.shop_type);
       formData.append('gst', values.gst);
       formData.append('address', values.address);
       formData.append('zip_code', values.zip_code);
@@ -338,6 +340,7 @@ const CreateShopScreen = ({ route }: any) => {
                   business_name: shopId ? user?.shop?.restaurant_name : '',
                   shop_category: shopId ? user?.shop?.shop_category : [],
                   phone: shopId ? user?.shop?.phone : '',
+                  shop_type: shopId ? user?.shop?.shop_type : '',
                   gst: shopId ? user?.shop?.gst : '',
                   address: shopId ? user?.shop?.address : '',
                   zip_code: shopId ? user?.shop?.zip_code : '',
@@ -450,6 +453,47 @@ const CreateShopScreen = ({ route }: any) => {
                         <Text style={{ color: '#EF4444', fontSize: 12, marginTop: 4 }}>
                           {errors.shop_category}
                         </Text>
+                      )}
+                    </View>
+
+
+
+                    {/* Ad Type Toggle */}
+                    <View className="bg-white dark:bg-white rounded-lg pt-4 mb-4" style={styles.shadow}>
+                      <View className="flex-row items-center mb-2">
+                        <MaterialIcons name="category" size={22} color="#ac94f4" className="mr-2" />
+                        <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Type of Shop</Text>
+                      </View>
+                      <View className="flex-col justify-between gap-2">
+                        {[
+                          { label: "Restaurant", type: "restaurant", emoji: "🍽️", desc: "Full-service dining experience" },
+                          { label: "Cafe", type: "cafe", emoji: "☕", desc: "Casual spot for coffee, tea, and light meals" },
+                          { label: "Food Truck", type: "food_truck", emoji: "🚚", desc: "Mobile kitchen serving street food or snacks" },
+                          { label: "Cloud Kitchen", type: "cloud_kitchen", emoji: "🏠", desc: "Delivery-only kitchen without dine-in" },
+                          // { label: "Bakery", type: "bakery", emoji: "🥐", desc: "Specializes in bread, pastries, and baked goods" },
+                          // { label: "Fast Food", type: "fast_food", emoji: "🍔", desc: "Quick-service meals, often takeout" },
+                          // { label: "Juice Bar", type: "juice_bar", emoji: "🍹", desc: "Serves fresh juices, smoothies, and health drinks" },
+                          // { label: "Dessert Shop", type: "dessert_shop", emoji: "🍰", desc: "Focuses on sweets like cake, ice cream, or candy" },
+                          // { label: "Pizzeria", type: "pizzeria", emoji: "🍕", desc: "Specializes in pizzas and related items" },
+                          // { label: "Buffet", type: "buffet", emoji: "🥗", desc: "All-you-can-eat style dining with variety" },
+                          // { label: "Bar & Grill", type: "bar_grill", emoji: "🍻", desc: "Casual place for drinks and grilled foods" },
+                          // { label: "Fine Dining", type: "fine_dining", emoji: "🍷", desc: "Upscale, elegant dining experience" },
+                          // { label: "Street Food Stall", type: "street_food", emoji: "🌮", desc: "Outdoor vendor offering local snacks" },
+                          // { label: "Ice Cream Parlor", type: "ice_cream", emoji: "🍦", desc: "Specializes in ice cream and frozen desserts" }
+                        ]?.map(({ label, type, emoji, desc }) => (
+                          <TouchableOpacity
+                            key={type}
+                            className={`flex-1 p-3 rounded-lg border ${values.shop_type === type ? 'bg-primary-100 border-gray-400' : 'bg-gray-100 dark:bg-white border-gray-300 dark:border-gray-300'}`}
+                            onPress={() => setFieldValue('shop_type', type)}
+                            accessibilityLabel={`Select ${type} ad type`}
+                          >
+                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`text-left text-base ${values?.shop_type === type ? "text-white dark:text-white" : "text-gray-900 dark:text-gray-900"}`}>{emoji} {label}</Text>
+                            <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-left text-xs  mt-1 ${values?.shop_type === type ? "text-white dark:text-white" : "text-gray-900 dark:text-gray-900"}`}>{desc}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                      {touched.shop_type && errors.shop_type && (
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mt-1">{errors.shop_type}</Text>
                       )}
                     </View>
 

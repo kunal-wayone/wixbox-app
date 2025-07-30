@@ -12,6 +12,7 @@ import {
   ToastAndroid,
   ActivityIndicator,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Formik } from 'formik';
@@ -346,6 +347,16 @@ const CreateAdScreen = () => {
                       uniqueKey="id"
                       onSelectedItemsChange={(selected) => {
                         setFieldValue('related_item', selected); // Assuming you're using Formik
+                        if (
+                          selected.length === 1 &&
+                          !values.original_price // only if not already filled
+                        ) {
+                          const selectedProduct: any = products?.find((p: any) => p.id === selected![0]);
+                          console.log(selected, selectedProduct)
+                          if (selectedProduct?.price) {
+                            setFieldValue('original_price', String(selectedProduct.price));
+                          }
+                        }
                       }}
                       selectedItems={values.related_item}
                       selectText="e.g., Deluxe Burger 🍔"
@@ -639,15 +650,19 @@ const CreateAdScreen = () => {
                     </View>
                     <View className="flex-row justify-between gap-2">
                       <View className="flex-1">
-                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-900 dark:text-gray-900 mb-1">Original Price</Text>
+                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-900 dark:text-gray-900 mb-1">Original Price </Text>
                         <TextInput
                           className="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-white rounded-lg p-3 text-base text-gray-800 dark:text-gray-900"
                           placeholder="e.g., 20 "
                           placeholderTextColor="#6B7280"
-                          defaultValue={values?.related_item?.length === 1 ? values?.related_item![0]?.price : ""}
+                          value={
+                            values?.related_item?.length === 1
+                              ? products?.find(p => p.id === values.related_item[0])?.price ?? ""
+                              : ""
+                          }
                           onChangeText={handleChange('original_price')}
                           onBlur={handleBlur('original_price')}
-                          value={values.original_price}
+                          // value={values.original_price}
                           keyboardType="numeric"
                           accessibilityLabel="Original price"
                         />
@@ -659,9 +674,18 @@ const CreateAdScreen = () => {
                         <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-900 dark:text-gray-900 mb-1">Discounted Price</Text>
                         <TextInput
                           className="border border-gray-300 dark:border-gray-300 bg-gray-100 dark:bg-white rounded-lg p-3 text-base text-gray-800 dark:text-gray-900"
-                          placeholder="e.g., 15 "
+                          placeholder="e.g., 15"
                           placeholderTextColor="#6B7280"
-                          onChangeText={handleChange('discounted_price')}
+                          onChangeText={(text) => {
+                            const value = parseFloat(text);
+                            const original = parseFloat(products?.find(p => p.id === values.related_item[0])?.price);
+                            console.log(value, original, values.original_price, !isNaN(value) && !isNaN(original) && value > original)
+                            if (!isNaN(value) && !isNaN(original) && value > original) {
+                              Alert.alert('Discounted Price', 'Discounted price cannot be more than original price');
+                              return
+                            }
+                            handleChange('discounted_price')(text); // ✅ correct
+                          }}
                           onBlur={handleBlur('discounted_price')}
                           value={values.discounted_price}
                           keyboardType="numeric"

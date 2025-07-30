@@ -79,6 +79,7 @@ const UserMomentsScreen: React.FC = () => {
 
   const getDefaultRegion = (): Region => {
     if (liveLocation && liveLocation.latitude && liveLocation.longitude) {
+      console.log(liveLocation, liveLocation.latitude, liveLocation.longitude)
       return {
         latitude: liveLocation.latitude,
         longitude: liveLocation.longitude,
@@ -141,10 +142,11 @@ const UserMomentsScreen: React.FC = () => {
   const fetchStores = async (pageNumber: number) => {
     try {
       const res: any = await Fetch(`/user/shops-nearby?per_page=5&page=${pageNumber}&radius=${searchRadius}`);
-      if (!res.success) {
-        throw new Error(res.message || 'Failed to fetch shops');
-      }
-      setRestaurantData(res?.data?.nearby_shops || []);
+      console.log(res?.data)
+      // if (!res.success) {
+      //   throw new Error(res.message || 'Failed to fetch shops');
+      // }
+      setRestaurantData(res?.nearby_shops || []);
     } catch (error) {
       ToastAndroid.show('Failed to fetch nearby stores', ToastAndroid.SHORT);
       console.error('Error fetching stores:', error);
@@ -168,6 +170,7 @@ const UserMomentsScreen: React.FC = () => {
   };
 
   const centerToUserLocation = () => {
+    console.log(liveLocation, mapRef.current)
     if (liveLocation && mapRef.current) {
       mapRef.current.animateToRegion({
         latitude: liveLocation.latitude,
@@ -227,47 +230,71 @@ const UserMomentsScreen: React.FC = () => {
   useEffect(() => {
     if (isFocused) {
       getLiveLocation();
-      fetchStores(1);
     }
   }, [isFocused, searchRadius, minRating]);
 
-  useEffect(() => {
-    const watchId = Geolocation.watchPosition(
-      (position) => {
-        if (position?.coords?.latitude && position?.coords?.longitude) {
-          const newLocation: Location = {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            heading: position.coords.heading || 0,
-            address: liveLocation?.address || 'Unknown',
-            country: liveLocation?.country || 'unknown',
-          };
-          setLiveLocation(newLocation);
-          animateMarker();
-          if (!liveLocation && mapRef.current) {
-            mapRef.current.animateToRegion({
-              latitude: newLocation.latitude,
-              longitude: newLocation.longitude,
-              latitudeDelta: 0.0001,
-              longitudeDelta: 0.0001,
-            }, 1000);
-          }
-        }
-      },
-      (error) => {
-        ToastAndroid.show('Error watching location', ToastAndroid.SHORT);
-        console.log('Watch error:', error);
-      },
-      {
-        enableHighAccuracy: true,
-        distanceFilter: 5,
-        interval: 2000,
-        fastestInterval: 1000,
-      }
-    );
 
-    return () => Geolocation.clearWatch(watchId);
+  useEffect(() => {
+    fetchStores(1);
+  }, []);
+
+  useEffect(() => {
+    let watchId: any;
+    if (isFocused) {
+      watchId = Geolocation.watchPosition(
+        (position) => {
+          if (position?.coords?.latitude && position?.coords?.longitude) {
+            const newLocation: Location = {
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              heading: position.coords.heading || 0,
+              address: liveLocation?.address || 'Unknown',
+              country: liveLocation?.country || 'unknown',
+            };
+            setLiveLocation(newLocation);
+            animateMarker();
+            if (!liveLocation && mapRef.current) {
+              mapRef.current.animateToRegion({
+                latitude: newLocation.latitude,
+                longitude: newLocation.longitude,
+                latitudeDelta: 0.0001,
+                longitudeDelta: 0.0001,
+              }, 1000);
+            }
+          }
+        },
+        (error) => {
+          ToastAndroid.show('Error watching location', ToastAndroid.SHORT);
+          console.log('Watch error:', error);
+        },
+        {
+          enableHighAccuracy: true,
+          distanceFilter: 5,
+          interval: 2000,
+          fastestInterval: 1000,
+        }
+      );
+    }
+    return () => {
+      if (watchId != null) Geolocation.clearWatch(watchId);
+    }
   }, [animateMarker, liveLocation?.address, liveLocation?.country]);
+
+
+  // You already have mapRef
+
+  // Animate map to liveLocation when either the screen is focused or liveLocation changes
+  useEffect(() => {
+    if (isFocused && liveLocation && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: liveLocation.latitude,
+        longitude: liveLocation.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }, 1000);
+    }
+  }, [isFocused, liveLocation]); // <-- trigger when focus or location change
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
@@ -291,7 +318,7 @@ const UserMomentsScreen: React.FC = () => {
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
           style={styles.map}
-          initialRegion={getDefaultRegion()}
+          region={getDefaultRegion()}
           mapType={mapType}
           showsUserLocation={false}
           rotateEnabled={false}

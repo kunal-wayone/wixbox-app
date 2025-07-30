@@ -14,12 +14,13 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Post } from '../../utils/apiUtils';
 
 // Validation schema using Yup
 const validationSchema = Yup.object().shape({
-  phoneNumber: Yup.string()
-    .required('Phone number is required')
-    .matches(/^\d{10}$/, 'Phone number must be 10 digits'),
+  email: Yup.string()
+    .email('Enter a valid email address')
+    .required('Email is required'),
 });
 
 const DeleteAccountScreen = () => {
@@ -30,25 +31,18 @@ const DeleteAccountScreen = () => {
     values: any,
     { setSubmitting, resetForm }: any,
   ) => {
-    navigation.navigate('DeleteAccountVerifyOtpScreen');
     try {
       // Replace with your actual API endpoint for sending OTP
-      const response = await fetch('https://api.example.com/send-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ phoneNumber: values.phoneNumber }),
-      });
-
-      if (!response.ok) {
+      const response: any = await Post('/user/send-delete-otp', { email: values.email }, 5000);
+      console.log(response)
+      if (!response.success) {
         throw new Error('Failed to send OTP');
       }
 
       ToastAndroid.show('OTP sent successfully!', ToastAndroid.SHORT);
       resetForm();
       // Optionally navigate to OTP verification screen
-      // navigation.navigate('VerifyOtpScreen', { phoneNumber: values.phoneNumber });
+      navigation.navigate('DeleteAccountVerifyOtpScreen', { email: values.email });
     } catch (error: any) {
       ToastAndroid.show(
         error.message || 'Something went wrong. Please try again.',
@@ -93,12 +87,12 @@ const DeleteAccountScreen = () => {
             </Text>
             <Text
               style={{ fontFamily: 'Raleway-Regular', textAlign: 'center', marginVertical: 8, color: '#4B5563' }}>
-              Enter your phone number to receive an OTP for account deletion.
+              Enter your email to receive an OTP for account deletion.
             </Text>
 
             <Formik
               initialValues={{
-                phoneNumber: '',
+                email: '',
               }}
               validationSchema={validationSchema}
               onSubmit={handleSendOtp}>
@@ -112,7 +106,7 @@ const DeleteAccountScreen = () => {
                 isSubmitting,
               }: any) => (
                 <View style={{ marginTop: 16 }}>
-                  {/* Phone Number */}
+                  {/* email  */}
                   <View style={{ marginBottom: 12 }}>
                     <Text
                       style={{
@@ -122,7 +116,7 @@ const DeleteAccountScreen = () => {
                         color: '#374151',
                         marginBottom: 4,
                       }}>
-                      Phone Number
+                      Email Id
                     </Text>
                     <TextInput
                       style={{
@@ -134,17 +128,15 @@ const DeleteAccountScreen = () => {
                         fontSize: 16,
                         fontFamily: 'Raleway-Regular',
                       }}
-                      placeholder="Enter phone number"
-                      onChangeText={handleChange('phoneNumber')}
-                      onBlur={handleBlur('phoneNumber')}
-                      value={values.phoneNumber}
-                      maxLength={10}
-                      keyboardType="numeric"
+                      placeholder="Enter email id"
+                      onChangeText={handleChange('email')}
+                      onBlur={handleBlur('email')}
+                      value={values.email}
                     />
-                    {touched.phoneNumber && errors.phoneNumber && (
+                    {touched.email && errors.email && (
                       <Text
                         style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
-                        {errors.phoneNumber}
+                        {errors.email}
                       </Text>
                     )}
                   </View>
@@ -154,7 +146,7 @@ const DeleteAccountScreen = () => {
                     onPress={handleSubmit}
                     disabled={isSubmitting}
                     style={{
-                      backgroundColor: isSubmitting ? '#B68AD480' : '#B68AD4',
+                      backgroundColor: isSubmitting ? '#ac94f4' : '#ac94f4',
                       padding: 16,
                       borderRadius: 10,
                       alignItems: 'center',

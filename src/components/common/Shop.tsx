@@ -12,7 +12,6 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import Icons from 'react-native-vector-icons/Ionicons';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
-
 import { RootState } from '../../store/store';
 import { addWishlistShop, removeWishlistShop } from '../../store/slices/wishlistSlice';
 import { addToCart } from '../../store/slices/cartSlice';
@@ -76,12 +75,14 @@ const Shop = ({
   const isFocused = useIsFocused()
   const dispatch = useDispatch<any>();
   const navigation = useNavigation<any>();
+  const wishlistShopIds = useSelector((state: RootState) => state.wishlist.shop_ids);
+  const isWishlisted = wishlistShopIds.some((shop: any) => shop.id === id)
+  const [isAdded, setIsAdded] = useState(isWishlisted)
   const [shopStatus, setShopStatus] = useState({
     isOpen: false,
     openingTime: null,
     closingTime: null,
   });
-  const wishlistShopIds = useSelector((state: RootState) => state.wishlist.shop_ids);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   let shiftDetails = [];
 
@@ -98,7 +99,6 @@ const Shop = ({
       console.warn("shift_details is neither a string nor an object.");
     }
   }
-  const isWishlisted = wishlistShopIds.some((shop: any) => shop.id === id)
 
   const formatToAMPM = (time24: string) => {
     const [hourStr, minute] = time24.split(':');
@@ -190,22 +190,34 @@ const Shop = ({
   }, [isFocused]);
 
 
-  // console.log(isShopOpen)
+  // Also update this in your useEffect and handler accordingly:
+
+  useEffect(() => {
+    setIsAdded(isWishlisted);
+  }, [isWishlisted]);
+
   const handleToggleWishlist = async () => {
     try {
-      if (isWishlisted) {
-        await dispatch(removeWishlistShop({ shop_id: id })).unwrap();
-        ToastAndroid.show('Removed from wishlist', ToastAndroid.SHORT);
+      const action = isAdded ? removeWishlistShop : addWishlistShop;
+      const result = await dispatch(action({ shop_id: id })).unwrap();
+
+      // Show toast on success only
+      if (result) {
+        setIsAdded(!isAdded);
+        ToastAndroid.show(
+          !isAdded ? 'Added to wishlist' : 'Removed from wishlist',
+          ToastAndroid.SHORT
+        );
       } else {
-        await dispatch(addWishlistShop({ shop_id: id })).unwrap();
-        ToastAndroid.show('Added to wishlist', ToastAndroid.SHORT);
+        ToastAndroid.show(
+          'Something went wrong updating wishlist',
+          ToastAndroid.SHORT
+        );
       }
     } catch (error) {
       ToastAndroid.show('Error updating wishlist', ToastAndroid.SHORT);
     }
   };
-
-
 
   const handleViewShopDetails = () => {
     try {
@@ -248,7 +260,7 @@ const Shop = ({
           />
 
           <TouchableOpacity className='absolute z-50 top-2 right-2' onPress={handleToggleWishlist}>
-            <Icons name={isWishlisted ? 'heart' : 'heart-outline'} size={24} color={isWishlisted ? 'red' : 'white'} />
+            <Icons name={isAdded ? 'heart' : 'heart-outline'} size={24} color={isAdded ? 'red' : 'white'} />
           </TouchableOpacity>
           <View className="absolute bottom-0 left-4 right-4 mb-4">
             <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-lg" numberOfLines={1}>
@@ -306,7 +318,7 @@ const Shop = ({
         />
 
         <TouchableOpacity className='absolute z-50 bg-white/80 rounded-lg top-2 right-2' onPress={handleToggleWishlist}>
-          <Icons name={isWishlisted ? 'heart' : 'heart-outline'} size={24} color={isWishlisted ? 'red' : 'black'} />
+          <Icons name={isAdded ? 'heart' : 'heart-outline'} size={24} color={isAdded ? 'red' : 'black'} />
         </TouchableOpacity>
         <View className="absolute bottom-0 left-4 right-4 mb-4">
           <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-white text-lg" numberOfLines={1}>

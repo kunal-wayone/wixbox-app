@@ -34,9 +34,9 @@ const AllOrderScreen = () => {
   const fetchAds = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response: any = await Fetch(`/user/vendor/get-order`, {}, 5000);
+      const response: any = await Fetch(`/user/get-order-user`, {}, 5000);
       if (!response.success) throw new Error('Failed to fetch orders');
-      setOrdersList(response.data || []);
+      setOrdersList(response.orders || []);
     } catch (error: any) {
       ToastAndroid.show(
         error?.message || 'Failed to load orders.',
@@ -192,7 +192,7 @@ const AllOrderScreen = () => {
         </View>
 
         <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-2xl text-center mb-4">
-          {user?.role === 'user' ? 'Orders History' : 'Manage Customer'}
+          {user?.role === 'user' ? 'Orders History' : 'Manage Orders'}
         </Text>
 
         <View className="flex-row justify-between mb-6 hidden">

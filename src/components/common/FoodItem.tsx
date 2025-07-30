@@ -41,7 +41,9 @@ const FoodItem = ({
     const navigation = useNavigation<any>();
     const cartItems = useSelector((state: RootState) => state.cart.items);
     const wishlistItems = useSelector((state: RootState) => state.wishlist.menu_items);
-    const isFavorite = wishlistItems?.some((i) => i.id === id);
+    const isFav = wishlistItems?.some((i) => i.id === id);
+    const [isAdded, setIsAdded] = useState(isFav)
+    const [isFavorite, setIsFavorite] = useState(isFav)
     const inCart = cartItems?.some((i) => i.id === id);
     const [addedToCart, setAddedToCart] = useState(inCart);
     const isFocused = useIsFocused()
@@ -50,18 +52,18 @@ const FoodItem = ({
         openingTime: null,
         closingTime: null,
     });
-    let shiftDetails = [];
-    console.log(isVegetarian)
-    if (item?.shop?.shift_details) {
-        try {
-            shiftDetails = JSON.parse(item.shop.shift_details);
-        } catch (e) {
-            // Optional: Log the error or handle it as needed
-            shiftDetails = [];
+    let shiftDetails: any[] = [];
+    try {
+        if (item?.shop?.shift_details) {
+            shiftDetails =
+                typeof item.shop.shift_details === 'string'
+                    ? JSON.parse(item.shop.shift_details)
+                    : item.shop.shift_details;
         }
+    } catch {
+        shiftDetails = [];
     }
 
-    console.log(item?.shop?.shift_details)
     const formatToAMPM = (time24: string) => {
         const [hourStr, minute] = time24.split(':');
         let hour = parseInt(hourStr);
@@ -70,12 +72,10 @@ const FoodItem = ({
         return `${hour}:${minute} ${ampm}`;
     };
 
-    console.log(item)
     const getShopStatus = () => {
         const currentDay = new Date()
             .toLocaleString('en-US', { weekday: 'short' })
             .toLowerCase();
-
         const currentTime = new Date().toLocaleTimeString('en-US', {
             hour12: false,
             hour: '2-digit',
@@ -87,11 +87,7 @@ const FoodItem = ({
         );
 
         if (!todayShift || !todayShift.first_shift_start) {
-            return {
-                isOpen: false,
-                openingTime: null,
-                closingTime: null,
-            };
+            return { isOpen: false, openingTime: null, closingTime: null };
         }
 
         const isOpen =
@@ -105,28 +101,20 @@ const FoodItem = ({
         };
     };
 
-
-
     useEffect(() => {
         if (isFocused) {
-            const status: any = getShopStatus();
-            setShopStatus(status);
+            setShopStatus(getShopStatus());
         }
     }, [isFocused]);
 
 
     const handleQuantityChange = (type: 'increment' | 'decrement') => {
-        if (type === 'increment' && quantity < maxQuantity) {
-            setQuantity((prev) => prev + 1);
-        } else if (type === 'decrement' && quantity > 1) {
-            setQuantity((prev) => prev - 1);
+        if (type === 'increment') {
+            if (quantity < maxQuantity) setQuantity(quantity + 1);
+            else ToastAndroid.show('Maximum quantity reached!', ToastAndroid.SHORT);
         } else {
-            ToastAndroid.show(
-                type === 'increment'
-                    ? 'Maximum quantity reached!'
-                    : 'Minimum quantity is 1!',
-                ToastAndroid.SHORT
-            );
+            if (quantity > 1) setQuantity(quantity - 1);
+            else ToastAndroid.show('Minimum quantity is 1!', ToastAndroid.SHORT);
         }
     };
 
@@ -135,63 +123,67 @@ const FoodItem = ({
             ToastAndroid.show('Item is out of stock!', ToastAndroid.SHORT);
             return;
         }
-        const cartHasItems = cartItems.length > 0;
-        const isDifferentShop = cartHasItems && cartItems[0].shop_id !== (item?.shop?.id ?? item?.store_id);
+        if (cartItems.length > 0) {
+            const currentShopId = item?.shop?.id ?? item?.store_id;
+            const cartShopId = cartItems[0]?.shop_id;
 
-        // Prevent adding items from different shops
-        if (isDifferentShop) {
-            ToastAndroid.show(
-                'You can only add items from one shop at a time.',
-                ToastAndroid.SHORT
-            );
-            return; // Don't update the state
+            if (cartShopId !== currentShopId) {
+                ToastAndroid.show(
+                    'You can only add items from one shop at a time.',
+                    ToastAndroid.SHORT
+                );
+                return;
+            }
         }
-        console.log({
-            id,
-            name,
-            price,
-            quantity,
-            image: item?.images[0],
-            shop_id: item?.shop?.id
-        }, item, imageUrl)
         dispatch(
             addToCart({
                 id,
                 name,
                 price,
                 quantity,
-                image: item?.images[0],
+                image: item?.images?.[0],
                 shop_id: item?.shop?.id ?? item?.store_id,
-                tax: item?.tax || 0
+                tax: item?.tax || 0,
             })
         );
         setAddedToCart(true);
     };
 
-    const handleFavoriteToggle = async () => {
+
+    const handleToggleWishlist = async () => {
         try {
-            if (isFavorite) {
-                await dispatch(removeWishlistItem({ menu_item_id: id })).unwrap();
-                ToastAndroid.show('Removed from wishlist', ToastAndroid.SHORT);
+            const action = isAdded ? removeWishlistItem : addWishlistItem;
+            const result = await dispatch(action({ menu_item_id: id })).unwrap();
+
+            // Show toast on success only
+            if (result) {
+                setIsAdded(!isAdded);
+                ToastAndroid.show(
+                    !isAdded ? 'Added to wishlist' : 'Removed from wishlist',
+                    ToastAndroid.SHORT
+                );
             } else {
-                await dispatch(addWishlistItem({ menu_item_id: id })).unwrap();
-                ToastAndroid.show('Added to wishlist', ToastAndroid.SHORT);
+                ToastAndroid.show(
+                    'Something went wrong updating wishlist',
+                    ToastAndroid.SHORT
+                );
             }
         } catch (error) {
-            ToastAndroid.show('Failed to update wishlist', ToastAndroid.SHORT);
+            ToastAndroid.show('Error updating wishlist', ToastAndroid.SHORT);
         }
     };
 
-    const renderDietaryBadges = () =>
-        dietaryInfo.map((info: any, index: number) => (
-            <View
-                key={index}
-                className="bg-blue-100 rounded-full px-2 py-1 mr-1"
-            >
-                <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-blue-800 text-xs">{info}</Text>
-            </View>
-        ));
+    useEffect(() => {
+        setIsAdded(isFav);
+    }, [isFav]);
 
+    // useEffect(() => {
+    //     setIsFavorite(wishlistItems.some((i: any) => i.id === id));
+    // }, [wishlistItems, handleToggleWishlist, id]);
+
+    useEffect(() => {
+        setAddedToCart(cartItems.some((i: any) => i.id === id));
+    }, [cartItems, id]);
     return (
         <TouchableOpacity onPress={() => {
             navigation.navigate("ProductDetailsScreen", { productId: item?.id })
@@ -237,12 +229,8 @@ const FoodItem = ({
             <View className="w-2/3 pl-4 flex-1">
                 <View className="flex-row justify-between items-start">
                     <Text style={{ fontFamily: 'Raleway-Bold' }} className="  text-gray-800 flex-1 " numberOfLines={1} ellipsizeMode='tail'>{name}</Text>
-                    <TouchableOpacity onPress={handleFavoriteToggle}>
-                        <Icons
-                            name="heart"
-                            size={22}
-                            color={isFavorite ? 'red' : 'gray'}
-                        />
+                    <TouchableOpacity onPress={handleToggleWishlist}>
+                        <Icons name={isAdded ? 'heart' : 'heart-outline'} size={24} color={isAdded ? 'red' : 'gray'} />
                     </TouchableOpacity>
                 </View>
                 <View className='flex-row items-center justify-between '>

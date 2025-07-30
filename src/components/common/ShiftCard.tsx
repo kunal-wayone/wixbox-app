@@ -102,10 +102,10 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
       setFieldValue('shift1', updated);
       onChange({ ...values, shift1: updated });
     } else if (type === 'shift1-to') {
-      if (values.shift1.rawFrom && selectedDate <= values.shift1.rawFrom) {
-        Alert.alert('End time must be after start time.');
-        return;
-      }
+      // if (values.shift1.rawFrom && selectedDate <= values.shift1.rawFrom) {
+      //   Alert.alert('End time must be after start time.');
+      //   return;
+      // }
       const updated = { ...values.shift1, to: formatted, rawTo: selectedDate };
       setFieldValue('shift1', updated);
       onChange({ ...values, shift1: updated });
@@ -114,10 +114,10 @@ const ShiftCard: React.FC<ShiftCardProps> = ({
       setFieldValue('shift2', updated);
       onChange({ ...values, shift2: updated });
     } else if (type === 'shift2-to') {
-      if (values.shift2?.rawFrom && selectedDate <= values.shift2.rawFrom) {
-        Alert.alert('End time must be after start time.');
-        return;
-      }
+      // if (values.shift2?.rawFrom && selectedDate <= values.shift2.rawFrom) {
+      //   Alert.alert('End time must be after start time.');
+      //   return;
+      // }
       const updated = { ...values.shift2, to: formatted, rawTo: selectedDate };
       setFieldValue('shift2', updated);
       onChange({ ...values, shift2: updated });

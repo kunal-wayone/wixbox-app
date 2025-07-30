@@ -237,13 +237,13 @@ const Menu = () => {
     <View className="bg-gray-50 pt-4">
       {/* Search + Add */}
       <View className="flex-row items-center gap-3 mb-4">
-        <View className="flex-row items-center flex-1 bg-white px-3 py-1 border rounded-xl shadow-sm">
+        <View className="flex-row items-center flex-1 bg-white border-gray-300 px-3 py-0.5 border rounded-xl shadow-sm">
           <AntDesign name="search1" color="#6B7280" size={20} />
-          <Text style={{ fontFamily: 'Raleway-Regular' }} Input
+          <TextInput style={{ fontFamily: 'Raleway-Regular' }}
             value={search}
             onChangeText={setSearch}
             placeholder="Search Item..."
-            className="ml-2 flex-1 text-sm text-gray-700"
+            className="ml-2 flex-1 text-sm text-gray-700  "
           />
         </View>
         <TouchableOpacity

@@ -7,6 +7,7 @@ import {
     Modal,
     ScrollView,
     Image,
+    ToastAndroid,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { IMAGE_URL, Post } from '../../utils/apiUtils';
@@ -21,34 +22,18 @@ const statusSteps = [
 ];
 ``
 const statusLabels: any = {
-    '0': 'pending',
-    '1': 'preparing',
-    '2': 'ready',
+    '0': 'Pending',
+    '1': 'Preparing',
+    '2': 'Ready',
     // '3': 'refund',
 };
 
 const OrderStatusCard = ({ orderData }: any) => {
     const [showModal, setShowModal] = useState(false);
+    const [statusValue, setStatusValue] = useState(null)
+    const [active, setActive] = useState(parseInt(orderData?.order?.status) || 0)
     const user: any | null = useSelector((state: RootState) => state.user.data);
-
-    const updateStauts = async (order_id: any, status: any) => {
-        const payload = {
-            order_id,
-            status
-        }
-
-        try {
-
-            const response: any = await Post('/user/vendor/update-order-status', payload, 5000)
-            if (!response?.success) {
-                throw new Error(response?.message || "Faield to update status")
-            }
-        } catch (error) {
-            console.log("Faeld to update status")
-        }
-
-    }
-
+console.log(orderData)
     const {
         id,
         name,
@@ -70,7 +55,26 @@ const OrderStatusCard = ({ orderData }: any) => {
         total_amount: finalTotalAamount
     } = orderData?.charges_summary
 
-    const activeStep = parseInt(status);
+    const updateStauts = async (order_id: any, status: any) => {
+        const payload = {
+            order_id,
+            status
+        }
+        try {
+
+            const response: any = await Post('/user/vendor/update-order-status', payload, 5000)
+            console.log(response)
+            if (!response?.success) {
+                throw new Error(response?.message || "Faield to update status")
+            }
+            setActive(parseInt(response?.data?.status))
+        } catch (error) {
+            ToastAndroid.show("Faeld to update status", ToastAndroid.SHORT)
+        }
+
+    }
+
+
 
     return (
         <>
@@ -93,14 +97,14 @@ const OrderStatusCard = ({ orderData }: any) => {
                                 name={step.icon}
                                 size={24}
                                 color={
-                                    index <= activeStep
+                                    index <= active
                                         ? '#ac94f4' // pink
-                                        : index === activeStep + 1
+                                        : index === active + 1
                                             ? '#a1a1aa' // gray-400
                                             : '#e5e7eb' // gray-200
                                 }
                             />
-                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`text-[10px] ${index === activeStep ? 'text-primary-100' : 'text-gray-800'} text-center`}>
+                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`text-[10px] ${index <= active ? 'text-primary-100' : 'text-gray-800'} text-center`}>
                                 {step?.label}
                             </Text>
                         </View>
@@ -112,7 +116,7 @@ const OrderStatusCard = ({ orderData }: any) => {
                     {statusSteps.slice(0, 3).map((_, index) => (
                         <View
                             key={index}
-                            className={`h-1 flex-1 mx-1 rounded-full ${index === activeStep ? 'bg-primary-100' : 'bg-gray-300'
+                            className={`h-1 flex-1 mx-1 rounded-full ${index <= active ? 'bg-primary-100' : 'bg-gray-300'
                                 }`}
                         />
                     ))}
@@ -129,9 +133,9 @@ const OrderStatusCard = ({ orderData }: any) => {
                 {user?.role !== "user" && <View className="flex-row justify-between items-center mb-3">
                     <View className="flex-1 mr-2  ">
                         <Picker
-                            selectedValue={''}
+                            selectedValue={status}
                             className='rounded-xl border-b-2 border-gray-300'
-                            onValueChange={value => console.log('unit', value)}
+                            onValueChange={(value: any) => setStatusValue(value)}
                             style={{ color: '#374151' }}
                             accessibilityLabel="Select unit"
                             dropdownIconColor={'gray'}
@@ -146,7 +150,7 @@ const OrderStatusCard = ({ orderData }: any) => {
                     <TouchableOpacity
                         className={`bg-primary-100 px-4 py-2 rounded-full ${true ? '' : 'hidden'
                             }`}
-                        onPress={() => console.log('Update status to:', "selectedStatus")}
+                        onPress={() => updateStauts(id, statusValue)}
                     >
                         <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-sm font-medium">Update Status</Text>
                     </TouchableOpacity>

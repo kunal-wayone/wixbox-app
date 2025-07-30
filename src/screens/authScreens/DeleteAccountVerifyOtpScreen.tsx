@@ -13,9 +13,10 @@ import {
 } from 'react-native';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Fetch, Post } from '../../utils/apiUtils';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -28,6 +29,8 @@ const validationSchema = Yup.object().shape({
 
 const DeleteAccountVerifyOtpScreen = () => {
   const navigation = useNavigation<any>();
+  const route: any = useRoute();
+  const email = route.params?.email
   const [modalVisible, setModalVisible] = useState(false);
   // Refs for each OTP input box to manage focus
   const otpRefs = useRef<any>(
@@ -45,23 +48,42 @@ const DeleteAccountVerifyOtpScreen = () => {
       setModalVisible(true); // Show success modal
 
       // Replace with your actual API endpoint
-      const response = await fetch('https://api.example.com/verify-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          otp: values.otp,
-        }),
-      });
-
-      if (!response.ok) {
+      const response: any = await Post('/user/delete-profile', { otp: values.otp, }, 5000);
+      console.log(response)
+      if (!response.success) {
         throw new Error('OTP verification failed');
       }
 
-      const data = await response.json();
+      const data = await response?.data;
       setModalVisible(true); // Show success modal
       resetForm();
+      navigation.replace('LoginScreen')
+    } catch (error: any) {
+      ToastAndroid.show(
+        error.message || 'Something went wrong. Please try again.',
+        ToastAndroid.SHORT,
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+
+  const reSendOtp = async (
+    values: any,
+    { setSubmitting, resetForm }: any,
+  ) => {
+    try {
+      // Replace with your actual API endpoint for sending OTP
+      const response: any = await Post('/user/send-delete-otp', { email: email }, 5000);
+      console.log(response)
+      if (!response.success) {
+        throw new Error('Failed to send OTP');
+      }
+
+      ToastAndroid.show('OTP sent successfully!', ToastAndroid.SHORT);
+      resetForm();
+      // Optionally navigate to OTP verification screen
     } catch (error: any) {
       ToastAndroid.show(
         error.message || 'Something went wrong. Please try again.',
