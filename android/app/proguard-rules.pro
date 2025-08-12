@@ -8,3 +8,16 @@
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
 # Add any project specific keep options here:
+# Keep annotations used by Razorpay
+-keep class proguard.annotation.Keep
+-keep class proguard.annotation.KeepClassMembers
+
+# Keep all Razorpay classes and members
+-keep class com.razorpay.** { *; }
+-dontwarn com.razorpay.**
+
+# Keep necessary inner classes and interfaces
+-keepclassmembers class * {
+    @proguard.annotation.Keep *;
+    @proguard.annotation.KeepClassMembers *;
+}

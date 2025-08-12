@@ -189,7 +189,7 @@ const TopCafesScreen = () => {
             initialLoading ? index.toString() : item.id.toString()
           }
           renderItem={initialLoading ? () => <SkeletonCard /> : (store: any) => (
-            <View key={store?.item?.id}>
+            <View className='px-2' key={store?.item?.id}>
               <Shop
                 id={store?.item?.id}
                 name={store?.item?.restaurant_name}

@@ -1,5 +1,6 @@
-package com.wishbox
+package com.wisboxwayone
 
+import com.wisboxwayone.BuildConfig
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled

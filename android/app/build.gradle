@@ -27,14 +27,14 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.wishbox"
+    namespace "com.wisboxwayone"
 
     defaultConfig {
-        applicationId "com.wishbox"
+        applicationId "com.wisboxwayone"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "2.0"
 
         // ✅ Add secrets here
         // buildConfigField "String", "MAPS_API_KEY", "\"${secretProps['MAPS_API_KEY']}\""
@@ -44,23 +44,36 @@ android {
     }
 
     signingConfigs {
-        debug {
-            storeFile file('debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
+        // debug {
+        //     storeFile file('debug.keystore')
+        //     storePassword 'android'
+        //     keyAlias 'androiddebugkey'
+        //     keyPassword 'android'
+        // }
+        release {
+            storeFile file('my-release-key.keystore')
+            storePassword 'Wisbox'
+            keyAlias 'my-key-alias'
+            keyPassword 'Wisbox'
         }
     }
 
     buildTypes {
-        debug {
-            signingConfig signingConfigs.debug
-        }
+        // debug {
+        //     signingConfig signingConfigs.debug
+        // }
         release {
-            signingConfig signingConfigs.debug
-            minifyEnabled enableProguardInReleaseBuilds
+            signingConfig signingConfigs.release
+            shrinkResources true
+            minifyEnabled true
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+        // release {
+        //     signingConfig signingConfigs.release
+        //     shrinkResouces false
+        //     minifyEnabled enableProguardInReleaseBuilds
+        //     proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+        // }
     }
 }
 

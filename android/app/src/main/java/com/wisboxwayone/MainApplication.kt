@@ -1,5 +1,6 @@
-package com.wishbox
+package com.wisboxwayone
 
+import com.wisboxwayone.BuildConfig 
 import android.app.Application
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication

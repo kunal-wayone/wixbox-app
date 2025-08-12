@@ -14,7 +14,31 @@
       },
       "oauth_client": [
         {
-          "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+          "client_id": "825024769088-0g7qt0u6suenat6ipcpgklqe4stdi2pi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wisbox",
+            "certificate_hash": "5e900bc1805844de3f3c8e59f26320465fb0b22a"
+          }
+        },
+        {
+          "client_id": "825024769088-rccf92nsn03ems3p1bdvhe0q0iat7kml.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wisbox",
+            "certificate_hash": "7ce5e8bc69204fd489337906b5bff3380a60c8c2"
+          }
+        },
+        {
+          "client_id": "825024769088-rob98rqtvj5k2u057iunvajef62mnvmk.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wisbox",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "825024769088-408ta9uq0rg0kkcs5uo816b63qfrgtub.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -27,7 +51,44 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+              "client_id": "825024769088-408ta9uq0rg0kkcs5uo816b63qfrgtub.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825024769088:android:5524ce7a7dbc92df1403a5",
+        "android_client_info": {
+          "package_name": "com.wisboxwayone"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "825024769088-roq33evoj6luhtbl7lhjpgplr78ipn8j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wisboxwayone",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "825024769088-408ta9uq0rg0kkcs5uo816b63qfrgtub.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDz_0jQtGV1Tn_7gsnjGHZO_bmZxUcUfms"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "825024769088-408ta9uq0rg0kkcs5uo816b63qfrgtub.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -43,7 +104,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+          "client_id": "825024769088-52sve6g2t4vp6s3r7682i5bb1pedvgur.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wishbox",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "825024769088-408ta9uq0rg0kkcs5uo816b63qfrgtub.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -56,7 +125,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+              "client_id": "825024769088-408ta9uq0rg0kkcs5uo816b63qfrgtub.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
@@ -72,7 +141,23 @@
       },
       "oauth_client": [
         {
-          "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+          "client_id": "825024769088-0jt3l32ivamid4baa1f127nho7hp59ri.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wishbox.users.wishbox",
+            "certificate_hash": "7ce5e8bc69204fd489337906b5bff3380a60c8c2"
+          }
+        },
+        {
+          "client_id": "825024769088-dasbvbrjvpe2bfb4jhn1ph9pjik0o6nv.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wishbox.users.wishbox",
+            "certificate_hash": "5e900bc1805844de3f3c8e59f26320465fb0b22a"
+          }
+        },
+        {
+          "client_id": "825024769088-408ta9uq0rg0kkcs5uo816b63qfrgtub.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
@@ -85,7 +170,7 @@
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "825024769088-94350gmt2gt3qc7cfsuamfjdl22i6pqg.apps.googleusercontent.com",
+              "client_id": "825024769088-408ta9uq0rg0kkcs5uo816b63qfrgtub.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
