@@ -8,6 +8,8 @@ import {
     StyleSheet,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { Fetch } from '../../utils/apiUtils';
+import { useNavigation } from '@react-navigation/native';
 
 const statusLabels: Record<string, string> = {
     pending: 'Pending',
@@ -63,7 +65,22 @@ type Props = {
 };
 
 const BookedTableCard: React.FC<Props> = ({ bookingData }) => {
+    const navigation = useNavigation();
     const [showModal, setShowModal] = useState(false);
+    const getShopData = async (shop_id: number) => {
+        try {
+            const res = await Fetch(`/user/shop/${shop_id}`);
+            if (res?.success && res.data) {
+                navigation.navigate('ViewAllMenuItems', { shop_info: res?.data});
+            } else {
+                console.error('Failed to fetch shop data');
+            }
+        } catch (error) {
+            console.error('Error fetching shop data:', error);
+        }
+    };
+
+
 
     return (
         <>
@@ -145,6 +162,14 @@ const BookedTableCard: React.FC<Props> = ({ bookingData }) => {
                 <TouchableOpacity style={styles.detailsButton} onPress={() => setShowModal(true)}>
                     <Text style={styles.detailsButtonText}>Show Booking Details</Text>
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.detailsButton, { marginTop: 10, backgroundColor: '#a78bfa' }]}
+                    onPress={() => getShopData(bookingData.shop_id)}
+                >
+                    <Text style={[styles.detailsButtonText, { color: 'white' }]}>Visit Shop</Text>
+                </TouchableOpacity>
+
             </View>
 
             {/* Modal */}

@@ -104,6 +104,7 @@ const FoodItem = ({
     useEffect(() => {
         if (isFocused) {
             setShopStatus(getShopStatus());
+            console.log(getShopStatus())
         }
     }, [isFocused]);
 
@@ -188,7 +189,7 @@ const FoodItem = ({
         <TouchableOpacity onPress={() => {
             navigation.navigate("ProductDetailsScreen", { productId: item?.id })
         }} className="relative bg-white border border-gray-300 rounded-2xl shadow-lg m-2 p-3 flex-row">
-            {shopStatus?.isOpen && (
+            {!shopStatus?.isOpen && (
                 <TouchableOpacity
                     onPress={() => {
                         ToastAndroid.show("Shop temporarily closed now", ToastAndroid.SHORT)

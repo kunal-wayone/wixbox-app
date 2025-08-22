@@ -4,14 +4,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
-export const IMAGE_URL =  'https://wisbox.wayone.co.in/';
+export const IMAGE_URL =  'https://wisbox.wayone.ae/';
 // "https://wixbox.aaademosites.com/"
 // Define API base URL
-export const BASE_URL = 'https://wisbox.wayone.co.in/api/v1';
+export const BASE_URL = 'https://wisbox.wayone.ae/api/v1';
 // "https://wixbox.aaademosites.com/api/v1"
 
 const api = axios.create({
-    baseURL: "https://wisbox.wayone.co.in/api/v1",//BASE_URL,
+    baseURL: "https://wisbox.wayone.ae/api/v1",//BASE_URL,
     timeout: 5000, // Default timeout in milliseconds
 });
 

@@ -326,8 +326,8 @@ const ShopDetailsScreen = () => {
       </Text>
     </TouchableOpacity>
   );
-
-  // Get unique floors
+ 
+  // Get unique floors 
   const getUniqueFloors = (tables = []) => {
     const seen = new Set();
     return tables
@@ -653,11 +653,11 @@ const ShopDetailsScreen = () => {
             />
           )}
           <TouchableOpacity
-            disabled={cartItems?.length > 0 ? true : false}
+            disabled={cartItems?.length > 0 ? false : true}
             className="bg-primary-90 p-4 rounded-xl flex-row items-center justify-center gap-2  "
             onPress={() => navigation.navigate('CartScreen')} // Add proper navigation route
           >
-            {cartItems?.length > 0 && < Text className='absolute bg-red-600 rounded-full p-1 px-2 text-white z-50'
+            {cartItems?.length > 0 && < Text className='absolute  bg-red-600 rounded-full p-1 px-2 text-white z-50'
               style={{ right: '-2%', top: "-40%" }}
             >{cartItems?.length || 0}</Text>}
             <Ionicons name='cart-outline' color={"#fff"} size={22} />

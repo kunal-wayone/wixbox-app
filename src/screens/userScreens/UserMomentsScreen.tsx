@@ -12,6 +12,7 @@ import {
   Dimensions,
   Animated,
   ToastAndroid,
+  Modal,
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Region, MapType } from 'react-native-maps';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -20,7 +21,7 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import Geolocation from '@react-native-community/geolocation';
 import { useDispatch, useSelector } from 'react-redux';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
-import { Fetch, IMAGE_URL } from '../../utils/apiUtils';
+import { Fetch, IMAGE_URL, Post } from '../../utils/apiUtils';
 import { getCurrentLocationWithAddress } from '../../utils/tools/locationServices';
 import { RootState } from '../../store/store';
 import { ImagePath } from '../../constants/ImagePath';
@@ -36,6 +37,7 @@ interface Location {
 }
 
 interface Store {
+  id: any;
   restaurant_name: string;
   about_business: string;
   latitude: number;
@@ -74,6 +76,8 @@ const UserMomentsScreen: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const [favoriteLocation, setFavoriteLocation] = useState<Location | null>(null);
   const markerScale = useRef(new Animated.Value(1)).current;
+  const [confirmModal, setConfirmModal] = useState(false)
+
 
   const { status: userStatus, data: user } = useSelector((state: RootState) => state.user);
 
@@ -146,12 +150,30 @@ const UserMomentsScreen: React.FC = () => {
       // if (!res.success) {
       //   throw new Error(res.message || 'Failed to fetch shops');
       // }
-      setRestaurantData(res?.nearby_shops || []);
+      setRestaurantData(res?.data?.nearby_shops || []);
     } catch (error) {
       ToastAndroid.show('Failed to fetch nearby stores', ToastAndroid.SHORT);
       console.error('Error fetching stores:', error);
     }
   };
+
+  const handelNotify = async () => {
+    try {
+      const res: any = await Post("/user/shops/notify", { shop_id: selectedStore?.id })
+      console.log(res)
+      if (!res?.success) {
+        throw new Error(res?.message || "Your are now inside of shop")
+      }
+      setConfirmModal(false)
+      navigation.navigate('ViewAllMenuItems', { shop_info: selectedStore })
+      console.log(res)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+
+
 
   const openGoogleMapsDirections = (store: Store) => {
     if (!liveLocation || !store?.latitude || !store?.longitude) return;
@@ -278,7 +300,7 @@ const UserMomentsScreen: React.FC = () => {
     return () => {
       if (watchId != null) Geolocation.clearWatch(watchId);
     }
-  }, [animateMarker, liveLocation?.address, liveLocation?.country]);
+  }, [liveLocation?.address, liveLocation?.country]);
 
 
   // You already have mapRef
@@ -311,10 +333,10 @@ const UserMomentsScreen: React.FC = () => {
       )} */}
         {liveLocation?.address && (
           <View style={styles.addressContainer}>
-            <Text style={styles.addressText}>{liveLocation.address.city + ", " + liveLocation.address.state + " (" + liveLocation.address?.pincode + ")"}</Text>
+            <Text style={styles.addressText}>{(liveLocation?.address?.city || "") + ", " + (liveLocation?.address?.state || "") + " (" + (liveLocation?.address?.pincode || "") + ")"}</Text>
           </View>
         )}
-        <MapView
+        {!isLoading && <MapView
           ref={mapRef}
           provider={PROVIDER_GOOGLE}
           style={styles.map}
@@ -353,9 +375,12 @@ const UserMomentsScreen: React.FC = () => {
                 description={store?.about_business}
                 onPress={() => setSelectedStore(store)}
                 image={ImagePath.home3}
-              />
+
+              >
+                <Text className='ml-8 text-center' numberOfLines={1}>{store?.restaurant_name}</Text>
+              </Marker>
             ))}
-        </MapView>
+        </MapView>}
 
         {/* Floating Buttons */}
         <View style={styles.floatingButtonContainer}>
@@ -419,8 +444,10 @@ const UserMomentsScreen: React.FC = () => {
           </View>
         </View>
 
+
+
         {selectedStore && (
-          <View style={styles.cardContainer}>
+          <TouchableOpacity onPress={() => navigation.navigate('ShopDetailsScreen', { shop_info: selectedStore })} style={styles.cardContainer}>
             <TouchableOpacity
               onPress={() => setSelectedStore(null)}
               style={styles.closeButton}
@@ -437,7 +464,7 @@ const UserMomentsScreen: React.FC = () => {
               />
               <View style={{ flex: 1 }}>
                 <Text style={styles.storeName}>{selectedStore?.restaurant_name}</Text>
-                <Text style={{ marginBottom: 4 }}>{selectedStore?.about_business}</Text>
+                <Text style={{ marginBottom: 4 }} numberOfLines={2} >{selectedStore?.about_business}</Text>
                 <View style={styles.ratingLocationRow}>
                   <View style={styles.inlineRow}>
                     <FontAwesome name="star" size={16} color="gold" />
@@ -458,10 +485,10 @@ const UserMomentsScreen: React.FC = () => {
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.visitButton, { backgroundColor: '#B68AD4' }]}
-                onPress={() => navigation.navigate('ShopDetailsScreen', { shop_info: selectedStore })}
+                onPress={() => setConfirmModal(true)}
               >
                 <Ionicons name="storefront" color="#fff" size={15} />
-                <Text style={styles.visitText}>Tap to view</Text>
+                <Text style={styles.visitText}>Visit Shop</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.visitButton, { backgroundColor: '#4CAF50' }]}
@@ -471,8 +498,71 @@ const UserMomentsScreen: React.FC = () => {
                 <Text style={styles.visitText}>Get Direction</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </TouchableOpacity>
         )}
+
+
+
+        {/* Confirmation Modal */}
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={confirmModal}
+          onRequestClose={() => setConfirmModal(false)}
+        >
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: 'rgba(0,0,0,0.3)',
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: 'white',
+                padding: 24,
+                borderRadius: 16,
+                width: '80%',
+              }}
+            >
+              <Text style={{ fontFamily: 'Raleway-Bold', fontSize: 18, textAlign: 'center', color: '#B68AD4' }}>
+                {'Are you inside of this shop?'}
+              </Text>
+              {/* <Text style={{ fontFamily: 'Raleway-Regular', fontSize: 16, textAlign: 'center', marginTop: 8, color: '#666' }}>
+                {'Are you sure you want to delete your account? This action cannot be undone.'}
+              </Text> */}
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 24 }}>
+                <TouchableOpacity
+                  style={{
+                    padding: 12,
+                    backgroundColor: '#e5e5e5',
+                    borderRadius: 12,
+                    flex: 1,
+                    marginRight: 8,
+                  }}
+                  onPress={() => setConfirmModal(false)}
+                >
+                  <Text style={{ fontFamily: 'Raleway-Bold', fontSize: 16, textAlign: 'center', color: '#000' }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={{
+                    padding: 12,
+                    backgroundColor: '#4CAF50',
+                    borderRadius: 12,
+                    flex: 1,
+                    marginLeft: 8,
+                  }}
+                  onPress={handelNotify}
+                >
+                  <Text className='font-semibold' style={{ fontFamily: 'Raleway-Bold', fontSize: 16, textAlign: 'center', color: '#fff' }}>
+                    {"I'm In"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );

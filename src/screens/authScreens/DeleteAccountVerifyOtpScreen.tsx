@@ -53,11 +53,13 @@ const DeleteAccountVerifyOtpScreen = () => {
       if (!response.success) {
         throw new Error('OTP verification failed');
       }
-
       const data = await response?.data;
       setModalVisible(true); // Show success modal
       resetForm();
-      navigation.replace('LoginScreen')
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'LoginScreen' }],
+      });
     } catch (error: any) {
       ToastAndroid.show(
         error.message || 'Something went wrong. Please try again.',
@@ -159,6 +161,8 @@ const DeleteAccountVerifyOtpScreen = () => {
               {({
                 handleSubmit,
                 setFieldValue,
+                setSubmitting,
+                resetForm,
                 values,
                 errors,
                 touched,
@@ -181,31 +185,55 @@ const DeleteAccountVerifyOtpScreen = () => {
                         flexDirection: 'row',
                         justifyContent: 'space-between',
                       }}>
-                      {[...Array(6)].map((_, index) => (
-                        <TextInput
-                          key={index}
-                          ref={otpRefs.current[index]}
-                          style={{
-                            borderWidth: 1,
-                            borderColor: '#D1D5DB',
-                            backgroundColor: '#F3F4F6',
-                            borderRadius: 8,
-                            width: 48,
-                            height: 48,
-                            textAlign: 'center',
-                            fontSize: 18,
-                            marginHorizontal: 4,
-                            fontFamily: 'Raleway-Regular',
-                          }}
-                          placeholder="0"
-                          keyboardType="number-pad"
-                          maxLength={1}
-                          onChangeText={value =>
-                            handleOtpChange(index, value, setFieldValue, values)
-                          }
-                          value={values.otp[index] || ''}
-                        />
-                      ))}
+                      <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
+                        {[...Array(6)].map((_, index) => (
+                          <TextInput
+                            key={index}
+                            ref={(ref) => (otpRefs.current[index] = ref!)}
+                            style={{
+                              borderWidth: 1,
+                              borderColor: '#D1D5DB',
+                              backgroundColor: '#F3F4F6',
+                              borderRadius: 8,
+                              width: 48,
+                              height: 48,
+                              textAlign: 'center',
+                              fontSize: 18,
+                              marginHorizontal: 4,
+                              fontFamily: 'Raleway-Regular',
+                            }}
+                            placeholder="_"
+                            placeholderTextColor={'gray'}
+                            keyboardType="number-pad"
+                            maxLength={1}
+                            value={values.otp[index] || ''}
+                            onChangeText={(value) => {
+                              const otpArray = values.otp.split('');
+                              otpArray[index] = value;
+
+                              const updatedOtp = otpArray.join('');
+                              setFieldValue('otp', updatedOtp);
+
+                              if (value && index < 5) {
+                                otpRefs.current[index + 1]?.focus();
+                              }
+                            }}
+                            onKeyPress={({ nativeEvent }) => {
+                              if (nativeEvent.key === 'Backspace') {
+                                const otpArray = values.otp.split('');
+                                if (!values.otp[index] && index > 0) {
+                                  otpRefs.current[index - 1]?.focus();
+                                  otpArray[index - 1] = '';
+                                  setFieldValue('otp', otpArray.join(''));
+                                } else {
+                                  otpArray[index] = '';
+                                  setFieldValue('otp', otpArray.join(''));
+                                }
+                              }
+                            }}
+                          />
+                        ))}
+                      </View>
                     </View>
                     {touched.otp && errors.otp && (
                       <Text
@@ -214,7 +242,7 @@ const DeleteAccountVerifyOtpScreen = () => {
                       </Text>
                     )}
                   </View>
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={() => reSendOtp(values, { setSubmitting, resetForm })}>
                     <Text
                       className="text-primary-80"
                       style={{

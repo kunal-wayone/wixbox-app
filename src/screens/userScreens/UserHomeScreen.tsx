@@ -295,7 +295,7 @@ const UserHomeScreen = () => {
             </View>
             <FreshStoreSection />
             <VisitNearByStores />
-            {/* <PopularAreaSection /> */}
+            <PopularAreaSection />
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>

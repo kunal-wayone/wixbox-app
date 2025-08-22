@@ -54,6 +54,7 @@ const CreateShopScreen = ({ route }: any) => {
   const [isLocation, setIsLocation] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [shopTypes, setShopTypes] = useState([])
   const [selectedCategory, setSelectedCategory] = useState<any>(user?.shop?.shop_category ?? [])
   const [schedules, setSchedules] = useState<any>(daysOfWeek.map(day => ({
     day, status: false, shift1: { from: '', to: '' }, shift2: { from: '', to: '' }, state: 'active'
@@ -98,6 +99,30 @@ const CreateShopScreen = ({ route }: any) => {
       }
 
       setCategories(response?.data || []);
+    } catch (error: any) {
+      console.log(error)
+      console.error('Unexpected error while fetching categories:', error);
+      // Optionally show an alert or toast
+    } finally {
+      setLoading(false)
+    }
+  };
+
+  const fetchShopType = async () => {
+    setLoading(true)
+    try {
+      const response: any = await Fetch(
+        `/user/vendor/shop-type`,
+        {},
+        5000
+      );
+      console.log(response)
+      if (!response?.success) {
+        console.error('Fetch categories error:', response?.message);
+        throw new Error(response?.message || 'Failed to fetch categories');
+      }
+
+      setShopTypes(response?.data || []);
     } catch (error: any) {
       console.log(error)
       console.error('Unexpected error while fetching categories:', error);
@@ -199,6 +224,9 @@ const CreateShopScreen = ({ route }: any) => {
     try {
       setSubmitting(true);
       setIsLoading(true)
+      if (images?.length === 0) {
+        throw new Error('At least one image add.')
+      }
       const formData = new FormData();
 
       formData.append('business_name', values.business_name);
@@ -256,8 +284,9 @@ const CreateShopScreen = ({ route }: any) => {
         for (const key in error.errors) {
           formattedErrors[key] = error.errors[key][0];
         }
+        console.log(error, formattedErrors)
         setErrors(formattedErrors);
-        setApiErrors(error?.errors?.latitude || "Live location is Requied")
+        // setApiErrors(error?.errors?.latitude || "Live location is Requied")
       }
     } finally {
       setIsLoading(false)
@@ -268,6 +297,7 @@ const CreateShopScreen = ({ route }: any) => {
   useEffect(() => {
     if (isFocused) {
       fetchCategories();
+      fetchShopType()
     }
   }, [isFocused]);
 
@@ -465,30 +495,15 @@ const CreateShopScreen = ({ route }: any) => {
                         <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-base text-gray-900 dark:text-gray-900">Type of Shop</Text>
                       </View>
                       <View className="flex-col justify-between gap-2">
-                        {[
-                          { label: "Restaurant", type: "restaurant", emoji: "🍽️", desc: "Full-service dining experience" },
-                          { label: "Cafe", type: "cafe", emoji: "☕", desc: "Casual spot for coffee, tea, and light meals" },
-                          { label: "Food Truck", type: "food_truck", emoji: "🚚", desc: "Mobile kitchen serving street food or snacks" },
-                          { label: "Cloud Kitchen", type: "cloud_kitchen", emoji: "🏠", desc: "Delivery-only kitchen without dine-in" },
-                          // { label: "Bakery", type: "bakery", emoji: "🥐", desc: "Specializes in bread, pastries, and baked goods" },
-                          // { label: "Fast Food", type: "fast_food", emoji: "🍔", desc: "Quick-service meals, often takeout" },
-                          // { label: "Juice Bar", type: "juice_bar", emoji: "🍹", desc: "Serves fresh juices, smoothies, and health drinks" },
-                          // { label: "Dessert Shop", type: "dessert_shop", emoji: "🍰", desc: "Focuses on sweets like cake, ice cream, or candy" },
-                          // { label: "Pizzeria", type: "pizzeria", emoji: "🍕", desc: "Specializes in pizzas and related items" },
-                          // { label: "Buffet", type: "buffet", emoji: "🥗", desc: "All-you-can-eat style dining with variety" },
-                          // { label: "Bar & Grill", type: "bar_grill", emoji: "🍻", desc: "Casual place for drinks and grilled foods" },
-                          // { label: "Fine Dining", type: "fine_dining", emoji: "🍷", desc: "Upscale, elegant dining experience" },
-                          // { label: "Street Food Stall", type: "street_food", emoji: "🌮", desc: "Outdoor vendor offering local snacks" },
-                          // { label: "Ice Cream Parlor", type: "ice_cream", emoji: "🍦", desc: "Specializes in ice cream and frozen desserts" }
-                        ]?.map(({ label, type, emoji, desc }) => (
+                        {shopTypes?.map(({ id, name, image }) => (
                           <TouchableOpacity
-                            key={type}
-                            className={`flex-1 p-3 rounded-lg border ${values.shop_type === type ? 'bg-primary-100 border-gray-400' : 'bg-gray-100 dark:bg-white border-gray-300 dark:border-gray-300'}`}
-                            onPress={() => setFieldValue('shop_type', type)}
-                            accessibilityLabel={`Select ${type} ad type`}
+                            key={id}
+                            className={` p-3 flex-row items-center gap-2 rounded-lg border ${values.shop_type === id ? 'bg-primary-100 border-gray-400' : 'bg-gray-100 dark:bg-white border-gray-300 dark:border-gray-300'}`}
+                            onPress={() => setFieldValue('shop_type', id)}
+                            accessibilityLabel={`Select ${name} ad type`}
                           >
-                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`text-left text-base ${values?.shop_type === type ? "text-white dark:text-white" : "text-gray-900 dark:text-gray-900"}`}>{emoji} {label}</Text>
-                            <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-left text-xs  mt-1 ${values?.shop_type === type ? "text-white dark:text-white" : "text-gray-900 dark:text-gray-900"}`}>{desc}</Text>
+                            <Image source={image ? { uri: IMAGE_URL + image } : ImagePath.item1} width={40} height={40} resizeMode='contain' className='rounded-xl' />
+                            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className={`text-left text-base ${values?.shop_type === id ? "text-white dark:text-white" : "text-gray-900 dark:text-gray-900"}`}>{name}</Text>
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -692,7 +707,7 @@ const CreateShopScreen = ({ route }: any) => {
                         <Text
                           className='text-center'
                           style={{ color: '#EF4444', fontSize: 12, }}>
-                          {"Please enable location services, Try agian"}
+                          {apiErrors || "Please enable location services, Try agian"}
                         </Text>
                       )}
                       <View style={{ marginVertical: 8 }}>

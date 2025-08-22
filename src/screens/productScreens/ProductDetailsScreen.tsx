@@ -65,9 +65,17 @@ const ProductDetailsScreen = () => {
     closingTime: null,
   });
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const shiftDetails = itemDetails?.shop?.shift_details
-    ? JSON.parse(itemDetails?.shop?.shift_details)
-    : [];
+  let shiftDetails: any[] = [];
+  try {
+    if (itemDetails?.shop?.shift_details) {
+      shiftDetails =
+        typeof itemDetails.shop.shift_details === 'string'
+          ? JSON.parse(itemDetails.shop.shift_details)
+          : itemDetails.shop.shift_details;
+    }
+  } catch {
+    shiftDetails = [];
+  }
 
   const formatToAMPM = (time24: string) => {
     const [hourStr, minute] = time24.split(':');
@@ -77,36 +85,10 @@ const ProductDetailsScreen = () => {
     return `${hour}:${minute} ${ampm}`;
   };
 
-  const isShopOpen: any = () => {
-    const currentDay = new Date()
-      .toLocaleString('en-US', { weekday: 'short' })
-      .toLowerCase();
-    const currentTime = new Date().toLocaleTimeString('en-US', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-    const shiftData = itemDetails?.shop?.shift_details ? JSON.parse(itemDetails?.shop?.shift_details) : null;
-    const todayShift = shiftData?.find(
-      (shift: any) => shift.day.toLowerCase() === currentDay && shift.status
-    );
-    // console.log(shiftData, item)
-
-    if (!todayShift || !todayShift.first_shift_start) return false;
-
-    return (
-      currentTime >= todayShift.first_shift_start &&
-      currentTime <= todayShift.first_shift_end
-    );
-  };
-
-
-
   const getShopStatus = () => {
     const currentDay = new Date()
       .toLocaleString('en-US', { weekday: 'short' })
       .toLowerCase();
-
     const currentTime = new Date().toLocaleTimeString('en-US', {
       hour12: false,
       hour: '2-digit',
@@ -118,11 +100,7 @@ const ProductDetailsScreen = () => {
     );
 
     if (!todayShift || !todayShift.first_shift_start) {
-      return {
-        isOpen: false,
-        openingTime: null,
-        closingTime: null,
-      };
+      return { isOpen: false, openingTime: null, closingTime: null };
     }
 
     const isOpen =
@@ -136,15 +114,22 @@ const ProductDetailsScreen = () => {
     };
   };
 
-
-
   useEffect(() => {
     if (isFocused) {
-      const status: any = getShopStatus();
-      console.log(isShopOpen(), status)
-      setShopStatus(status);
+      setShopStatus(getShopStatus());
+      console.log(getShopStatus())
     }
   }, [isFocused]);
+
+
+
+  // useEffect(() => {
+  //   if (isFocused) {
+  //     const status: any = getShopStatus();
+  //     console.log(isShopOpen(), status)
+  //     setShopStatus(status);
+  //   }
+  // }, [isFocused]);
 
 
 
@@ -387,7 +372,7 @@ const ProductDetailsScreen = () => {
                 {itemDetails?.shop?.restaurant_name || 'The Gourmet Kitchen'}
               </Text>
             </View>
-            <View className="flex-row flex-wrap gap-2 mt-1">
+            <View className="flex-row flex-wrap gap-2 mt-1 hidden">
               {availableTags.map(tag => (
                 <View
                   key={tag.id}

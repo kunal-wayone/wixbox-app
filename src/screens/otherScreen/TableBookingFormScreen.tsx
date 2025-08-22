@@ -66,6 +66,8 @@ const TableBookingFormScreen = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showThankYouModal, setShowThankYouModal] = useState(false);
     const [selectedSlot, setSelectedSlot] = useState(null)
+    const user = useSelector((state: RootState) => state.user.data);
+
 
     const formatDate = (date: any) => {
         const year = date.getFullYear();
@@ -188,8 +190,8 @@ const TableBookingFormScreen = () => {
 
                     <Formik
                         initialValues={{
-                            name: '',
-                            phone: '',
+                            name: user?.name || '',
+                            phone: user?.phone || '',
                             booking_date: '',
                             time_slot: [],
                             guests: '',
@@ -276,23 +278,23 @@ const TableBookingFormScreen = () => {
                                                     className={`${bgClass} mb-2 rounded p-2`}
                                                     onPress={() => {
                                                         setFieldValue('time_slot', slot); // Update form field
-                                                        }}
+                                                    }}
                                                 >
                                                     <Text style={{ fontSize: 12 }} className={textClass}>
                                                         📅 {slot.date} | 🕐 {slot.start_time} - {slot.end_time} • 💰 ₹{slot.price}
                                                     </Text>
-                                                    </TouchableOpacity>
+                                                </TouchableOpacity>
                                             );
-                                            })}
+                                        })}
                                     </View>
-                                    )} */}
+                                )} */}
 
                                 <View style={{ marginBottom: 12 }}>
                                     <Text style={labelStyle}>Select Time Slot</Text>
                                     <View style={pickerContainer}>
                                         <Picker
                                             selectedValue={values.time_slot || ''}
-                                            onValueChange={(val) => setSelectedSlot(val)}
+                                            onValueChange={(val) => {setSelectedSlot(val);console.log(val)}}
                                         >
                                             <Picker.Item label="Select time slot" style={{ fontSize: 13 }} value="" />
                                             {table_info![0].time_slot?.map((slot: any, i: any) => (
@@ -382,7 +384,7 @@ const TableBookingFormScreen = () => {
                                     }}
                                     onPaymentFailure={(error) => {
                                         setIsLoading(false);
-                                        navigation.replace('BookedTablesScreen')
+                                        // navigation.replace('BookedTablesScreen')
                                         ToastAndroid.show('Payment failed. Please try again.', ToastAndroid.LONG);
                                     }}
                                     onPaymentCancel={() => {

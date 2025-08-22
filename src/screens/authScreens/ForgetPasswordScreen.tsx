@@ -57,10 +57,6 @@ const ForgetPasswordScreen = () => {
       }
 
       const data = response?.data;
-      // Store OTP or relevant data (adjust key and value as needed)
-      await AsyncStorage.setItem('resetOtp', JSON.stringify(data?.otp));
-      await AsyncStorage.setItem('resetEmail', JSON.stringify(values?.email));
-
       // Navigate to OTP verification screen
       navigation.navigate('VerifyOtpScreen', { email: values.email });
 

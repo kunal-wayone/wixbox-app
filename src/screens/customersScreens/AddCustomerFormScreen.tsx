@@ -62,6 +62,7 @@ const AddCustomerFormScreen = () => {
   const isFocused = useIsFocused();
   const dispatch = useDispatch();
   const route = useRoute<any>();
+  const orderData = route?.params?.orderData;
   const orderDetails = route?.params?.orderDetails ?? null;
   const item = route?.params?.item ?? null;
   const cartItems = useSelector((state: RootState) => state.cart.items);
@@ -72,6 +73,7 @@ const AddCustomerFormScreen = () => {
     user?.role === 'user' ? 'Own' : 'Other' // Default to 'Own' for users, 'Other' for others
   );
 
+  console.log(user, orderData)
   // Update orderItems when cartItems or focus changes
   useEffect(() => {
     if (isFocused) {
@@ -145,9 +147,9 @@ const AddCustomerFormScreen = () => {
   console.log(item)
   // Initial form values based on selectedOption
   const getInitialValues = () => ({
-    customerName: orderDetails?.name || (selectedOption === 'Own' && user ? user.name : ''),
-    email: orderDetails?.email || (selectedOption === 'Own' && user ? user.email : ''),
-    phone: orderDetails?.phone || (selectedOption === 'Own' && user ? user.phone : ''),
+    customerName: orderDetails?.name || (selectedOption === 'Own' && user ? user.name : '') || (orderData && orderData?.customer?.name),
+    email: orderDetails?.email || (selectedOption === 'Own' && user ? user.email : '') || (orderData && orderData?.customer?.email),
+    phone: orderDetails?.phone || (selectedOption === 'Own' && user ? user.phone : '') || (orderData && orderData?.customer?.phone),
     orderItems: item || cartItems || [],
     arrivedAt: '',
   });
@@ -170,7 +172,7 @@ const AddCustomerFormScreen = () => {
         >
           {/* Header with Back Button and Title */}
           <View className="flex-row items-center border-gray-200">
-            <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 absolute">
+            <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 z-50 absolute">
               <Ionicons name="arrow-back" size={24} color="black" />
             </TouchableOpacity>
             <Text
@@ -265,7 +267,7 @@ const AddCustomerFormScreen = () => {
                   <TouchableOpacity
                     onPress={() => {
                       if (user?.role === "user") {
-                        navigation.navigate('SearchScreen')
+                        navigation.navigate('ViewAllMenuItems', { shopId: orderItems![0]?.shop_id })
                       } else {
                         navigation.navigate('AddOrderScreen')
                       }
@@ -315,6 +317,7 @@ const AddCustomerFormScreen = () => {
                     onChangeText={handleChange('customerName')}
                     onBlur={handleBlur('customerName')}
                     value={values.customerName}
+                    editable={selectedOption !== 'Own'}
                   />
                   {touched.customerName && errors.customerName && (
                     <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>
@@ -353,6 +356,7 @@ const AddCustomerFormScreen = () => {
                     onBlur={handleBlur('email')}
                     value={values.email}
                     keyboardType="email-address"
+                    editable={selectedOption !== 'Own'}
                   />
                   {touched.email && errors.email && (
                     <Text style={{ fontFamily: 'Raleway-Regular', color: '#EF4444', fontSize: 12, marginTop: 4 }}>

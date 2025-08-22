@@ -19,6 +19,26 @@ import { RootState } from '../../store/store';
 import { useSelector } from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import OrderCard from '../../components/common/OrderCard';
+import LinearGradient from 'react-native-linear-gradient';
+import Feather from 'react-native-vector-icons/Feather';
+
+
+const quickActions = [
+  {
+    label: 'Booked Tables',
+    icon: 'coffee',
+    emoji: '🪑',
+    screen: 'BookedTablesScreen',
+    gradient: ['#34d399', '#059669'], // green gradient
+  },
+  {
+    label: 'Moments',
+    icon: 'target',
+    emoji: '🎯',
+    screen: 'MomentScreen',
+    gradient: ['#fde68a', '#f59e0b'], // yellow-orange
+  },
+]
 
 const AddCustomerScreen = () => {
   const navigation = useNavigation<any>();
@@ -33,10 +53,13 @@ const AddCustomerScreen = () => {
   const fetchAds = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response: any = await Fetch(`/user/vendor/get-order`, {}, 5000);
-      console.log(response?.data)
+      const url = user?.role === 'user' ? "/user/get-order-user" : "/user/vendor/get-order"
+      const response: any = await Fetch(url, {}, 5000);
+
+
+      console.log(response.data, response?.orders)
       if (!response.success) throw new Error('Failed to fetch orders');
-      setOrdersList(response.data || []);
+      setOrdersList(response.data || response?.orders || []);
     } catch (error: any) {
       ToastAndroid.show(
         error?.message || 'Failed to load orders.',
@@ -56,13 +79,13 @@ const AddCustomerScreen = () => {
   const filteredOrders = React.useMemo(
     () =>
       ordersList.filter((item: any) =>
-        item?.order?.name?.toLowerCase().includes(searchQuery?.toLowerCase())
+        item?.name?.toLowerCase().includes(searchQuery?.toLowerCase())
       ),
     [ordersList, searchQuery]
   );
   console.log(filteredOrders)
   const renderCustomerCard = ({ item }: any, index: any) => (
-    <OrderCard key={index}  orderData={item} />
+    <OrderCard key={index} orderData={item} />
   );
 
   const renderModalContent = () => {
@@ -158,22 +181,60 @@ const AddCustomerScreen = () => {
           {user?.role === 'user' ? 'Orders List' : 'Manage Customer'}
         </Text>
 
-        {user?.role !== "user" && <View className="flex-row justify-between mb-6">
+        {user?.role !== 'user' && <TouchableOpacity
+          onPress={() => navigation.navigate('MomentScreen')}
+          className="bg-primary-20 absolute right-4 top-3 py-2.5 px-3 rounded-lg justify-center">
+          <Ionicons name="map" size={20} color="#B68AD4" />
+        </TouchableOpacity>}
+
+        {<View className="flex-row justify-between mb-6">
           <View className="flex-1 flex-row items-center border border-gray-300 rounded-xl mr-3 px-2">
             <Ionicons name="search" size={20} color="#4B5563" />
             <TextInput style={{ fontFamily: 'Raleway-Regular' }}
               className="flex-1 text-base ml-2"
-              placeholder="Search Customer"
+              placeholder="Search Order"
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
           </View>
-          <TouchableOpacity
+          {user?.role !== "user" && <TouchableOpacity
             onPress={() => navigation.navigate('AddOrderScreen')}
             className="bg-primary-90 py-2.5 px-3 rounded-lg justify-center">
             <Ionicons name="add" size={20} color="white" />
-          </TouchableOpacity>
+          </TouchableOpacity>}
         </View>}
+
+
+        {/* Quick Action Grid */}
+        {user?.role !== 'user' && <View className="flex-row flex-wrap justify-between">
+          {quickActions.map((item, index) => (
+            <TouchableOpacity
+              key={index}
+              onPress={() => navigation.navigate(item.screen)}
+              className="w-[48%] h-20 mb-3 bg-white rounded-xl flex-row items-center gap-2 px-2 pt-2 pb-1"
+              // style={[style.shadow]}
+              activeOpacity={0.8}
+            >
+              {/* Left: Gradient Icon Box */}
+              <LinearGradient
+                colors={item.gradient}
+                style={{ borderRadius: 10 }}
+                className="flex-1 w-2/5 p-3 flex-row justify-center items-center"
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Feather name={item.icon} size={25} color="#fff" />
+              </LinearGradient>
+
+              {/* Right: Label + Emoji */}
+              <View className='w-3/5'>
+                <Text style={{ fontFamily: 'Raleway-Bold' }} className="text-sm mb-1 text-gray-600">{item.label}</Text>
+                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-base">{item.emoji}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>}
+
 
         {isLoading ? (
           <View className="flex-1 justify-center items-center mt-10">
@@ -193,6 +254,13 @@ const AddCustomerScreen = () => {
         )}
 
         {renderModalContent()}
+        {user?.role === "user" && (
+          <TouchableOpacity onPress={() => navigation.navigate('HomeScreen')} className="p-3 rounded-xl w-11/12 m-auto mb-0   bg-primary-80  z-10">
+            <Text style={{ fontFamily: 'Raleway-SemiBold' }} className='text-center text-white '>
+              Go To Home
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView >
   );

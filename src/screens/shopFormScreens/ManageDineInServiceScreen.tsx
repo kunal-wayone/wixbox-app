@@ -23,7 +23,6 @@ import { ImagePath } from '../../constants/ImagePath';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Octicons from 'react-native-vector-icons/Octicons';
-
 import { Post, TokenStorage } from '../../utils/apiUtils';
 import { useSelector } from 'react-redux';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -43,7 +42,6 @@ const validationSchema = Yup.object().shape({
     .positive('Price must be positive'),
 });
 
-
 type SlotType = {
   date: string; // e.g. "Sat Jul 26 2025"
   start_time: string; // "HH:mm"
@@ -60,7 +58,7 @@ const ManageDineInServiceScreen = () => {
   const [premium, setPremium] = useState(false);
   const [tables, setTables] = useState<any>(shopId ? (user?.shop?.tables || []) : []);
   const [showForm, setShowForm] = useState(false);
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
   const [tableOptions, setTableOptions] = useState<any>([]);
   // Slot states
   const [timeSlots, setTimeSlots] = useState<SlotType[]>([]);
@@ -74,9 +72,8 @@ const ManageDineInServiceScreen = () => {
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
 
-
   // Handlers for date/time pickers
-  const onChangeDate = (_event: Event, selectedDate?: Date) => {
+  const onChangeDate = (event: any, selectedDate?: Date) => {
     setShowDatePicker(false);
     if (selectedDate) {
       setSlotDate(selectedDate);
@@ -86,7 +83,7 @@ const ManageDineInServiceScreen = () => {
     }
   };
 
-  const onChangeStartTime = (_event: Event, selectedTime?: Date) => {
+  const onChangeStartTime = (event: any, selectedTime?: Date) => {
     setShowStartTimePicker(false);
     if (selectedTime) {
       setSlotStartTime(selectedTime);
@@ -97,7 +94,7 @@ const ManageDineInServiceScreen = () => {
     }
   };
 
-  const onChangeEndTime = (_event: Event, selectedTime?: Date) => {
+  const onChangeEndTime = (event: any, selectedTime?: Date) => {
     setShowEndTimePicker(false);
     if (selectedTime) {
       if (slotStartTime && selectedTime <= slotStartTime) {
@@ -159,18 +156,29 @@ const ManageDineInServiceScreen = () => {
     setTimeSlots(updatedSlots);
   };
 
-
   const handleAddTable = (values: any, { resetForm }: any) => {
+    if (timeSlots.length === 0) {
+      ToastAndroid.show('Please add at least one slot', ToastAndroid.SHORT);
+      return;
+    }
+
     const newTable = {
       floor,
       table_number: values.table_number,
       type: type,
       price: values.price,
       premium: premium ? 1 : 0,
-      seats: values?.seats || 0
+      seats: values?.seats || 0,
+      time_slot: timeSlots, // ✅ include slots here
     };
+
     setTables([...tables, newTable]);
     resetForm();
+    setTimeSlots([]); // ✅ clear slot state after adding
+    setSlotDate(null);
+    setSlotStartTime(null);
+    setSlotEndTime(null);
+    setSlotPrice('');
     ToastAndroid.show('Table added successfully!', ToastAndroid.SHORT);
   };
 
@@ -183,14 +191,12 @@ const ManageDineInServiceScreen = () => {
         value: `T${i + 1}`,
         type: 'Regular Seating',
       })),
-
       // Cabin Tables
       ...Array.from({ length: 15 }, (_, i) => ({
         label: `CABIN-${i + 1}`,
         value: `CABIN-${i + 1}`,
         type: 'Cabin',
       })),
-
       // Open Air Tables
       ...Array.from({ length: 20 }, (_, i) => ({
         label: `OPEN-${i + 1}`,
@@ -203,8 +209,8 @@ const ManageDineInServiceScreen = () => {
   };
 
   useEffect(() => {
-    tabelNo()
-  }, [])
+    tabelNo();
+  }, []);
 
   const handleRemoveTable = (index: any) => {
     const updatedTables = tables.filter((_: any, i: any) => i !== index);
@@ -217,13 +223,12 @@ const ManageDineInServiceScreen = () => {
       ToastAndroid.show('Please add at least one table', ToastAndroid.SHORT);
       return;
     }
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const formData = new FormData();
       tables.forEach((table: any, index: any) => {
         formData.append(`table[${index}]`, JSON.stringify(table));
       });
-
 
       const token = await TokenStorage.getToken();
       if (!token) {
@@ -232,7 +237,7 @@ const ManageDineInServiceScreen = () => {
 
       const url = '/user/vendor/dining-table';
       const response: any = await Post(url, { table: tables }, 5000);
-      console.log(url, response)
+      console.log(url, response);
       if (!response.success) {
         throw new Error(response?.message || 'Failed to create tables');
       }
@@ -244,7 +249,7 @@ const ManageDineInServiceScreen = () => {
 
       navigation.navigate('HomeScreen');
     } catch (error: any) {
-      console.log(error)
+      console.log(error);
       if (error.errors) {
         const formattedErrors: any = {};
         for (const key in error.errors) {
@@ -256,12 +261,9 @@ const ManageDineInServiceScreen = () => {
         error?.message || 'Something went wrong. Please try again.';
       ToastAndroid.show(errorMessage, ToastAndroid.SHORT);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   };
-
-
-
 
   // Format time and date helpers
   const formatTime = (date: Date | null) => {
@@ -275,9 +277,11 @@ const ManageDineInServiceScreen = () => {
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
-        {isLoading && <View className='absolute bg-black/80 top-0 z-50 h-full w-full '>
-          <ActivityIndicator className='m-auto' size={"large"} color={'#B68AD4'} />
-        </View>}
+        {isLoading && (
+          <View className="absolute bg-black/80 top-0 z-50 h-full w-full">
+            <ActivityIndicator className="m-auto" size={'large'} color={'#B68AD4'} />
+          </View>
+        )}
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
@@ -285,13 +289,11 @@ const ManageDineInServiceScreen = () => {
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
-
           <View>
             <TouchableOpacity
               className="absolute top-4 left-4 p-2"
               onPress={() => navigation.goBack()}
-              accessibilityLabel="Go back"
-            >
+              accessibilityLabel="Go back">
               <Ionicons name="arrow-back" size={24} color="#374151" />
             </TouchableOpacity>
 
@@ -299,21 +301,20 @@ const ManageDineInServiceScreen = () => {
               <Text className="text-center text-2xl font-bold text-gray-900 mt-6 mb-1">
                 {'Dine-In Setup 🪑'}
               </Text>
-
-              <Text
-                style={{ textAlign: 'center', marginTop: 0, color: '#4B5563' }}>
+              <Text style={{ textAlign: 'center', marginTop: 0, color: '#4B5563' }}>
                 Manage table details below
               </Text>
             </View>
 
-            <View className="bg-white rounded-lg m-4 p-4 mb-4 flex-row items-center justify-between shadow-md" style={styles.shadow}>
+            <View
+              className="bg-white rounded-lg m-4 p-4 mb-4 flex-row items-center justify-between shadow-md"
+              style={styles.shadow}>
               <View>
-                <Text className='text-lg font-bold   '>Dine-In Mode</Text>
-                <Text className='text-sm'>Enable to accept table bookin</Text>
+                <Text className="text-lg font-bold">Dine-In Mode</Text>
+                <Text className="text-sm">Enable to accept table booking</Text>
               </View>
-              <Switch value={showForm} onValueChange={setShowForm} size={"small"} />
+              <Switch value={showForm} onValueChange={setShowForm} size={'small'} />
             </View>
-
 
             {showForm && (
               <View style={styles.card}>
@@ -325,8 +326,7 @@ const ManageDineInServiceScreen = () => {
                     seats: '',
                   }}
                   validationSchema={validationSchema}
-                  onSubmit={handleAddTable}
-                >
+                  onSubmit={handleAddTable}>
                   {({
                     handleChange,
                     handleBlur,
@@ -339,8 +339,28 @@ const ManageDineInServiceScreen = () => {
                     <View>
                       {/* Floor Picker */}
                       <View style={styles.pickerContainer}>
-                        <Picker selectedValue={floor} onValueChange={setFloor} style={styles.pickerStyle}>
-                          {['Select Floor or Area', 'Ground Floor', '1st Floor', '2nd Floor', '3rd Floor', '4th Floor', '5th Floor', '6th Floor', '7th Floor', '8th Floor', '9th Floor', '10th Floor', '11th Floor', 'Rooftop', 'Backyard', 'Garden Area'].map(f => (
+                        <Picker
+                          selectedValue={floor}
+                          onValueChange={setFloor}
+                          style={styles.pickerStyle}>
+                          {[
+                            'Select Floor or Area',
+                            'Ground Floor',
+                            '1st Floor',
+                            '2nd Floor',
+                            '3rd Floor',
+                            '4th Floor',
+                            '5th Floor',
+                            '6th Floor',
+                            '7th Floor',
+                            '8th Floor',
+                            '9th Floor',
+                            '10th Floor',
+                            '11th Floor',
+                            'Rooftop',
+                            'Backyard',
+                            'Garden Area',
+                          ].map(f => (
                             <Picker.Item key={f} label={f} value={f} />
                           ))}
                         </Picker>
@@ -348,7 +368,10 @@ const ManageDineInServiceScreen = () => {
 
                       {/* Type Picker */}
                       <View style={styles.pickerContainerSecondary}>
-                        <Picker selectedValue={type} onValueChange={setType} style={styles.pickerStyle}>
+                        <Picker
+                          selectedValue={type}
+                          onValueChange={setType}
+                          style={styles.pickerStyle}>
                           <Picker.Item label="Choose Table Type" value="" />
                           <Picker.Item label="Regular Seating" value="Regular Seating" />
                           <Picker.Item label="Cabin / Private Table" value="Cabin" />
@@ -363,8 +386,7 @@ const ManageDineInServiceScreen = () => {
                           onValueChange={handleChange('table_number')}
                           onBlur={handleBlur('table_number')}
                           style={styles.pickerStyle}
-                          enabled={tableOptions.length > 0}
-                        >
+                          enabled={tableOptions.length > 0}>
                           <Picker.Item label="Choose Table Number" value="" />
                           {tableOptions?.map((table: any, index: any) => (
                             <Picker.Item key={index} label={table?.label} value={table?.value} />
@@ -381,8 +403,7 @@ const ManageDineInServiceScreen = () => {
                           selectedValue={values.seats}
                           onValueChange={handleChange('seats')}
                           onBlur={handleBlur('seats')}
-                          style={styles.pickerStyle}
-                        >
+                          style={styles.pickerStyle}>
                           <Picker.Item label="Select Number of Seats" value="" />
                           <Picker.Item label="🪑 2 Seater" value="2" />
                           <Picker.Item label="🪑 4 Seater" value="4" />
@@ -399,20 +420,18 @@ const ManageDineInServiceScreen = () => {
                           <Picker.Item label="🪑 26 Seater" value="26" />
                           <Picker.Item label="🪑 28 Seater" value="28" />
                           <Picker.Item label="🪑 30 Seater" value="30" />
-
                         </Picker>
                         {touched.seats && errors.seats && (
                           <Text style={styles.errorText}>{errors.seats}</Text>
                         )}
                       </View>
 
-
                       {/* Price Input */}
                       <View style={styles.inputContainer}>
                         <TextInput
                           style={styles.input}
                           placeholder="e.g. ₹100 for rooftop or premium cabin"
-                          placeholderTextColor={"#000"}
+                          placeholderTextColor={'#000'}
                           onChangeText={handleChange('price')}
                           onBlur={handleBlur('price')}
                           value={values.price}
@@ -425,11 +444,15 @@ const ManageDineInServiceScreen = () => {
 
                       {/* Premium Radio Buttons */}
                       <View style={styles.radioGroup}>
-                        <TouchableOpacity onPress={() => setPremium(false)} style={styles.radioContainer}>
+                        <TouchableOpacity
+                          onPress={() => setPremium(false)}
+                          style={styles.radioContainer}>
                           <View style={[styles.radio, !premium && styles.radioSelected]} />
                           <Text style={styles.radioText}>Regular (Normal seating)</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => setPremium(true)} style={styles.radioContainer}>
+                        <TouchableOpacity
+                          onPress={() => setPremium(true)}
+                          style={styles.radioContainer}>
                           <View style={[styles.radio, premium && styles.radioSelected]} />
                           <Text style={styles.radioText}>Premium (AC, privacy, priority)</Text>
                         </TouchableOpacity>
@@ -437,38 +460,48 @@ const ManageDineInServiceScreen = () => {
 
                       {/* Time Slots */}
                       <View style={{ marginBottom: 12 }}>
-                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>Add Time Slots</Text>
+                        <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8 }}>
+                          Add Time Slots
+                        </Text>
 
-                        <View className='flex-row items-center justify-between'>
-                          {/* Date Picker */}
-                          <TouchableOpacity onPress={() => setShowDatePicker(true)} style={[styles.input1, { justifyContent: 'center' }]}>
+                        {/* Date Picker */}
+                        <View className="flex-row items-center justify-between">
+                          <TouchableOpacity
+                            onPress={() => setShowDatePicker(true)}
+                            style={[styles.input1, { justifyContent: 'center' }]}>
                             <Text style={{ color: slotDate ? '#000' : '#999' }}>
                               {slotDate ? slotDate.toDateString() : 'Select Date'}
                             </Text>
                           </TouchableOpacity>
-                          {showDatePicker && (
-                            <DateTimePicker
-                              value={slotDate || new Date()}
-                              mode="date"
-                              display="default"
-                              onChange={onChangeDate}
-                              minimumDate={new Date()}
-                            />
-                          )}
+                          <DateTimePicker
+                            isVisible={showDatePicker}
+                            mode="date"
+                            minimumDate={new Date()}
+                            onConfirm={(selectedDate) => {
+                              console.log('Selected Date:', selectedDate);
+                              setShowDatePicker(false);
+                              if (selectedDate) {
+                                setSlotDate(selectedDate);
+                                setSlotStartTime(null);
+                                setSlotEndTime(null);
+                              }
+                            }}
+                            onCancel={() => setShowDatePicker(false)}
+                          />
                           {/* Price Input */}
                           <TextInput
                             style={[styles.input1]}
                             placeholder="Price"
-                            placeholderTextColor={"gray"}
-                            className='w-[48%] text-sm'
+                            placeholderTextColor={'gray'}
+                            className="w-[48%] text-sm"
                             keyboardType="numeric"
                             value={slotPrice}
                             onChangeText={setSlotPrice}
                           />
                         </View>
-                        <View className='flex-row items-center justify-between'>
 
-                          {/* Start Time Picker */}
+                        <View className="flex-row items-center justify-between">
+                          {/* Start Time Picker Button */}
                           <TouchableOpacity
                             onPress={() => {
                               if (!slotDate) {
@@ -477,23 +510,32 @@ const ManageDineInServiceScreen = () => {
                               }
                               setShowStartTimePicker(true);
                             }}
-                            style={[styles.input1, { justifyContent: 'center', }]}
-                          >
+                            style={[styles.input1, { justifyContent: 'center' }]}>
                             <Text style={{ color: slotStartTime ? '#000' : '#999' }}>
                               {slotStartTime ? formatTime(slotStartTime) : 'Select Start Time'}
                             </Text>
                           </TouchableOpacity>
-                          {showStartTimePicker && slotDate && (
-                            <DateTimePicker
-                              value={slotStartTime || new Date(slotDate.setHours(9, 0, 0))}
-                              mode="time"
-                              is24Hour={true}
-                              display="default"
-                              onChange={onChangeStartTime}
-                            />
-                          )}
 
-                          {/* End Time Picker */}
+                          {/* Start Time Picker Modal */}
+                          <DateTimePicker
+                            isVisible={showStartTimePicker}
+                            mode="time"
+                            is24Hour={true}
+                            date={slotStartTime || new Date(slotDate?.setHours(9, 0, 0))}
+                            onConfirm={(selectedTime) => {
+                              console.log('Selected Start Time:', selectedTime);
+                              setShowStartTimePicker(false);
+                              if (selectedTime) {
+                                setSlotStartTime(selectedTime);
+                                if (slotEndTime && selectedTime >= slotEndTime) {
+                                  setSlotEndTime(null);
+                                }
+                              }
+                            }}
+                            onCancel={() => setShowStartTimePicker(false)}
+                          />
+
+                          {/* End Time Picker Button */}
                           <TouchableOpacity
                             onPress={() => {
                               if (!slotStartTime) {
@@ -502,24 +544,32 @@ const ManageDineInServiceScreen = () => {
                               }
                               setShowEndTimePicker(true);
                             }}
-                            style={[styles.input1, { justifyContent: 'center', }]}
-                          >
+                            style={[styles.input1, { justifyContent: 'center' }]}>
                             <Text style={{ color: slotEndTime ? '#000' : '#999' }}>
                               {slotEndTime ? formatTime(slotEndTime) : 'Select End Time'}
                             </Text>
                           </TouchableOpacity>
-                          {showEndTimePicker && slotDate && (
-                            <DateTimePicker
-                              value={slotEndTime || new Date(slotDate.setHours(10, 0, 0))}
-                              mode="time"
-                              is24Hour={true}
-                              display="default"
-                              onChange={onChangeEndTime}
-                            />
-                          )}
+
+                          {/* End Time Picker Modal */}
+                          <DateTimePicker
+                            isVisible={showEndTimePicker}
+                            mode="time"
+                            is24Hour={true}
+                            date={slotEndTime || new Date(slotDate?.setHours(10, 0, 0))}
+                            onConfirm={(selectedTime) => {
+                              console.log('Selected End Time:', selectedTime);
+                              setShowEndTimePicker(false);
+                              if (selectedTime) {
+                                if (slotStartTime && selectedTime <= slotStartTime) {
+                                  Alert.alert('Invalid Time', 'End time must be after start time.');
+                                  return;
+                                }
+                                setSlotEndTime(selectedTime);
+                              }
+                            }}
+                            onCancel={() => setShowEndTimePicker(false)}
+                          />
                         </View>
-
-
 
                         {/* Add Slot Button */}
                         <TouchableOpacity onPress={addSlot} style={styles.addSlotButton}>
@@ -544,7 +594,10 @@ const ManageDineInServiceScreen = () => {
                       </View>
 
                       {/* Add Table Button */}
-                      <TouchableOpacity onPress={() => handleSubmit()} disabled={isSubmitting} style={styles.addButton}>
+                      <TouchableOpacity
+                        onPress={() => handleSubmit()}
+                        disabled={isSubmitting}
+                        style={styles.addButton}>
                         <Text style={styles.addButtonText}>+ Add more Tables</Text>
                       </TouchableOpacity>
                     </View>
@@ -555,7 +608,7 @@ const ManageDineInServiceScreen = () => {
 
             {/* Added Tables List */}
             {tables?.length > 0 && (
-              <View style={styles.tableListContainer} className='m-4 '>
+              <View style={styles.tableListContainer} className="m-4">
                 <Text style={styles.tableListTitle}>Added Tables</Text>
                 {tables.map((table: any, index: number) => (
                   <View
@@ -568,9 +621,9 @@ const ManageDineInServiceScreen = () => {
                       padding: 16,
                       borderRadius: 12,
                       marginBottom: 12,
-                      borderColor: "lightgray",
+                      borderColor: 'lightgray',
                       borderWidth: 1,
-                      elevation: 2
+                      elevation: 2,
                     }}>
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#1F2937' }}>
@@ -595,6 +648,17 @@ const ManageDineInServiceScreen = () => {
                           {table.premium === 1 ? 'Premium Table' : 'Standard Table'}
                         </Text>
                       </View>
+
+                      {table?.time_slot?.length > 0 && (
+                        <View style={{ marginTop: 6 }}>
+                          {table.time_slot.map((slot: SlotType, idx: number) => (
+                            <Text key={idx} style={{ fontSize: 12, color: '#6B7280' }}>
+                              • {slot.date} | {slot.start_time}-{slot.end_time} • ₹{slot.price}
+                            </Text>
+                          ))}
+                        </View>
+                      )}
+
                     </View>
                     <TouchableOpacity
                       onPress={() => handleRemoveTable(index)}
@@ -611,8 +675,7 @@ const ManageDineInServiceScreen = () => {
               </View>
             )}
 
-
-            <TouchableOpacity onPress={handleCreateTables} className='mx-4 mb-8' >
+            <TouchableOpacity onPress={handleCreateTables} className="mx-4 mb-8">
               <LinearGradient
                 colors={['#ac94f4', '#7248B3']}
                 start={{ x: 0, y: 0 }}
@@ -756,7 +819,10 @@ const styles = StyleSheet.create({
   loadingOverlay: {
     position: 'absolute',
     backgroundColor: 'rgba(0,0,0,0.8)',
-    top: 0, left: 0, right: 0, bottom: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 50,
@@ -767,7 +833,7 @@ const styles = StyleSheet.create({
     left: '-2%',
     width: 208,
     height: 176,
-    tintColor: "#ac94f4",
+    tintColor: '#ac94f4',
   },
   headerText: {
     textAlign: 'center',
@@ -789,7 +855,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
     backgroundColor: '#F9FAFB',
-    marginHorizontal: 16
+    marginHorizontal: 16,
   },
   pickerContainer: {
     backgroundColor: '#F3F4F6',
@@ -855,7 +921,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontFamily: 'Raleway-Bold',
   },
-
   slotItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -864,14 +929,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     borderRadius: 6,
   },
-
   addSlotButton: {
     backgroundColor: '#7248B3',
     paddingVertical: 10,
     borderRadius: 8,
     alignItems: 'center',
   },
-
 });
 
 export default ManageDineInServiceScreen;

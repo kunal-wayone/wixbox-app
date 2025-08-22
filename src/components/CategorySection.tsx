@@ -58,10 +58,7 @@ const CategorySection = () => {
         }
 
         // Map data to ensure blank images use DEFAULT_IMAGE
-        const newCategories = response?.data.map((item: any) => ({
-          ...item,
-          image: item.image && item.image.trim() !== '' ? IMAGE_URL + item.image : DEFAULT_IMAGE,
-        }));
+        const newCategories = response?.data
 
         setData((prev) => (isInitial ? newCategories : [...prev, ...newCategories]));
         setHasMore(response.pagination.current_page < Math.ceil(response.pagination.total / response.pagination.per_page));
@@ -186,8 +183,8 @@ const CategorySection = () => {
             onPress={() => handleCategoryPress(category)}
           >
             <Image
-              source={{ uri: category?.image }}
-              className="w-20 h-20 rounded-full mb-2"
+              source={category?.image ? { uri: IMAGE_URL + category?.image } : DEFAULT_IMAGE}
+              className="w-20 h-20 rounded-full border border-gray-100 mb-2"
               resizeMode="cover"
               onError={() => handleImageError(category?.id)}
             />

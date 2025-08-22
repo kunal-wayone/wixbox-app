@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { ImagePath } from '../constants/ImagePath';
 import { useDispatch, useSelector } from 'react-redux';
-import { TokenStorage } from '../utils/apiUtils';
+import { Fetch, Post, TokenStorage } from '../utils/apiUtils';
 import { logout } from '../store/slices/authSlice';
 import { RootState } from '../store/store';
 import { googleSignOut } from '../utils/authentication/googleAuth';
@@ -73,6 +73,20 @@ const ProfileScreen = () => {
     setModalVisible(true);
   };
 
+  const handelSendDeleteOtp = async () => {
+    try {
+      const response: any = await Post('/user/send-delete-otp', {}, 5000);
+      console.log(response)
+      if (response?.success) {
+        throw new Error(response?.message || 'Faield to send otp, Please try again.')
+      }
+      return response
+    } catch (error) {
+
+    }
+    const response = await Post('/user/send-delete-otp', {}, 5000);
+
+  }
   const confirmAction = () => {
     if (modalAction === 'Logout') {
       dispatch(logout())
@@ -93,7 +107,9 @@ const ProfileScreen = () => {
       // Implement logout logic here
       console.log('Logging out...');
     } else if (modalAction === 'Delete') {
-      navigation.navigate('DeleteAccountScreen');
+      handelSendDeleteOtp()
+
+      navigation.navigate('DeleteAccountVerifyOtpScreen', { email: user?.email });
       // Implement delete account logic here
       console.log('Deleting account...');
     }
@@ -116,7 +132,7 @@ const ProfileScreen = () => {
           {/* Profile Image */}
           <View className="items-center mt-8">
             <Image
-              source={ImagePath.profile1} // Replace with actual image
+              source={ImagePath.profile} // Replace with actual image
               className="w-24 h-24 rounded-full"
             />
             <TouchableOpacity onPress={() => navigation.navigate('EditProfileScreen')} className=''>

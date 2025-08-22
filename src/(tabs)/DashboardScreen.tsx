@@ -71,7 +71,7 @@ const quickActions = [
     label: 'Manage Orders',
     icon: 'shopping-cart',
     emoji: '🛒',
-    screen: 'ManageAllOrders',
+    screen: 'AddCustomerScreen',
     gradient: ['#fca5a5', '#ef4444'], // red
   },
   {
@@ -262,6 +262,9 @@ const DashboardScreen = () => {
                 </View>
               </View>
               <View className="flex-row items-center gap-1">
+                <TouchableOpacity onPress={() => navigation.navigate("NotificationScreen", { shop_info: user?.shop })} className="rounded-full p-2 justify-center items-center">
+                  <Feather name='bell' size={18} />
+                </TouchableOpacity>
                 <TouchableOpacity onPress={() => navigation.navigate("ShopDetailsScreen", { shop_info: user?.shop })} className="rounded-full p-2 justify-center items-center">
                   <Feather name='eye' size={18} />
                 </TouchableOpacity>

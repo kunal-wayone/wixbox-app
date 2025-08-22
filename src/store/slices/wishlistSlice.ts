@@ -76,7 +76,8 @@ export const removeWishlistItem = createAsyncThunk(
   'wishlist/removeWishlistItem',
   async (body: { menu_item_id: number }, { rejectWithValue }) => {
     try {
-      await Delete('/user/wishlist-product', body, {}, 5000);
+      console.log(body)
+      await Post('/user/wishlist-product', body, 5000);
       return body.menu_item_id;
     } catch (error) {
       return rejectWithValue('Failed to remove wishlist item');

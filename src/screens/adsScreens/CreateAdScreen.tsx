@@ -135,6 +135,14 @@ const CreateAdScreen = () => {
     setFieldValue('images', updatedImages);
   };
 
+  const formatToMySQLTime = (dateString: any) => {
+    const date = new Date(dateString);
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  };
+
   const handleSaveAd = async (values: any, { setSubmitting, resetForm, setErrors }: any) => {
     try {
       const formData = new FormData();
@@ -148,8 +156,8 @@ const CreateAdScreen = () => {
       formData.append('promotion_tag', values.promotion_tag);
       formData.append('offer_starts_at', formatDate(values.offer_starts_at));
       formData.append('offer_ends_at', formatDate(values.offer_ends_at));
-      formData.append('offer_start_time', formatTime(values.offer_start_time));
-      formData.append('offer_end_time', formatTime(values.offer_end_time));
+      formData.append('offer_start_time', formatToMySQLTime(values.offer_start_time));
+      formData.append('offer_end_time', formatToMySQLTime(values.offer_end_time));
       formData.append('original_price', values.original_price);
       formData.append('discounted_price', values.discounted_price || '');
       formData.append('caption', values.caption);

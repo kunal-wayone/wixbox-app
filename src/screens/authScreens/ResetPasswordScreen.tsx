@@ -18,7 +18,7 @@ import { Formik } from 'formik';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { ImagePath } from '../../constants/ImagePath';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Post } from '../../utils/apiUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -40,34 +40,36 @@ const validationSchema = Yup.object().shape({
 
 const ResetPasswordScreen = () => {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const email = route.params?.email || '';
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [email, setEmail] = useState<any>('');
+  // const [email, setEmail] = useState<any>('');
   const [otp, setOtp] = useState<any>('');
   const [apiErrors, setApiErrors] = useState<any>({
     email: '',
     password: '',
   });
 
-  // Load OTP hint from AsyncStorage
-  useEffect(() => {
-    const loadEmailHint = async () => {
-      try {
-        const storedEmail: any = await AsyncStorage.getItem('resetEmail');
-        const storedOtp: any = await AsyncStorage.getItem('resetOtp');
-        if (storedEmail) {
-          const email = JSON.parse(storedEmail);
-          const otp = JSON.parse(storedOtp);
-          setEmail(email);
-          setOtp(otp);
-        }
-      } catch (error) {
-        console.error('Failed to load OTP hint:', error);
-      }
-    };
-    loadEmailHint();
-  }, []);
+  // // Load OTP hint from AsyncStorage
+  // useEffect(() => {
+  //   const loadEmailHint = async () => {
+  //     try {
+  //       const storedEmail: any = await AsyncStorage.getItem('resetEmail');
+  //       const storedOtp: any = await AsyncStorage.getItem('resetOtp');
+  //       if (storedEmail) {
+  //         const email = JSON.parse(storedEmail);
+  //         const otp = JSON.parse(storedOtp);
+  //         setEmail(email);
+  //         setOtp(otp);
+  //       }
+  //     } catch (error) {
+  //       console.error('Failed to load OTP hint:', error);
+  //     }
+  //   };
+  //   loadEmailHint();
+  // }, []);
 
   // Mock API call for resetting password
   // const handleResetPassword = async (
@@ -124,8 +126,8 @@ const ResetPasswordScreen = () => {
         throw new Error(response?.message || 'OTP verification failed');
       }
 
-      await AsyncStorage.removeItem('resetOtp');
-      await AsyncStorage.removeItem('resetEmail');
+      // await AsyncStorage.removeItem('resetOtp');
+      // await AsyncStorage.removeItem('resetEmail');
       resetForm();
       ToastAndroid.show('OTP verified successfully!', ToastAndroid.SHORT);
       setShowSuccessModal(true)
@@ -150,7 +152,10 @@ const ResetPasswordScreen = () => {
     if (showSuccessModal) {
       const timer = setTimeout(() => {
         setShowSuccessModal(false);
-        navigation.navigate('LoginScreen');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'LoginScreen' }],
+        });
       }, 3000); // Modal closes after 3 seconds
       return () => clearTimeout(timer); // Cleanup timer on unmount
     }

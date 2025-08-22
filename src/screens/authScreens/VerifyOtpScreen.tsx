@@ -35,7 +35,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 // Validation schema for OTP
 const verifyOtpSchema = Yup.object().shape({
   otp: Yup.string()
-    .length(4, 'OTP must be exactly 4 digits')
+    .length(6, 'OTP must be exactly 4 digits')
     .matches(/^\d+$/, 'OTP must contain only digits')
     .required('OTP is required'),
 });
@@ -101,7 +101,7 @@ const VerifyOtpScreen = () => {
       // await AsyncStorage.removeItem('resetEmail');
       resetForm();
       ToastAndroid.show('OTP verified successfully!', ToastAndroid.SHORT);
-      navigation.navigate('ResetPasswordScreen');
+      navigation.navigate('ResetPasswordScreen', { email });
     } catch (error: any) {
       const errorMessage =
         error?.errors?.errors || 'Something went wrong. Please try again.';
@@ -116,23 +116,23 @@ const VerifyOtpScreen = () => {
   };
 
   // Handle resend OTP
-  const handleResendOtp = async () => {
+  const handleResendOtp = async (resetForm: any) => {
     try {
       setApiErrors({ otp: '' });
       const response: any = await Post('/auth/forget-password', {
         email,
       }, 5000);
       console.log(email, response);
-      setOtpHint(response?.data?.otp);
+      // setOtpHint(response?.data?.otp);
       if (!response.success) {
         throw new Error(response?.message || 'Something went wrong!');
       }
 
       const data = response?.data;
-      await AsyncStorage.setItem('resetOtp', JSON.stringify(data?.otp));
-      setOtpHint(data.otp);
-      setResendTimer(30);
+      // setOtpHint(data.otp);
+      setResendTimer(60);
       setCanResend(false);
+      resetForm()
       ToastAndroid.show('OTP resent successfully!', ToastAndroid.SHORT);
     } catch (error: any) {
       const errorMessage =
@@ -231,6 +231,7 @@ const VerifyOtpScreen = () => {
               {({
                 handleSubmit,
                 setFieldValue,
+                resetForm,
                 values,
                 errors,
                 touched,
@@ -249,15 +250,11 @@ const VerifyOtpScreen = () => {
                       }}>
                       Enter OTP
                     </Text>
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                      }}>
-                      {[...Array(4)].map((_, index) => (
+                    <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 20 }}>
+                      {[...Array(6)].map((_, index) => (
                         <TextInput
                           key={index}
-                          ref={otpRefs.current[index]}
+                          ref={(ref) => (otpRefs.current[index] = ref!)}
                           style={{
                             borderWidth: 1,
                             borderColor: '#D1D5DB',
@@ -268,18 +265,37 @@ const VerifyOtpScreen = () => {
                             textAlign: 'center',
                             fontSize: 18,
                             marginHorizontal: 4,
-                            color: "#000",
                             fontFamily: 'Raleway-Regular',
-
                           }}
-                          placeholder="0"
-                          placeholderTextColor={"#000"}
+                          placeholder="_"
+                          placeholderTextColor={'gray'}
                           keyboardType="number-pad"
                           maxLength={1}
-                          onChangeText={(value: string) =>
-                            handleOtpChange(index, value, setFieldValue, values)
-                          }
                           value={values.otp[index] || ''}
+                          onChangeText={(value) => {
+                            const otpArray = values.otp.split('');
+                            otpArray[index] = value;
+
+                            const updatedOtp = otpArray.join('');
+                            setFieldValue('otp', updatedOtp);
+
+                            if (value && index < 5) {
+                              otpRefs.current[index + 1]?.focus();
+                            }
+                          }}
+                          onKeyPress={({ nativeEvent }) => {
+                            if (nativeEvent.key === 'Backspace') {
+                              const otpArray = values.otp.split('');
+                              if (!values.otp[index] && index > 0) {
+                                otpRefs.current[index - 1]?.focus();
+                                otpArray[index - 1] = '';
+                                setFieldValue('otp', otpArray.join(''));
+                              } else {
+                                otpArray[index] = '';
+                                setFieldValue('otp', otpArray.join(''));
+                              }
+                            }
+                          }}
                         />
                       ))}
                     </View>
@@ -300,7 +316,7 @@ const VerifyOtpScreen = () => {
                   </View>
 
                   <TouchableOpacity
-                    onPress={handleResendOtp}
+                    onPress={() => handleResendOtp(resetForm)}
                     disabled={!canResend}
                     style={{ marginBottom: 16 }}>
                     <Text

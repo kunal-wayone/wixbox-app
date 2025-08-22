@@ -336,7 +336,6 @@ const AddDineInServiceScreen = ({ route }: any) => {
                       <View style={styles.pickerContainerSecondary}>
                         <Picker selectedValue={type} onValueChange={setType} style={styles.pickerStyle}>
                           <Picker.Item label="Choose Table Type" value="" />
-                          <Picker.Item label="Choose Table Type" value="" />
                           <Picker.Item label="Regular Seating" value="Regular Seating" />
                           <Picker.Item label="Cabin / Private Table" value="Cabin" />
                           <Picker.Item label="Open Air / Outside" value="Open Air" />

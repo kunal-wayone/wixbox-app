@@ -53,10 +53,7 @@ const AllCategoriesScreen = () => {
 
                 if (!response.success) throw new Error(response.message);
 
-                const newCategories = response.data.map((item: any) => ({
-                    ...item,
-                    image: item.image && item.image.trim() !== '' ? IMAGE_URL + item.image : DEFAULT_IMAGE,
-                }));
+                const newCategories = response.data;
 
                 setData((prev) => (isInitial ? newCategories : [...prev, ...newCategories]));
                 setHasMore(response.pagination.current_page < Math.ceil(response.pagination.total / response.pagination.per_page));
@@ -106,7 +103,7 @@ const AllCategoriesScreen = () => {
             onPress={() => handleCategoryPress(item)}
         >
             <Image
-                source={{ uri: item.image }}
+                source={item?.image ? { uri: item.image } : ImagePath.item1}
                 style={styles.image}
                 resizeMode="cover"
                 onError={() => handleImageError(item.id)}

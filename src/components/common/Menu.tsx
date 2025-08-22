@@ -213,7 +213,7 @@ const Menu = () => {
   const renderFooter = () => {
     if (isLoadingMore) {
       return (
-        <View className="py-4">
+        <View className="py-4 my-auto">
           <ActivityIndicator size="large" color="#007AFF" />
         </View>
       );
@@ -223,7 +223,7 @@ const Menu = () => {
       return (
         <TouchableOpacity
           onPress={loadMoreProducts}
-          className="bg-primary-90 py-3 px-4 rounded-lg my-4 ml-4"
+          className="bg-primary-90 py-3 px-4 rounded-lg my-auto ml-4"
         >
           <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-center font-medium">Load More</Text>
         </TouchableOpacity>

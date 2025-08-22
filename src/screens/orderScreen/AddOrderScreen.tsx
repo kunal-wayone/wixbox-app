@@ -48,6 +48,7 @@ interface CartState {
 
 const AddOrderScreen = ({ navigation, route }: any) => {
   const shopId = route?.params?.shopId || null;
+  const orderData = route?.params?.user || null;
   const dispatch = useDispatch();
   const { items: cartItems, totalWithTax } = useSelector((state: CartState) => state.cart);
   const [products, setProducts] = useState<Product[]>([]);
@@ -58,7 +59,7 @@ const AddOrderScreen = ({ navigation, route }: any) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCartVisible, setIsCartVisible] = useState(false);
   const itemsPerPage = 10;
-
+  console.log(orderData)
   const fetchProducts = useCallback(
     async (pageNum: number, append = false) => {
       if (pageNum > totalPages && append) return;
@@ -395,7 +396,7 @@ const AddOrderScreen = ({ navigation, route }: any) => {
           }}
           onPress={() => {
             setIsCartVisible(false);
-            navigation.navigate('AddCustomerFormScreen', { shopId, items: cartItems });
+            navigation.navigate('AddCustomerFormScreen', { shopId, items: cartItems, orderData });
           }}
           disabled={cartItems.length === 0}
         >
@@ -452,7 +453,7 @@ const AddOrderScreen = ({ navigation, route }: any) => {
                   }}
                   onPress={() => {
                     setIsCartVisible(false);
-                    navigation.navigate('AddCustomerFormScreen', { shopId, items: cartItems });
+                    navigation.navigate('AddCustomerFormScreen', { shopId, items: cartItems, orderData });
                   }}
                 >
                   <Text style={{ fontFamily: 'Raleway-Regular', color: '#fff', textAlign: 'center', fontSize: 16, fontWeight: '600' }}>

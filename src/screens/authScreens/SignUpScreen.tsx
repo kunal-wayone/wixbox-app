@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import {
   View,
   Text,
@@ -26,7 +26,6 @@ import { googleAuth, signup } from '../../store/slices/authSlice';
 import { fetchUser } from '../../store/slices/userSlice';
 import { getFcmToken } from '../../utils/notification/firebase';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Post } from '../../utils/apiUtils';
 
 const { width, height } = Dimensions.get('screen');
 
@@ -44,103 +43,152 @@ const validationSchema = Yup.object().shape({
   confirmPassword: Yup.string()
     .oneOf([Yup.ref('password'), undefined], 'Passwords must match')
     .required('Confirm Password is required'),
-  // agreeTerms: Yup.boolean()
-  //   .oneOf([true], 'You must accept the Terms & Conditions')
-  //   .required('You must accept the Terms & Conditions'),
 });
 
-const SignUpScreen = ({ route }: any) => {
+interface FormValues {
+  fullName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
+interface ApiError {
+  name?: string;
+  email?: string;
+  password?: string;
+  password_confirmation?: string;
+}
+
+// Reusable Input Component
+const InputField = memo(
+  ({
+    label,
+    placeholder,
+    value,
+    onChangeText,
+    onBlur,
+    error,
+    touched,
+    secureTextEntry,
+    toggleSecureText,
+    keyboardType,
+    disabled,
+  }: {
+    label: string;
+    placeholder: string;
+    value: string;
+    onChangeText: (text: string) => void;
+    onBlur: () => void;
+    error?: string;
+    touched?: boolean;
+    secureTextEntry?: boolean;
+    toggleSecureText?: () => void;
+    keyboardType?: string;
+    disabled?: boolean;
+  }) => (
+    <View style={styles.inputContainer}>
+      <Text style={styles.label}>{label}</Text>
+      <View style={styles.inputWrapper}>
+        <TextInput
+          style={styles.input}
+          placeholder={placeholder}
+          placeholderTextColor="#666"
+          value={value}
+          onChangeText={onChangeText}
+          onBlur={onBlur}
+          secureTextEntry={secureTextEntry}
+          keyboardType={keyboardType}
+          autoCapitalize={keyboardType === 'email-address' ? 'none' : 'sentences'}
+          editable={!disabled}
+          accessibilityLabel={label}
+        />
+        {toggleSecureText && (
+          <TouchableOpacity
+            onPress={toggleSecureText}
+            style={styles.iconButton}
+            disabled={disabled}
+            accessibilityLabel={secureTextEntry ? 'Show password' : 'Hide password'}
+          >
+            <Icon name={secureTextEntry ? 'eye' : 'eye-off'} size={20} color="#666" />
+          </TouchableOpacity>
+        )}
+      </View>
+      {touched && error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
+  )
+);
+
+const SignUpScreen = ({ route }: { route: any }) => {
   const navigation = useNavigation<any>();
   const dispatch = useDispatch<any>();
   const { accountType } = route.params || {};
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCheck, setIsCheck] = useState(false);
-  const [apiErrors, setApiErrors] = useState({
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
-  });
+  const [apiErrors, setApiErrors] = useState<ApiError>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignUp = async (values: any, { setSubmitting, resetForm, setErrors }: any) => {
-    if (!isCheck) {
-      ToastAndroid.show('Required to check the Terms & Conditions.', ToastAndroid.SHORT);
-      return;
-    }
-    setIsLoading(true);
-    console.log(isCheck)
-    try {
-      if (!accountType) {
-        throw new Error('Account type is required');
+  const handleSignUp = useCallback(
+    async (values: FormValues, { setSubmitting, resetForm, setErrors }: any) => {
+      if (!isCheck) {
+        ToastAndroid.show('Please accept the Terms & Conditions.', ToastAndroid.SHORT);
+        setSubmitting(false);
+        return;
       }
 
-      const payload = {
-        name: values.fullName,
-        email: values.email,
-        password: values.password,
-        password_confirmation: values.confirmPassword,
-        role: accountType,
-        fcm_token: await getFcmToken(),
-      };
-      // const response: any = await Post('/auth/signin', payload, 10000);
-
-      const response = await dispatch(signup(payload)).unwrap();
-      console.log(response)
-      if (!response.success) {
-        throw new Error(response.message || 'Registration failed');
-      }
-
-      await dispatch(fetchUser()).unwrap();
-
-      // Clear form and errors
-      setApiErrors({
-        name: '',
-        email: '',
-        password: '',
-        password_confirmation: '',
-      });
-      resetForm();
-
-      ToastAndroid.show(
-        response.message || 'Account created successfully!',
-        ToastAndroid.LONG
-      );
-
-      // Navigate based on role
-      navigation.navigate(response.user?.role === 'user' ? 'HomeScreen' : 'CreateShopScreen');
-    } catch (error: any) {
-      console.log(true, error)
-      if (error.errors) {
-        const formattedErrors: any = {};
-        for (const key in error.errors) {
-          formattedErrors[key] = error.errors[key][0];
+      setIsLoading(true);
+      try {
+        if (!accountType) {
+          throw new Error('Account type is required');
         }
-        setErrors(formattedErrors);
+
+        const payload = {
+          name: values.fullName,
+          email: values.email,
+          password: values.password,
+          password_confirmation: values.confirmPassword,
+          role: accountType,
+          fcm_token: await getFcmToken(),
+        };
+
+        const response = await dispatch(signup(payload)).unwrap();
+        if (!response.success) {
+          throw new Error(response.message || 'Registration failed');
+        }
+
+        await dispatch(fetchUser()).unwrap();
+
+        resetForm();
+        setApiErrors({});
+        ToastAndroid.show(response.message || 'Account created successfully!', ToastAndroid.LONG);
+
+        navigation.navigate(response.user?.role === 'user' ? 'HomeScreen' : 'CreateShopScreen');
+      } catch (error: any) {
+        const errorData = error?.errors || {};
+        setApiErrors({
+          name: errorData.name?.[0] || '',
+          email: errorData.email?.[0] || '',
+          password: errorData.password?.[0] || '',
+          password_confirmation: errorData.password_confirmation?.[0] || '',
+        });
+        setErrors(errorData);
+        ToastAndroid.show(error.message || 'Registration failed. Please try again.', ToastAndroid.LONG);
+      } finally {
+        setIsLoading(false);
+        setSubmitting(false);
       }
-      ToastAndroid.show(
-        error.message || 'Registration failed. Please try again.',
-        ToastAndroid.LONG
-      );
-    } finally {
-      setSubmitting(false);
-      setIsLoading(false);
-    }
-  };
+    },
+    [isCheck, accountType, dispatch, navigation]
+  );
 
-  const handleGoogleSignUp = async () => {
+  const handleGoogleSignUp = useCallback(async () => {
     setIsLoading(true);
-
     try {
       if (!accountType) {
         throw new Error('Account type is required');
       }
 
-      const payload = {
-        role: accountType,
-      };
-
+      const payload = { role: accountType };
       const response = await dispatch(googleAuth(payload)).unwrap();
 
       if (!response.success) {
@@ -148,74 +196,53 @@ const SignUpScreen = ({ route }: any) => {
       }
 
       await dispatch(fetchUser()).unwrap();
+      ToastAndroid.show(response.message || 'Account created successfully!', ToastAndroid.LONG);
 
-      ToastAndroid.show(
-        response.message || 'Account created successfully!',
-        ToastAndroid.LONG
-      );
-
-      // Navigate based on role
       navigation.navigate(response.user?.role === 'user' ? 'HomeScreen' : 'CreateShopScreen');
     } catch (error: any) {
-      console.log(error)
-      const errorData = error?.errors || {};
       setApiErrors({
-        name: errorData.name?.[0] || '',
-        email: errorData.email?.[0] || '',
-        password: errorData.password?.[0] || '',
-        password_confirmation: errorData.password_confirmation?.[0] || '',
+        name: error?.errors?.name?.[0] || '',
+        email: error?.errors?.email?.[0] || '',
+        password: error?.errors?.password?.[0] || '',
+        password_confirmation: error?.errors?.password_confirmation?.[0] || '',
       });
-
-      ToastAndroid.show(
-        error.message || 'Google registration failed. Please try again.',
-        ToastAndroid.LONG
-      );
+      ToastAndroid.show(error.message || 'Google registration failed. Please try again.', ToastAndroid.LONG);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [accountType, dispatch, navigation]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
+    <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}>
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      >
         <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            backgroundColor: '#fff',
-          }}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled">
-          <View className="p-4">
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.padding}>
             <Image
               source={ImagePath.signBg}
-              style={{ tintColor: '#ac94f4' }}
-              className="absolute -top-[2%] -left-[2%] w-52 h-44"
+              style={[styles.backgroundImage, { tintColor: '#ac94f4' }]}
               resizeMode="contain"
             />
-            <View className="mt-20">
+            <View style={styles.content}>
               <MaskedView
-                maskElement={
-                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center text-3xl font-bold   ">
-                    Create an Account
-                  </Text>
-                }>
+                maskElement={<Text style={styles.title}>Create an Account</Text>}
+              >
                 <LinearGradient
                   colors={['#ac94f4', '#7248B3']}
                   start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}>
-                  <Text style={{ fontFamily: 'Raleway-Regular', opacity: 0 }}
-                    className="text-center text-3xl font-bold   "
-                  >
-                    Create an Account
-                  </Text>
+                  end={{ x: 1, y: 0 }}
+                >
+                  <Text style={[styles.title, { opacity: 0 }]}>Create an Account</Text>
                 </LinearGradient>
               </MaskedView>
-              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center my-2 text-gray-600">
-                Create your account to get started
-              </Text>
+              <Text style={styles.subtitle}>Create your account to get started</Text>
 
               <Formik
                 initialValues={{
@@ -223,226 +250,278 @@ const SignUpScreen = ({ route }: any) => {
                   email: '',
                   password: '',
                   confirmPassword: '',
-                  agreeTerms: false,
                 }}
                 validationSchema={validationSchema}
-                onSubmit={handleSignUp}>
-                {({
-                  handleChange,
-                  handleBlur,
-                  handleSubmit,
-                  values,
-                  errors,
-                  touched,
-                  isSubmitting: formikSubmitting,
-                }) => (
-                  <View className="mt-4">
-                    <View className="mb-1">
-                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">
-                        Full Name
-                      </Text>
-                      <TextInput style={{ fontFamily: 'Raleway-Regular' }}
-                        className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
-                        placeholder="Enter your full name"
-                        placeholderTextColor={"#000"}
-                        onChangeText={handleChange('fullName')}
-                        onBlur={handleBlur('fullName')}
-                        value={values.fullName}
-                        editable={!isLoading}
-                      />
-                      {(touched.fullName) && (
-                        <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-red-500 text-xs mt-1 ${errors.fullName ? "" : "hidden"}`}>
-                          {errors.fullName}
-                        </Text>
-                      )}
-                    </View>
-
-                    <View className="mb-1">
-                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">
-                        Email Address
-                      </Text>
-                      <TextInput style={{ fontFamily: 'Raleway-Regular' }}
-                        className="border border-gray-300 bg-gray-100 text-gray-900 rounded-lg p-3 text-base"
-                        placeholder="Enter your email"
-                        placeholderTextColor={"#000"}
-                        onChangeText={handleChange('email')}
-                        onBlur={handleBlur('email')}
-                        value={values.email}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        editable={!isLoading}
-                      />
-                      {(touched.email) && (
-                        <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-red-500 text-xs mt-1 ${errors.email ? "" : "hidden"}`}>
-                          {errors.email}
-                        </Text>
-                      )}
-                    </View>
-
-                    <View className="mb-1">
-                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">
-                        Create Password
-                      </Text>
-                      <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
-                        <TextInput style={{ fontFamily: 'Raleway-Regular' }}
-                          className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
-                          placeholder="Enter your password"
-                          placeholderTextColor={"#000"}
-                          onChangeText={handleChange('password')}
-                          onBlur={handleBlur('password')}
-                          value={values.password}
-                          secureTextEntry={!showPassword}
-                          editable={!isLoading}
-                        />
-                        <TouchableOpacity
-                          onPress={() => setShowPassword(!showPassword)}
-                          className="p-3 bg-gray-100"
-                          disabled={isLoading}>
-                          <Icon
-                            name={showPassword ? 'eye-off' : 'eye'}
-                            size={20}
-                            color="#666"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                      {(touched.password) && (
-                        <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-red-500 text-xs mt-1 ${errors.password ? "" : "hidden"}`}>
-                          {errors.password}
-                        </Text>
-                      )}
-                    </View>
-
-                    <View className="mb-1">
-                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm font-medium text-gray-700 mb-1">
-                        Confirm Password
-                      </Text>
-                      <View className="flex-row items-center border border-gray-300 rounded-lg overflow-hidden">
-                        <TextInput style={{ fontFamily: 'Raleway-Regular' }}
-                          className="flex-1 p-3 bg-gray-100 text-base text-gray-900"
-                          placeholder="Confirm your password"
-                          placeholderTextColor={"#000"}
-                          onChangeText={handleChange('confirmPassword')}
-                          onBlur={handleBlur('confirmPassword')}
-                          value={values.confirmPassword}
-                          secureTextEntry={!showConfirmPassword}
-                          editable={!isLoading}
-                        />
-                        <TouchableOpacity
-                          onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="p-3 bg-gray-100"
-                          disabled={isLoading}>
-                          <Icon
-                            name={showConfirmPassword ? 'eye-off' : 'eye'}
-                            size={20}
-                            color="#666"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                      {(touched.confirmPassword) && (
-                        <Text style={{ fontFamily: 'Raleway-Regular' }} className={`text-red-500 text-xs mt-1 ${errors.confirmPassword ? "" : "hidden"}`}>
-                          {errors.confirmPassword}
-                        </Text>
-                      )}
-                    </View>
-
-                    <View className="flex-row items-center mb-3">
+                onSubmit={handleSignUp}
+              >
+                {({ handleChange, handleBlur, handleSubmit, values, errors, touched, isSubmitting }) => (
+                  <View style={styles.form}>
+                    <InputField
+                      label="Full Name"
+                      placeholder="Enter your full name"
+                      value={values.fullName}
+                      onChangeText={handleChange('fullName')}
+                      onBlur={handleBlur('fullName')}
+                      error={errors.fullName || apiErrors.name}
+                      touched={touched.fullName}
+                      disabled={isLoading || isSubmitting}
+                    />
+                    <InputField
+                      label="Email Address"
+                      placeholder="Enter your email"
+                      value={values.email}
+                      onChangeText={handleChange('email')}
+                      onBlur={handleBlur('email')}
+                      error={errors.email || apiErrors.email}
+                      touched={touched.email}
+                      keyboardType="email-address"
+                      disabled={isLoading || isSubmitting}
+                    />
+                    <InputField
+                      label="Create Password"
+                      placeholder="Enter your password"
+                      value={values.password}
+                      onChangeText={handleChange('password')}
+                      onBlur={handleBlur('password')}
+                      error={errors.password || apiErrors.password}
+                      touched={touched.password}
+                      secureTextEntry={!showPassword}
+                      toggleSecureText={() => setShowPassword(!showPassword)}
+                      disabled={isLoading || isSubmitting}
+                    />
+                    <InputField
+                      label="Confirm Password"
+                      placeholder="Confirm your password"
+                      value={values.confirmPassword}
+                      onChangeText={handleChange('confirmPassword')}
+                      onBlur={handleBlur('confirmPassword')}
+                      error={errors.confirmPassword || apiErrors.password_confirmation}
+                      touched={touched.confirmPassword}
+                      secureTextEntry={!showConfirmPassword}
+                      toggleSecureText={() => setShowConfirmPassword(!showConfirmPassword)}
+                      disabled={isLoading || isSubmitting}
+                    />
+                    <View style={styles.checkboxContainer}>
                       <CheckBox
                         value={isCheck}
-                        onValueChange={va => {
-                          setIsCheck(va);
-                          handleChange('agreeTerms');
-                          console.log(va, isCheck, values.agreeTerms);
-                        }}
+                        onValueChange={setIsCheck}
                         tintColors={{ true: '#7248B3', false: '#666' }}
+                        disabled={isLoading || isSubmitting}
+                        accessibilityLabel="Accept Terms & Conditions"
                       />
-                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="ml-2 text-sm text-gray-600">
+                      <Text style={styles.checkboxText}>
                         I agree to the Terms & Conditions
                       </Text>
                     </View>
-
-                    {touched.agreeTerms && !isCheck && (
-                      <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-red-500 text-xs mb-3">
-                        {"Required to check the Terms & Conditions"}
+                    {!isCheck && touched.confirmPassword && (
+                      <Text style={styles.errorText}>
+                        Please accept the Terms & Conditions
                       </Text>
                     )}
-
                     <TouchableOpacity
                       onPress={() => handleSubmit()}
-                      disabled={isLoading || formikSubmitting}
-                      className="mt-4">
+                      disabled={isLoading || isSubmitting}
+                      style={styles.submitButton}
+                      accessibilityLabel="Create Account"
+                    >
                       <LinearGradient
                         colors={['#ac94f4', '#7248B3']}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 0 }}
-                        style={{
-                          padding: 16,
-                          borderRadius: 10,
-                          alignItems: 'center',
-                          opacity: isLoading || formikSubmitting ? 0.7 : 1,
-                        }}>
-                        <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-white text-base font-bold">
-                          Create Account
-                        </Text>
+                        style={[styles.gradientButton, { opacity: isLoading || isSubmitting ? 0.7 : 1 }]}
+                      >
+                        <Text style={styles.buttonText}>Create Account</Text>
                       </LinearGradient>
                     </TouchableOpacity>
                   </View>
                 )}
               </Formik>
 
-              <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-center my-4 text-gray-600">
-                -------- Or Continue with --------
-              </Text>
+              <Text style={styles.divider}>-------- Or Continue with --------</Text>
 
-              <View className="flex-row justify-center gap-4 mb-4">
+              <View style={styles.socialButtons}>
                 <TouchableOpacity
-                  className="p-3 w-1/2 bg-primary-10 rounded-2xl"
+                  style={styles.socialButton}
                   onPress={handleGoogleSignUp}
-                  disabled={isLoading}>
+                  disabled={isLoading}
+                  accessibilityLabel="Sign up with Google"
+                >
                   <Image
                     source={ImagePath.google}
-                    className="w-8 h-8 m-auto"
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  className="p-3 w-1/2 bg-primary-10 rounded-2xl hidden"
-                  disabled={isLoading}>
-                  <Image
-                    source={ImagePath.facebook}
-                    className="w-8 h-8 m-auto"
+                    style={styles.socialIcon}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
               </View>
 
-              <View className="flex-row justify-center items-center mb-4">
-                <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-sm text-gray-600">
-                  Already have an account?{' '}
-                </Text>
+              <View style={styles.loginPrompt}>
+                <Text style={styles.loginText}>Already have an account? </Text>
                 <TouchableOpacity
                   onPress={() => navigation.navigate('LoginScreen')}
-                  disabled={isLoading}>
-                  <Text style={{ fontFamily: 'Raleway-Regular' }} className="text-primary-100 text-sm ml-1 font-bold underline">
-                    Login
-                  </Text>
+                  disabled={isLoading}
+                  accessibilityLabel="Navigate to Login"
+                >
+                  <Text style={styles.loginLink}>Login</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </View>
         </ScrollView>
-        {/* 
-        {isLoading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#FFFFFF" />
-            <Text style={{fontFamily:'Raleway-Regular'}}  style={styles.loadingText}>Creating Account...</Text>
-          </View>
-        )} */}
       </KeyboardAvoidingView>
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text style={styles.loadingText}>Creating Account...</Text>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  flex: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    backgroundColor: '#fff',
+  },
+  padding: {
+    padding: 16,
+  },
+  backgroundImage: {
+    position: 'absolute',
+    top: -8,
+    left: -8,
+    width: 208,
+    height: 176,
+  },
+  content: {
+    marginTop: 80,
+  },
+  title: {
+    fontFamily: 'Raleway-Regular',
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontFamily: 'Raleway-Regular',
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginVertical: 8,
+  },
+  form: {
+    marginTop: 16,
+  },
+  inputContainer: {
+    marginBottom: 8,
+  },
+  label: {
+    fontFamily: 'Raleway-Regular',
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 4,
+  },
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  input: {
+    flex: 1,
+    padding: 12,
+    backgroundColor: '#f5f5f5',
+    fontFamily: 'Raleway-Regular',
+    fontSize: 16,
+    color: '#333',
+  },
+  iconButton: {
+    padding: 12,
+    backgroundColor: '#f5f5f5',
+  },
+  errorText: {
+    fontFamily: 'Raleway-Regular',
+    fontSize: 12,
+    color: '#e53e3e',
+    marginTop: 4,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  checkboxText: {
+    fontFamily: 'Raleway-Regular',
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 8,
+  },
+  submitButton: {
+    marginTop: 16,
+  },
+  gradientButton: {
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontFamily: 'Raleway-Regular',
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  divider: {
+    fontFamily: 'Raleway-Regular',
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginVertical: 16,
+  },
+  socialButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 16,
+  },
+  socialButton: {
+    padding: 12,
+    width: width * 0.4,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  socialIcon: {
+    width: 32,
+    height: 32,
+  },
+  loginPrompt: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  loginText: {
+    fontFamily: 'Raleway-Regular',
+    fontSize: 14,
+    color: '#666',
+  },
+  loginLink: {
+    fontFamily: 'Raleway-Regular',
+    fontSize: 14,
+    color: '#7248B3',
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
   loadingOverlay: {
     position: 'absolute',
     top: 0,
@@ -455,8 +534,9 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   loadingText: {
-    color: '#FFFFFF',
+    fontFamily: 'Raleway-Regular',
     fontSize: 16,
+    color: '#fff',
     marginTop: 10,
     fontWeight: 'bold',
   },

@@ -231,7 +231,7 @@ const SearchScreen = () => {
 
           {active === "product" && <ScrollView
             horizontal
-            className="px-4  "
+            className="px-4 hidden  "
             style={{ maxHeight: "6%", minHeight: "6%", }}
             contentContainerStyle={{ maxHeight: "100%", minHeight: "100%", }}
 

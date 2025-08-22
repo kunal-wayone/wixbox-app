@@ -58,7 +58,7 @@ const CartScreen = () => {
                     padding: 12,
                 }}>
                 <Image
-                    source={item?.image}
+                    source={{ uri: IMAGE_URL + item?.image }}
                     style={{ width: 80, height: 80, borderRadius: 10, marginRight: 12 }}
                     resizeMode="cover"
                 />

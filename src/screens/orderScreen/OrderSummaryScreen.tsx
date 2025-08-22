@@ -188,7 +188,8 @@ const OrderSummaryScreen = () => {
       try {
         setIsLoading(true);
         const discount = parseFloat(values.discount || '0') || 0;
-        const totalAmount = subTotal - discount + totalTax;
+        const tax = parseFloat(values.service_tax || '0') || 0;
+        const totalAmount = subTotal - discount + totalTax + tax;
 
         if (totalAmount <= 0) {
           ToastAndroid.show('Total amount must be greater than zero', ToastAndroid.LONG);
@@ -217,6 +218,7 @@ const OrderSummaryScreen = () => {
             rate: tax.rate,
             input_value: parseFloat(tax.inputValue || '0'),
           })),
+          service_tax: 0,
           shop_id: shopId,
           order: cartItems
             .filter(item => item?.id && item?.name && item?.quantity && item?.price)
@@ -230,7 +232,7 @@ const OrderSummaryScreen = () => {
               image: item.image || '',
             })),
         };
-        const url = user?.role === "user" ? 'place-order-user' : '/user/vendor/place-order'
+        const url = user?.role === "user" ? '/user/place-order-user' : '/user/vendor/place-order'
 
         const response: any = await Post(url, jsonPayload, 10000);
         console.log(response)
@@ -242,7 +244,7 @@ const OrderSummaryScreen = () => {
         resetForm();
         ToastAndroid.show('Order placed successfully!', ToastAndroid.LONG);
         return { success: true, orderId: response?.order?.id || '' };
-      } catch (error) {
+      } catch (error: any) {
         ToastAndroid.show(
           error.message === 'Network Error'
             ? 'Network error. Please check your internet connection.'
@@ -376,7 +378,7 @@ const OrderSummaryScreen = () => {
               setFieldValue,
             }) => {
               const totalAmount = useMemo(
-                () => subTotal - parseFloat(values.discount || '0') + totalTax + taxToatal,
+                () => subTotal - parseFloat(values.discount || '0') + totalTax + taxToatal + parseFloat(values?.service_tax || '0'),
                 [subTotal, totalTax, values.discount, values.service_tax]
               );
 
@@ -439,7 +441,7 @@ const OrderSummaryScreen = () => {
                         )}
                       </View>
 
-                      <View className="mb-4 flex-row items-center justify-between">
+                      <View className="mb-4 flex-row items-center justify-between ">
                         <Text style={{ fontFamily: 'Raleway-SemiBold' }} className="text-sm text-gray-700 mb-1">Service Charge (₹)</Text>
                         <TextInput
                           className="border border-gray-300 w-1/4 rounded-lg px-4 py-2 text-base"

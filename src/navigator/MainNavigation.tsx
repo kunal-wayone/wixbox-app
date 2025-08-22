@@ -53,6 +53,7 @@ import AllOrderScreen from '../screens/orderScreen/AllOrderScreen';
 import ManageDineInServiceScreen from '../screens/shopFormScreens/ManageDineInServiceScreen';
 import ManageReviewScreen from '../screens/otherScreen/ManageReviewScreeen';
 import UsersMenuItems from '../components/common/UsersMenuItems';
+import CustormerScreen from '../(tabs)/CustormerScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -108,6 +109,7 @@ const MainNavigation = () => {
       <Stack.Screen name="ManageAllOrders" component={AllOrderScreen} />
       <Stack.Screen name="ManageReviewScreen" component={ManageReviewScreen} />
       <Stack.Screen name="ViewAllMenuItems" component={UsersMenuItems} />
+      <Stack.Screen name="MomentScreen" component={CustormerScreen} />
 
 
 
